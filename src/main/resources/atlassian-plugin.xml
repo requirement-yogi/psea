@@ -23,6 +23,7 @@
         <version>${project.version}</version>
         <param name="atlassian-licensing-enabled">false</param>
         <vendor name="${project.organization.name}" url="${project.organization.url}" />
+        <param name="configure.url">/plugins/${project.groupId}.${project.artifactId}/about.action</param>
 
         <param name="plugin-icon">img/psea-addon-16x.png</param>
         <param name="plugin-logo">img/psea-addon-72x.png</param>
@@ -34,8 +35,25 @@
         <param name="atlassian-data-center-compatible">true</param>
     </plugin-info>
 
+    <resource type="i18n" name="Internationalization" location="com/playsql/psea/i18n" />
+
     <component key="provider" class="com.playsql.psea.impl.PseaServiceImpl" public="true">
         <interface>com.playsql.psea.api.PseaService</interface>
     </component>
+
+    <xwork name="MVC Actions" key="xwork">
+        <description>MVC actions for all pages provided by the plugin</description>
+        <package name="psea-general" extends="default" namespace="/plugins/${project.groupId}.${project.artifactId}">
+            <action name="about" class="com.atlassian.confluence.core.ConfluenceActionSupport" method="doDefault">
+                <interceptor-ref name="defaultStack" />
+                <result name="input" type="velocity">/about.vm</result>
+            </action>
+        </package>
+    </xwork>
+
+    <web-item key="about" name="About link in the Help menu" section="system.help/pages" weight="60">
+        <label key="com.playsql.psea.about-link" />
+        <link linkId="psea-about-link">/plugins/${project.groupId}.${project.artifactId}/about.action</link>
+    </web-item>
 
 </atlassian-plugin>

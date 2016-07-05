@@ -1,14 +1,18 @@
 <html>
 <head>
     <title>About the PSEA add-on</title>
+    <meta name="decorator" content="main"/>
 </head>
 
 <body>
 
-<h1>Play SQL Export Add-on (PSEA)</h1>
+<p>This service enables Excel exports in
+    <a href="https://marketplace.atlassian.com/plugins/com.playsql.requirementyogi">Requirement Yogi</a>
+    and Play SQL's
+    <a href="https://marketplace.atlassian.com/plugins/com.playsql.playsql-plugin">Spreadsheets for Confluence</a>.
+</p>
 
-<p>This service enables Excel exports in Requirement Yogi and Play SQL.</p>
-
+<br>
 <h2>License</h2>
 
 <p>The license is visible at <a href="https://documentation.play-sql.com/display/PUBLIC/License">https://documentation.play-sql.com/display/PUBLIC/License</a>.</p>
