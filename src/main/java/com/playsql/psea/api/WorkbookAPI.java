@@ -21,10 +21,14 @@ package com.playsql.psea.api;
  */
 
 import com.google.common.collect.Maps;
+import org.apache.poi.hssf.usermodel.HSSFHyperlink;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.xssf.usermodel.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class WorkbookAPI {
     final XSSFWorkbook workbook;
@@ -62,60 +66,93 @@ public final class WorkbookAPI {
         TH, WORKBOOK_TITLE, RED_CELL;
     }
 
-    public abstract static class Value {
-        protected abstract void setCell(XSSFCell xlCell, Map<Style, CellStyle> styles);
-    }
-    public static class StringValue extends Value {
+    public static class Value {
         private final Style format;
         private final String value;
+        private final String href;
 
-        public StringValue(String value) {
-            this.value = value;
+        public Value(Object value) {
+            this.value = Objects.toString(value);
             this.format = null;
+            href = null;
         }
 
-        public StringValue(Style style, String value) {
-            this.format = style;
-            this.value = value;
+        public Value(Style format, Object value) {
+            this.format = format;
+            this.value = Objects.toString(value);
+            href = null;
+        }
+
+        public Value(Style format, Object value, String href) {
+            this.format = format;
+            this.value = Objects.toString(value);
+            this.href = href;
+        }
+
+        public Style getFormat() {
+            return format;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public String getHref() {
+            return href;
         }
 
         @Override
-        protected void setCell(XSSFCell xlCell, Map<Style, CellStyle> styles) {
-            xlCell.setCellValue(value);
-                    CellStyle style = styles.get(format);
-                    if (style != null)
-                        xlCell.setCellStyle(style);
+        public String toString() {
+            return String.format("%s (%s, %s)",
+                value,
+                Objects.toString(format),
+                href);
         }
     }
 
     public static class Sheet {
         private final WorkbookAPI workbook;
+        private final XSSFCreationHelper helper;
         private final XSSFSheet sheet;
-        private int rowNum = 0;
+        private int rowNum = 1;
 
         private Sheet(WorkbookAPI workbook, XSSFSheet sheet) {
             this.workbook = workbook;
+            this.helper = workbook.workbook.getCreationHelper();
             this.sheet = sheet;
         }
 
-        public void setData(Value[][] values, String[][] formats) {
-            if (values != null) {
-                for (int row = 0 ; row < values.length ; row++) {
-                    throw new RuntimeException("Not implemented");
-                }
-            }
+        public Row addRow(List<? extends Value> values) {
+            return addRow(rowNum++, values);
         }
+        public Row addRow(int position, List<? extends Value> values) {
+            XSSFRow xlRow = sheet.createRow(position);
+            Row row = new Row(xlRow);
+            for (int col = 0 ; col < values.size() ; col++) {
+                row.setCell(col, values.get(col));
+            }
+            return row;
+        }
+        public class Row {
+            private final XSSFRow xlRow;
 
-        public void addRow(Value[] values, Style[] formats) {
-            XSSFRow xlRow = sheet.createRow(rowNum++);
-            for (int col = 0 ; col < values.length ; col++) {
+            public Row(XSSFRow xlRow) {
+                this.xlRow = xlRow;
+            }
+
+            public void setCell(int col, Value value) {
                 XSSFCell xlCell = xlRow.createCell(col);
-                values[col].setCell(xlCell, workbook.styles);
-                /*if (formats.length > col) {
-                    CellStyle style = workbook.styles.get(formats[col]);
-                    if (style != null)
-                        xlCell.setCellStyle(style);
-                }*/
+
+                xlCell.setCellValue(value.getValue());
+                CellStyle style = workbook.styles.get(value.getFormat());
+                if (style != null) {
+                    xlCell.setCellStyle(style);
+                }
+                if (value.getHref() != null) {
+                    Hyperlink link = helper.createHyperlink(Hyperlink.LINK_URL);
+                    link.setAddress(value.getHref());
+                    xlCell.setHyperlink(link);
+                }
             }
         }
     }
