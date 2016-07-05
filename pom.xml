@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.playsql</groupId>
+    <artifactId>pois-service</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <organization>
+        <name>Play SQL</name>
+        <url>http://www.play-sql.com/</url>
+    </organization>
+
+    <name>POIS Service</name>
+    <description>The add-on includes Apache POI to provide import/export services for Excel and Word. It provides no feature to the end-user, but it is used as an API by other add-ons.</description>
+    <packaging>atlassian-plugin</packaging>
+
+    <dependencies>
+
+
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>3.8</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>3.8</version>
+            <scope>compile</scope><!--
+            <exclusions>
+                <exclusion>
+                    <groupId>xml-apis</groupId>
+                    <artifactId>xml-apis</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>dom4j</groupId>
+                    <artifactId>dom4j</artifactId>
+                </exclusion>
+            </exclusions>-->
+        </dependency>
+<!--
+        <dependency>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+            <version>1.0.b2</version>
+            <scope>compile</scope>
+        </dependency>-->
+
+        <dependency>
+            <groupId>com.atlassian.confluence</groupId>
+            <artifactId>confluence</artifactId>
+            <version>${confluence.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>3.12</version>
+            <scope>compile</scope>
+            &lt;!&ndash;<exclusions>
+                <exclusion>
+                    &lt;!&ndash; NO_RELEASE We shouldn't exclude the schemas &ndash;&gt;
+                  <groupId>org.apache.poi</groupId>
+                  <artifactId>poi-ooxml-schemas</artifactId>
+                </exclusion>
+            </exclusions>&ndash;&gt;
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>stax2-api</artifactId>
+            <version>3.1.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>woodstox-core-lgpl</artifactId>
+            <version>4.4.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>woodstox-core-asl</artifactId>
+            <version>4.4.1</version>
+            <scope>compile</scope>
+        </dependency>-->
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>codehaus-mule-repo</id>
+            <name>codehaus-mule-repo</name>
+            <url>https://repository-master.mulesoft.org/nexus/content/groups/public/</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.atlassian.maven.plugins</groupId>
+                <artifactId>maven-amps-plugin</artifactId>
+                <version>6.0.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <upm.pac.disable>true</upm.pac.disable>
+                    </systemPropertyVariables>
+                    <enableFastdev>false</enableFastdev>
+                    <instanceId>confluence</instanceId>
+                    <installPlugin>false</installPlugin>
+                    <cliPort>4338</cliPort>
+                    <httpPort>1990</httpPort>
+                    <contextPath>/confluence</contextPath>
+                    <products>
+                        <product>
+                            <id>confluence</id>
+                            <instanceId>confluence</instanceId>
+                            <version>${confluence.version}</version>
+                            <dataVersion>${confluence.data.version}</dataVersion>
+                            <containerId>tomcat7x</containerId>
+                        </product>
+                    </products>
+                    <instructions>
+                        <Export-Package>
+                            com.playsql.pois.api<!--,
+                            com.microsoft.schemas.office.x2006.digsig,
+                            org.apache.poi*,
+                            org.openxmlformats.schemas.*,
+                            org.w3.x2000.x09.xmldsig,
+                            org.w3.x2000.x09.xmldsig.impl,
+                            schemaorg_apache_xmlbeans.*
+-->
+                        </Export-Package>
+                        <Import-Package>
+                            com.google.common.collect;version="[11,80)"
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin><!--
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>1.8</version>
+                <configuration>
+                    &lt;!&ndash;
+                        You don't need to run the license plugin manually, it is part of the build (see executions).
+                        It retrieves all licenses of all dependencies into src/licenses/THIRD-PARTY-included-modules.txt
+
+                        NB: How to retrieve licenses on a new project:
+                        mvn clean license:download-licenses -Dlicense.includedScopes=compile
+                    &ndash;&gt;
+                    <projectName>Play SQL PageObjects</projectName>
+                    <licenseName>apache_v2</licenseName>
+                    <organizationName>Play SQL S.A.S.U.</organizationName>
+                    <inceptionYear>2015</inceptionYear>
+
+                    &lt;!&ndash; Skips the goal download-licenses &ndash;&gt;
+                    <skipDownloadLicenses>false</skipDownloadLicenses>
+                    &lt;!&ndash; Skips the goal download-licenses &ndash;&gt;
+                    <skipUpdateLicense>false</skipUpdateLicense>
+                    &lt;!&ndash; The license of each module &ndash;&gt;
+                    <licenseFile>${basedir}/src/license/LICENSE.txt</licenseFile>
+                    <useMissingFile>true</useMissingFile>
+                    <sortArtifactByName>true</sortArtifactByName>
+                    &lt;!&ndash; The file with the list of licenses, for those which can't be found automatically &ndash;&gt;
+                    <missingFile>src/license/THIRD-PARTY.properties</missingFile>
+                    &lt;!&ndash; Same as 'missingFile' but in XML, probably &ndash;&gt;
+                    <licensesConfigFile>src/license/licenses-manual.xml</licensesConfigFile>
+                    &lt;!&ndash; All licenses which could automatically be fetched. About the current module only.&ndash;&gt;
+                    <licensesOutputFile>src/license/licenses-generated.xml</licensesOutputFile>
+                    &lt;!&ndash; Dump the text of all licenses of third parties. About the current module only. &ndash;&gt;
+                    <licensesOutputDirectory>src/license/text</licensesOutputDirectory>
+                    &lt;!&ndash; A list of dependencies for the subtree and their licenses &ndash;&gt;
+                    <thirdPartyFilename>THIRD-PARTY-included-modules.txt</thirdPartyFilename>
+                    &lt;!&ndash; Where to put the THIRD-PARTY.txt file &ndash;&gt;
+                    <outputDirectory>${project.basedir}/src/license</outputDirectory>
+                    &lt;!&ndash; In the binary distribution, we exclude libraries which are only compiled against, as long
+                         as they're not GPL. Atlassian Confluence is considered with a developer license. &ndash;&gt;
+                    <includedScopes>compile</includedScopes>
+
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>download-licenses2</id>
+                        &lt;!&ndash; This phase is before 'package' so the license information is included in the binary
+                             distribution. &ndash;&gt;
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>download-licenses</goal>
+                            <goal>update-file-header</goal>
+                            <goal>update-project-license</goal>
+                            <goal>add-third-party</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>-->
+        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/*.properties</exclude>
+                    <exclude>**/*.xml</exclude>
+                </excludes>
+            </resource>
+        </resources>
+    </build>
+
+    <properties>
+        <java.version>1.8</java.version>
+        <upm.license.compatibility.version>2.8.1</upm.license.compatibility.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <allowGoogleTracking>false</allowGoogleTracking>
+        <jira.version>7.0.0</jira.version>
+        <confluence.version>5.8.6</confluence.version>
+        <confluence.data.version>5.8.6</confluence.data.version>
+        <plugin.create.content.version>5.2.1</plugin.create.content.version>
+        <ao.version>0.28.1</ao.version>
+        <amps.version>6.0.8</amps.version>
+        <plugin.testrunner.version>1.2.3</plugin.testrunner.version>
+        <skipTests>false</skipTests>
+
+    </properties>
+
+</project>

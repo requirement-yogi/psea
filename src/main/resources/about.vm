@@ -1,0 +1,26 @@
+<html>
+<head>
+    <title>About the POIS Service add-on</title>
+</head>
+
+<body>
+
+<h1>POIS Service</h1>
+
+<p>This service provides Excel exports for Requirement Yogi and Play SQL.</p>
+
+<h2>License</h2>
+
+<p>The license is visible at </p>
+
+<pre>
+Lists of 6 third-party dependencies.
+     (The Apache Software License, Version 2.0) Commons Codec (commons-codec:commons-codec:1.5 - http://commons.apache.org/codec/)
+     (Unknown license) dom4j (dom4j:dom4j:1.6.1 - http://dom4j.org)
+     (The Apache Software License, Version 2.0) Apache POI (org.apache.poi:poi:3.8 - http://poi.apache.org/)
+     (The Apache Software License, Version 2.0) XmlBeans (org.apache.xmlbeans:xmlbeans:2.3.0 - http://xmlbeans.apache.org)
+     (The Apache Software License, Version 2.0) StAX API (stax:stax-api:1.0.1 - http://stax.codehaus.org/)
+     (The Apache Software License, Version 2.0) XML Commons External Components XML APIs (xml-apis:xml-apis:1.0.b2 - http://xml.apache.org/commons/#external)
+</pre>
+
+</body>

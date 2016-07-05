@@ -1,0 +1,22 @@
+<atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <param name="atlassian-licensing-enabled">false</param>
+        <vendor name="${project.organization.name}" url="${project.organization.url}" />
+
+        <param name="plugin-icon">img/pois-addon-16x.png</param>
+        <param name="plugin-logo">img/pois-addon-72x.png</param>
+
+        <!--<param name="plugin-banner">img/Banner.png</param>-->
+        <param name="vendor-icon">img/vendor-icon.png</param>
+        <param name="vendor-logo">img/vendor-logo.png</param>
+
+        <param name="atlassian-data-center-compatible">true</param>
+    </plugin-info>
+
+    <component key="provider" class="com.playsql.pois.impl.PoisServiceImpl" public="true">
+        <interface>com.playsql.pois.api.PoisService</interface>
+    </component>
+
+</atlassian-plugin>
