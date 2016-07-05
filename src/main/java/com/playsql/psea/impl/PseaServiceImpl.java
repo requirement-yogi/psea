@@ -1,4 +1,4 @@
-package com.playsql.pois.impl;
+package com.playsql.psea.impl;
 
 /*
  * #%L
@@ -20,8 +20,8 @@ package com.playsql.pois.impl;
  * #L%
  */
 
-import com.playsql.pois.api.PoisService;
-import com.playsql.pois.api.WorkbookAPI;
+import com.playsql.psea.api.PseaService;
+import com.playsql.psea.api.WorkbookAPI;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
@@ -29,7 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-public class PoisServiceImpl implements PoisService {
+public class PseaServiceImpl implements PseaService {
     public File export(Consumer<WorkbookAPI> f) {
         XSSFWorkbook xlWorkbook = new XSSFWorkbook();
         WorkbookAPI workbook = new WorkbookAPI(xlWorkbook);

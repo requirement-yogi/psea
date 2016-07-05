@@ -1,4 +1,4 @@
-package com.playsql.pois.api;
+package com.playsql.psea.api;
 
 /*
  * #%L
@@ -22,8 +22,7 @@ package com.playsql.pois.api;
 
 import java.io.File;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
-public interface PoisService {
+public interface PseaService {
     File export(Consumer<WorkbookAPI> f);
 }

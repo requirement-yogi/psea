@@ -1,4 +1,4 @@
-package com.playsql.pois.api;
+package com.playsql.psea.api;
 
 /*
  * #%L

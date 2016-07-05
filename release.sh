@@ -34,8 +34,8 @@ LAST_COMMIT=$(git log -1 --pretty=oneline)
 HAS_MVN=$(echo $LAST_COMMIT | grep "[auto] Set version to" || true)
 HAS_NO_RELEASE=$(grep "NO_RELEASE" -l -RI * | grep -v "/target/" | wc -l)
 
-if [ -d ../target-apache-poi-service ] ; then
-    echo "Please remove the directory ../target-apache-poi-service before releasing."
+if [ -d ../target-psea] ; then
+    echo "Please remove the directory ../target-psea before releasing."
     exit 2
 fi
 
@@ -54,7 +54,7 @@ fi
 if [ -n "$HAS_MVN" ] ; then
     git log HEAD^^^..HEAD --format=oneline
     echo
-    echo "Will reset to previous commit (and remove the tag apache-poi-service-parent-$VER if exists)"
+    echo "Will reset to previous commit (and remove the tag psea-parent-$VER if exists)"
     read -p "Press ENTER"
     git reset --hard HEAD^
 
@@ -64,8 +64,8 @@ if [ -n "$HAS_MVN" ] ; then
         git reset --hard HEAD^
     fi
 
-    git tag -d apache-poi-service-$VER || true
-    git tag -d apache-poi-service-parent-$VER || true
+    git tag -d psea-$VER || true
+    git tag -d psea-parent-$VER || true
 
     echo "Last rev: "
     git log -1 --format=oneline
@@ -79,8 +79,8 @@ read
 
 
 if [ -d target/confluence/home ] ; then
-    echo "Moving ./target to ../target-apache-poi-service"
-    mv ./target ../target-apache-poi-service
+    echo "Moving ./target to ../target-psea"
+    mv ./target ../target-psea
 fi
 
 echo
@@ -90,7 +90,7 @@ echo
 mvn3 versions:set -DgenerateBackupPoms=false -DnewVersion=$VER
 mvn3 clean install
 git commit -am "[auto] Set version to $VER"
-git tag -a apache-poi-service-parent-$VER -m "Release $VER"
+git tag -a psea-parent-$VER -m "Release $VER"
 
 # We don't move the other artifacts to ../releases, since the local maven repo is enough to publish them
 ls target/*.jar
@@ -115,10 +115,10 @@ git push --tags
 echo
 echo
 
-if [ -d ../target-apache-poi-service ] ; then
-    echo "Restoring ../target-apache-poi-service ./target"
+if [ -d ../target-psea ] ; then
+    echo "Restoring ../target-psea ./target"
     rm -rf ./target
-    mv ../target-apache-poi-service ./target
+    mv ../target-psea ./target
     rm ./target/*.jar
 fi
 

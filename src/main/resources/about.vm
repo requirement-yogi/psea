@@ -1,13 +1,13 @@
 <html>
 <head>
-    <title>About the POIS Service add-on</title>
+    <title>About the PSEA add-on</title>
 </head>
 
 <body>
 
-<h1>POIS Service</h1>
+<h1>Play SQL Export Add-on (PSEA)</h1>
 
-<p>This service provides Excel exports for Requirement Yogi and Play SQL.</p>
+<p>This service enables Excel exports in Requirement Yogi and Play SQL.</p>
 
 <h2>License</h2>
 

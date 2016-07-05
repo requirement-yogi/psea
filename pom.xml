@@ -6,7 +6,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.playsql</groupId>
-    <artifactId>pois-service</artifactId>
+    <artifactId>play-sql-export-addon</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <organization>
@@ -14,8 +14,8 @@
         <url>http://www.play-sql.com/</url>
     </organization>
 
-    <name>POIS Service</name>
-    <description>The add-on includes Apache POI to provide import/export services for Excel and Word. It provides no feature to the end-user, but it is used as an API by other add-ons.</description>
+    <name>PSEA - Play SQL Export Add-on</name>
+    <description>The add-on is a technical library that helps Requirement Yogi and Play SQL Spreadsheets exporting to Excel.</description>
     <packaging>atlassian-plugin</packaging>
 
     <dependencies>
@@ -80,7 +80,7 @@
                     </products>
                     <instructions>
                         <Export-Package>
-                            com.playsql.pois.api<!--,
+                            com.playsql.psea.api<!--,
                             com.microsoft.schemas.office.x2006.digsig,
                             org.apache.poi*,
                             org.openxmlformats.schemas.*,
