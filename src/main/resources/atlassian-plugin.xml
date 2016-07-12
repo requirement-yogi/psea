@@ -37,6 +37,7 @@
 
     <resource type="i18n" name="Internationalization" location="com/playsql/psea/i18n" />
 
+    <!-- Don't change this key - it's used by add-ons -->
     <component key="provider" class="com.playsql.psea.impl.PseaServiceImpl" public="true">
         <interface>com.playsql.psea.api.PseaService</interface>
     </component>

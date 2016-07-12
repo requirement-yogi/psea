@@ -21,9 +21,9 @@ package com.playsql.psea.api;
  */
 
 import com.google.common.collect.Maps;
-import org.apache.poi.hssf.usermodel.HSSFHyperlink;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Hyperlink;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.xssf.usermodel.*;
 
 import java.util.List;
@@ -56,6 +56,11 @@ public final class WorkbookAPI {
         XSSFCellStyle STYLE_RED_CELL = workbook.createCellStyle();
         STYLE_RED_CELL.setFont(BOLD_FONT);
         styles.put(Style.RED_CELL, STYLE_RED_CELL);
+
+        XSSFCellStyle STYLE_MIRROR_CELL = workbook.createCellStyle();
+        STYLE_MIRROR_CELL.setFillBackgroundColor(IndexedColors.BLUE_GREY.getIndex());
+        STYLE_MIRROR_CELL.setFillPattern(CellStyle.NO_FILL); // or SOLID_FOREGROUND?
+        styles.put(Style.MIRROR_CELL, STYLE_MIRROR_CELL);
     }
 
     public Sheet newSheet(String name) {
@@ -63,7 +68,9 @@ public final class WorkbookAPI {
     }
 
     public enum Style {
-        TH, WORKBOOK_TITLE, RED_CELL;
+        TH, WORKBOOK_TITLE, RED_CELL,
+        /** The cell in a dependency matrix which is in the diagonal */
+        MIRROR_CELL
     }
 
     public static class Value {
@@ -154,6 +161,10 @@ public final class WorkbookAPI {
                     xlCell.setHyperlink(link);
                 }
             }
+        }
+
+        public void freezePanes(int colSplit, int rowSplit, int leftmostColumn, int topRow) {
+            sheet.createFreezePane(colSplit, rowSplit, leftmostColumn, topRow);
         }
     }
 }
