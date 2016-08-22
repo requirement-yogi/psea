@@ -21,6 +21,7 @@ package com.playsql.psea.api;
  */
 
 import com.google.common.collect.Maps;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -42,6 +43,7 @@ public final class WorkbookAPI {
         XSSFCellStyle STYLE_TH = workbook.createCellStyle();
         STYLE_TH.setFont(BOLD_FONT);
         styles.put(Style.TH, STYLE_TH);
+        styles.put(Style.ID_COLUMN, STYLE_TH);
 
         XSSFFont WORKBOOK_TITLE_FONT = workbook.createFont();
         WORKBOOK_TITLE_FONT.setBold(true);
@@ -67,8 +69,16 @@ public final class WorkbookAPI {
         return new Sheet(this, workbook.createSheet(name));
     }
 
+    public Sheet getSheet(String title) {
+        XSSFSheet sheet = workbook.getSheet(title);
+        if (sheet == null) return null;
+        return new Sheet(this, sheet);
+    }
+
     public enum Style {
-        TH, WORKBOOK_TITLE, RED_CELL,
+        TH, ID_COLUMN,
+        WORKBOOK_TITLE,
+        RED_CELL,
         /** The cell in a dependency matrix which is in the diagonal */
         MIRROR_CELL
     }
@@ -140,6 +150,32 @@ public final class WorkbookAPI {
             }
             return row;
         }
+
+        public void autoSizeHeaders() {
+            XSSFRow row0 = sheet.getRow(0);
+            if (row0 != null) {
+                int col = 0;
+
+                XSSFCell cell;
+                while (null != (cell = row0.getCell(col))) {
+                    String rawValue = cell.getRawValue();
+                    if (StringUtils.isNotBlank(rawValue)) {
+                        sheet.autoSizeColumn(col);
+                        /*final int CHARACTER_WIDTH = 256;
+                        final int MAX_COLUMN_WIDTH = 255 * CHARACTER_WIDTH;
+                        sheet.setColumnWidth(col, Math.min(sheet.getColumnWidth(col) + CHARACTER_WIDTH * 3, MAX_COLUMN_WIDTH));*/
+                    }
+                }
+            }
+        }
+
+        public void setHeightInPoints(int rowNumber, float height) {
+            XSSFRow row = sheet.getRow(rowNumber);
+            if (row != null) {
+                row.setHeightInPoints(height);
+            }
+        }
+
         public class Row {
             private final XSSFRow xlRow;
 
