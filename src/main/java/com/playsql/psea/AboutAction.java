@@ -1,4 +1,4 @@
-package com.playsql.psea.impl;
+package com.playsql.psea;
 
 /*
  * #%L
@@ -20,30 +20,30 @@ package com.playsql.psea.impl;
  * #L%
  */
 
+import com.atlassian.confluence.core.ConfluenceActionSupport;
+import com.google.common.collect.Lists;
 import com.playsql.psea.api.PseaService;
+import com.playsql.psea.api.Sheet;
+import com.playsql.psea.api.Value;
 import com.playsql.psea.api.WorkbookAPI;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.function.Consumer;
 
-public class PseaServiceImpl implements PseaService {
-    public File export(Consumer<WorkbookAPI> f) {
-        XSSFWorkbook xlWorkbook = new XSSFWorkbook();
-        WorkbookAPI workbook = new WorkbookAPIImpl(xlWorkbook);
-        f.accept(workbook);
+public class AboutAction extends ConfluenceActionSupport {
+    public PseaService pseaService;
 
-        try {
-            File file = File.createTempFile("excel-export-", ".xlsx");
-            file.deleteOnExit();
-            FileOutputStream fileOut = new FileOutputStream(file);
-            xlWorkbook.write(fileOut);
-            fileOut.close();
-            return file;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public String doTest() {
+        pseaService.export(new Consumer<WorkbookAPI>() {
+            @Override
+            public void accept(WorkbookAPI workbookAPI) {
+                Sheet sh = workbookAPI.newSheet("lanket");
+                sh.addRow(Lists.newArrayList(new Value("Someval")));
+            }
+        });
+        return SUCCESS;
+    }
+
+    public void setPseaService(PseaService pseaService) {
+        this.pseaService = pseaService;
     }
 }

@@ -22,9 +22,21 @@
 <licenseSummary>
   <dependencies>
     <dependency>
+      <groupId>com.github.virtuald</groupId>
+      <artifactId>curvesapi</artifactId>
+      <version>1.03</version>
+      <licenses>
+        <license>
+          <name>BSD License</name>
+          <url>http://opensource.org/licenses/BSD-3-Clause</url>
+          <distribution>repo</distribution>
+        </license>
+      </licenses>
+    </dependency>
+    <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>1.5</version>
+      <version>1.10</version>
       <licenses>
         <license>
           <name>The Apache Software License, Version 2.0</name>
@@ -34,17 +46,9 @@
       </licenses>
     </dependency>
     <dependency>
-      <groupId>dom4j</groupId>
-      <artifactId>dom4j</artifactId>
-      <version>1.6.1</version>
-      <licenses>
-        <!--No license information available. -->
-      </licenses>
-    </dependency>
-    <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi</artifactId>
-      <version>3.8</version>
+      <version>3.14</version>
       <licenses>
         <license>
           <name>The Apache Software License, Version 2.0</name>
@@ -55,7 +59,7 @@
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-ooxml</artifactId>
-      <version>3.8</version>
+      <version>3.14</version>
       <licenses>
         <license>
           <name>The Apache Software License, Version 2.0</name>
@@ -66,7 +70,7 @@
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-ooxml-schemas</artifactId>
-      <version>3.8</version>
+      <version>3.14</version>
       <licenses>
         <license>
           <name>The Apache Software License, Version 2.0</name>
@@ -77,31 +81,7 @@
     <dependency>
       <groupId>org.apache.xmlbeans</groupId>
       <artifactId>xmlbeans</artifactId>
-      <version>2.3.0</version>
-      <licenses>
-        <license>
-          <name>The Apache Software License, Version 2.0</name>
-          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
-    </dependency>
-    <dependency>
-      <groupId>stax</groupId>
-      <artifactId>stax-api</artifactId>
-      <version>1.0.1</version>
-      <licenses>
-        <license>
-          <name>The Apache Software License, Version 2.0</name>
-          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
-    </dependency>
-    <dependency>
-      <groupId>xml-apis</groupId>
-      <artifactId>xml-apis</artifactId>
-      <version>1.0.b2</version>
+      <version>2.6.0</version>
       <licenses>
         <license>
           <name>The Apache Software License, Version 2.0</name>

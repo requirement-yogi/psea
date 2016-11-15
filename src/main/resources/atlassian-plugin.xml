@@ -45,9 +45,13 @@
     <xwork name="MVC Actions" key="xwork">
         <description>MVC actions for all pages provided by the plugin</description>
         <package name="psea-general" extends="default" namespace="/plugins/${project.groupId}.${project.artifactId}">
-            <action name="about" class="com.atlassian.confluence.core.ConfluenceActionSupport" method="doDefault">
+            <action name="about" class="com.playsql.psea.AboutAction" method="doDefault">
                 <interceptor-ref name="defaultStack" />
                 <result name="input" type="velocity">/about.vm</result>
+            </action>
+            <action name="test" class="com.playsql.psea.AboutAction" method="doTest">
+                <interceptor-ref name="defaultStack" />
+                <result name="success" type="velocity">/about.vm</result>
             </action>
         </package>
     </xwork>

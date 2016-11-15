@@ -1,8 +1,6 @@
 
-Lists of 6 third-party dependencies.
-     (The Apache Software License, Version 2.0) Commons Codec (commons-codec:commons-codec:1.5 - http://commons.apache.org/codec/)
-     (BSD style license, http://dom4j.sourceforge.net/dom4j-1.6.1/license.html) dom4j (dom4j:dom4j:1.6.1 - http://dom4j.org)
-     (The Apache Software License, Version 2.0) Apache POI (org.apache.poi:poi:3.8 - http://poi.apache.org/)
-     (The Apache Software License, Version 2.0) XmlBeans (org.apache.xmlbeans:xmlbeans:2.3.0 - http://xmlbeans.apache.org)
-     (The Apache Software License, Version 2.0) StAX API (stax:stax-api:1.0.1 - http://stax.codehaus.org/)
-     (The Apache Software License, Version 2.0) XML Commons External Components XML APIs (xml-apis:xml-apis:1.0.b2 - http://xml.apache.org/commons/#external)
+Lists of 4 third-party dependencies.
+     (BSD License) curvesapi (com.github.virtuald:curvesapi:1.03 - https://github.com/virtuald/curvesapi)
+     (Apache License, Version 2.0) Apache Commons Codec (commons-codec:commons-codec:1.10 - http://commons.apache.org/proper/commons-codec/)
+     (The Apache Software License, Version 2.0) Apache POI (org.apache.poi:poi:3.14 - http://poi.apache.org/)
+     (The Apache Software License, Version 2.0) XmlBeans (org.apache.xmlbeans:xmlbeans:2.6.0 - http://xmlbeans.apache.org)

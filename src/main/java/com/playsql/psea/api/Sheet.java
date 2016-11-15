@@ -20,16 +20,16 @@ package com.playsql.psea.api;
  * #L%
  */
 
-public interface WorkbookAPI {
-    Sheet newSheet(String name);
+import java.util.List;
 
-    Sheet getSheet(String title);
+public interface Sheet {
+    Row addRow(List<? extends Value> values);
 
-    enum Style {
-        TH, ID_COLUMN,
-        WORKBOOK_TITLE,
-        RED_CELL,
-        /** The cell in a dependency matrix which is in the diagonal */
-        MIRROR_CELL
-    }
+    Row addRow(int position, List<? extends Value> values);
+
+    void autoSizeHeaders();
+
+    void setHeightInPoints(int rowNumber, float height);
+
+    void freezePanes(int colSplit, int rowSplit, int leftmostColumn, int topRow);
 }
