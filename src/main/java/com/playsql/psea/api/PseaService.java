@@ -25,4 +25,5 @@ import java.util.function.Consumer;
 
 public interface PseaService {
     File export(Consumer<WorkbookAPI> f);
+    String getVersion();
 }

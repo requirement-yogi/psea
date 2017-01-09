@@ -30,6 +30,12 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 public class PseaServiceImpl implements PseaService {
+
+    @Override
+    public String getVersion() {
+        return "1.2";
+    }
+
     public File export(Consumer<WorkbookAPI> f) {
         XSSFWorkbook xlWorkbook = new XSSFWorkbook();
         WorkbookAPI workbook = new WorkbookAPIImpl(xlWorkbook);
