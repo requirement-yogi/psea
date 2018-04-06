@@ -32,4 +32,9 @@ public interface Sheet {
     void setHeightInPoints(int rowNumber, float height);
 
     void freezePanes(int colSplit, int rowSplit, int leftmostColumn, int topRow);
+
+    void addMergedRegion(int firstRow, int lastRow, int firstCol, int lastCol);
+
+    int getRowNum();
+    void setRowNum(int rowNum);
 }

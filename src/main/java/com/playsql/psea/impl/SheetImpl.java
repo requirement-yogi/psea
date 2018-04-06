@@ -23,6 +23,7 @@ package com.playsql.psea.impl;
 import com.playsql.psea.api.Row;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -51,7 +52,10 @@ public class SheetImpl implements Sheet {
         XSSFRow xlRow = sheet.createRow(position);
         Row row = new RowImpl(this, xlRow);
         for (int col = 0 ; col < values.size() ; col++) {
-            row.setCell(col, values.get(col));
+            Value value = values.get(col);
+            if (value != null && value.getValue() != null) {
+                row.setCell(col, value);
+            }
         }
         return row;
     }
@@ -87,6 +91,19 @@ public class SheetImpl implements Sheet {
     @Override
     public void freezePanes(int colSplit, int rowSplit, int leftmostColumn, int topRow) {
         sheet.createFreezePane(colSplit, rowSplit, leftmostColumn, topRow);
+    }
+
+    @Override
+    public void addMergedRegion(int firstRow, int lastRow, int firstCol, int lastCol) {
+        sheet.addMergedRegion(new CellRangeAddress(firstRow, lastRow, firstCol, lastCol));
+    }
+
+    public int getRowNum() {
+        return rowNum;
+    }
+
+    public void setRowNum(int rowNum) {
+        this.rowNum = rowNum;
     }
 
     WorkbookAPIImpl getWorkbook() {

@@ -87,8 +87,8 @@ echo
 echo
 echo "Changing version to $VER"
 echo
-mvn3 versions:set -DgenerateBackupPoms=false -DnewVersion=$VER
-mvn3 clean install
+mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$VER
+mvn clean install
 git commit -am "[auto] Set version to $VER"
 git tag -a psea-parent-$VER -m "Release $VER"
 
@@ -102,8 +102,8 @@ echo
 echo
 echo "Changing version to $NEXT_VER"
 echo
-mvn3 versions:set -DgenerateBackupPoms=false -DnewVersion=$NEXT_VER
-mvn3 clean install
+mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$NEXT_VER
+mvn clean install
 git commit -am "[auto] Set version to $NEXT_VER"
 
 echo
