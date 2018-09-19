@@ -20,16 +20,13 @@ package com.playsql.psea.api;
  * #L%
  */
 
-import com.google.gson.JsonElement;
-
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public interface PseaService {
     File export(Consumer<WorkbookAPI> f);
     String getVersion();
-    JsonElement extract(FileInputStream stream, String excelFileName);
-    Workbook extract2(FileInputStream stream, String excelFileName,  Map<String, Object> rowConsumptionInOut, Consumer<Workbook.Row> rowConsumer);
+//    JsonElement extract(FileInputStream stream, String excelFileName);
+    void extract2(FileInputStream stream, String excelFileName, ExcelImportConsumer rowConsumer);
 }

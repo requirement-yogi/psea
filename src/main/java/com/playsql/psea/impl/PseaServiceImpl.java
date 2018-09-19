@@ -21,11 +21,8 @@ package com.playsql.psea.impl;
  */
 
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.playsql.psea.api.PseaService;
+import com.playsql.psea.api.ExcelImportConsumer;
 import com.playsql.psea.api.WorkbookAPI;
 import com.playsql.psea.api.Workbook.*;
 import org.apache.poi.ss.usermodel.*;
@@ -37,7 +34,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -67,139 +63,15 @@ public class PseaServiceImpl implements PseaService {
         }
     }
 
-    public JsonElement extract(FileInputStream stream, String fileName){
-        // null check
-        if (fileName == null || stream == null)
-            return null;
-
-        JsonObject workbook = new JsonObject();
-
-        workbook.addProperty("name",fileName);
-
-        workbook.addProperty("integrationState","PENDING");
-
-        // try reading inputstream
-        try  {
-
-            // metadata on worksheets
-            JsonArray worksheets = new JsonArray();
-
-            // apache poi representation of a .xls excel file
-            Workbook excelWorkbook = WorkbookFactory.create(stream);
-            // iterator on sheets
-            Iterator<Sheet> sheetIterator = excelWorkbook.sheetIterator();
-            // for each sheet
-            while (sheetIterator.hasNext()) {
-
-                Sheet sheet = sheetIterator.next();
-
-                // metadata of the current sheet
-                JsonObject sheetMetadata = new JsonObject();
-
-                // rows of the current sheet
-                JsonArray sheetRowsMetadata = new JsonArray();
-
-                // integration configuration of the current sheet
-                JsonObject sheetIntegrationConfigMetadata = new JsonObject();
-
-                // grouping unit of data present on a sheet, all requirements on the sheet will have this property set
-                sheetIntegrationConfigMetadata.addProperty("category", "");
-
-                // integration configuration maps sheet columns to requirement properties
-                JsonArray columnsMapping = new JsonArray();
-
-                sheetIntegrationConfigMetadata.add("columnsMapping", columnsMapping);
-
-                // iterator on rows in a sheet
-                Iterator<Row> rowIterator = sheet.rowIterator();
-
-                int rowNum = -1;
-                // for each row
-                while (rowIterator.hasNext()) {
-
-                    Row row = rowIterator.next();
-                    rowNum = row.getRowNum();
-
-                    // metadata of the current row
-                    JsonObject rowMetadata = new JsonObject();
-
-                    // cells of the current row
-                    JsonArray rowCellsMetadata = new JsonArray();
-
-
-                    // iterator on cells in a row
-                    Iterator<Cell> cellIterator = row.cellIterator();
-                    // loop on cells
-                    int colNum = -1;
-                    // for each cell
-                    while (cellIterator.hasNext()) {
-
-                        Cell cell = cellIterator.next();
-                        colNum = cell.getColumnIndex();
-
-                        // if on the first row
-                        if (rowNum == 0) {
-                            JsonObject columnMapping = new JsonObject();
-                            columnMapping.addProperty("index",colNum);
-                            columnMapping.addProperty("mapping","");
-                            columnsMapping.add(columnMapping);
-                        }
-
-                        Object cellValue = null;
-                        switch (cell.getCellType()) {
-                            case Cell.CELL_TYPE_NUMERIC:
-                                cellValue = cell.getNumericCellValue();
-                                break;
-                            case Cell.CELL_TYPE_STRING:
-                                cellValue = cell.getStringCellValue();
-                                break;
-                        }
-                        //adding cell Metadata to list
-                        JsonObject workbookCell = new JsonObject();
-                        workbookCell.addProperty("index", colNum);
-                        workbookCell.addProperty("value", cellValue == null ? "" : cellValue.toString());
-                        rowCellsMetadata.add(workbookCell);
-
-                    }
-
-                    //store the row number
-                    rowMetadata.addProperty("rowNum", rowNum);
-
-                    //store the cells
-                    rowMetadata.add("cells",rowCellsMetadata);
-
-                    //adding row Metadata to list
-                    sheetRowsMetadata.add(rowMetadata);
-                }
-
-                // store the name of the current sheet
-                sheetMetadata.addProperty("name", sheet.getSheetName());
-                // store the rows
-                sheetMetadata.add("rows", sheetRowsMetadata);
-                // store the integration configuration
-                sheetMetadata.add("integrationConfig", sheetIntegrationConfigMetadata);
-
-                //adding sheet Metadata to list
-                worksheets.add(sheetMetadata);
-            }
-            workbook.add("worksheets", worksheets);
-
-
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("An error occured when trying to parse the provided file", ex);
-        }
-
-        return workbook;
-    }
-
-
-    public com.playsql.psea.api.Workbook extract2(FileInputStream stream, String fileName, Map<String, Object> rowConsumptionInOut, Consumer<com.playsql.psea.api.Workbook.Row> rowConsumer){
+    public void extract2(FileInputStream stream, String fileName, ExcelImportConsumer rowConsumer){
 
         // null check
         if (fileName == null || stream == null)
-            return null;
+            return;
 
-        com.playsql.psea.api.Workbook workbook = new  com.playsql.psea.api.Workbook();
+//        com.playsql.psea.api.Workbook workbook = new  com.playsql.psea.api.Workbook();
+
+        com.playsql.psea.api.Workbook workbook = rowConsumer.getOutput();
 
         workbook.setName(fileName);
 
@@ -211,6 +83,9 @@ public class PseaServiceImpl implements PseaService {
             // metadata on worksheets
 //            JsonArray worksheets = new JsonArray();
             List<Worksheet> worksheets = Lists.newArrayList();
+
+            //            workbook.add("worksheets", worksheets);
+            workbook.setWorksheets(worksheets);
             // apache poi representation of a .xls excel file
             Workbook excelWorkbook = WorkbookFactory.create(stream);
             // iterator on sheets
@@ -224,22 +99,17 @@ public class PseaServiceImpl implements PseaService {
 //                JsonObject sheetMetadata = new JsonObject();
                 com.playsql.psea.api.Workbook.Worksheet sheetMetadata = new Worksheet();
 
-                // rows of the current sheet
-//                JsonArray sheetRowsMetadata = null;
-                List<com.playsql.psea.api.Workbook.Row> sheetRowsMetadata = null;
+                //adding sheet Metadata to list
+                worksheets.add(sheetMetadata);
 
                 // max rows to be processed
                 Integer maxRows = null;
 
                 // TODO pprocessing data from outside
                 // buffer object to store rows temporarily
+                Map<String, Object> rowConsumptionInOut = rowConsumer.getRowConsumptionInOut();
                 if(rowConsumptionInOut != null){
-                    Object rowContainer = rowConsumptionInOut.get("sheetRowsMetadata");
-                    if(rowContainer != null) {
-//                        sheetRowsMetadata = (JsonArray)rowContainer;
-                        sheetRowsMetadata = (ArrayList<com.playsql.psea.api.Workbook.Row>) rowContainer;
-                        sheetRowsMetadata.clear();
-                    }
+
                     Object maxRowsObject = rowConsumptionInOut.get("max");
                     if(maxRowsObject != null){
                         maxRows = (Integer)maxRowsObject;
@@ -247,8 +117,7 @@ public class PseaServiceImpl implements PseaService {
 
                 }
 
-
-
+                //
                 // integration configuration of the current sheet
 //                JsonObject sheetIntegrationConfigMetadata = new JsonObject();
                 IntegrationConfig sheetIntegrationConfigMetadata = new IntegrationConfig();
@@ -280,7 +149,7 @@ public class PseaServiceImpl implements PseaService {
                     // TODO
                     // if the current row need to be skipped
                     if(maxRows != null && rowNum >= maxRows){
-                    // skippingall rows with  index is greater maxRows
+                    // skipping all rows with  index is greater maxRows
                         rowIterator.forEachRemaining(skippedRow -> {});
                         continue;
                     }
@@ -333,7 +202,6 @@ public class PseaServiceImpl implements PseaService {
 
                     }
 
-
                     //store the row number
 //                    rowMetadata.addProperty("rowNum", rowNum);
                     rowMetadata.setRowNum(rowNum);
@@ -350,26 +218,17 @@ public class PseaServiceImpl implements PseaService {
                 // store the name of the current sheet
 //                sheetMetadata.addProperty("name", sheet.getSheetName());
                 sheetMetadata.setName(sheet.getSheetName());
-                // store the rows
-                if(sheetRowsMetadata!=null)
-//                    sheetMetadata.add("rows", sheetRowsMetadata);
-                    sheetMetadata.getRows().addAll(sheetRowsMetadata);
 
                 // store the integration configuration
 //                sheetMetadata.add("integrationConfig", sheetIntegrationConfigMetadata);
                 sheetMetadata.setIntegrationConfig(sheetIntegrationConfigMetadata);
 
-                //adding sheet Metadata to list
-                worksheets.add(sheetMetadata);
             }
-//            workbook.add("worksheets", worksheets);
-            workbook.setWorksheets(worksheets);
+
 
 
         } catch (Exception ex) {
             throw new IllegalArgumentException("An error occured when trying to parse the provided file", ex);
         }
-
-        return workbook;
     }
 }
