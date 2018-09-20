@@ -20,8 +20,6 @@ package com.playsql.psea.api;
  * #L%
  */
 
-
-
 import com.google.common.collect.Lists;
 
 import javax.xml.bind.annotation.XmlTransient;

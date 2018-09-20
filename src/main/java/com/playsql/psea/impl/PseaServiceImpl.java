@@ -65,13 +65,19 @@ public class PseaServiceImpl implements PseaService {
 
     public void extract2(FileInputStream stream, String fileName, ExcelImportConsumer rowConsumer){
 
-        // null check
+        // no data to parse
         if (fileName == null || stream == null)
             return;
 
 //        com.playsql.psea.api.Workbook workbook = new  com.playsql.psea.api.Workbook();
 
-        com.playsql.psea.api.Workbook workbook = rowConsumer.getOutput();
+        com.playsql.psea.api.Workbook workbook = rowConsumer.getOptionalOutput();
+
+        if (workbook == null){
+            return;
+        }
+
+
 
         workbook.setName(fileName);
 
@@ -211,7 +217,7 @@ public class PseaServiceImpl implements PseaService {
                     rowMetadata.setCells(rowCellsMetadata);
 
                     // how to process rows and store their data
-                    rowConsumer.accept(rowMetadata);
+                    rowConsumer.consumeRow(rowMetadata);
 
                 }
 
