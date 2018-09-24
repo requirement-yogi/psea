@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * A class to store metadata from Excel Workbook
  */
-public class Workbook {
+public final class Workbook {
 
     /**
      * original excel file name

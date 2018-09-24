@@ -69,22 +69,20 @@ public class PseaServiceImpl implements PseaService {
         if (fileName == null || stream == null)
             return;
 
-//        com.playsql.psea.api.Workbook workbook = new  com.playsql.psea.api.Workbook();
-
         com.playsql.psea.api.Workbook workbook = rowConsumer.getOptionalOutput();
 
-        if (workbook == null){
-            return;
-        }
-
-
-
-        workbook.setName(fileName);
-
-        workbook.setIntegrationState(IntegrationState.PENDING);
 
         // try reading inputstream
         try  {
+
+            // TODO implement processing when optional output is not ptovided
+            if (workbook == null){
+                return;
+            }
+
+            workbook.setName(fileName);
+
+            workbook.setIntegrationState(IntegrationState.PENDING);
 
             // metadata on worksheets
 //            JsonArray worksheets = new JsonArray();
@@ -111,7 +109,7 @@ public class PseaServiceImpl implements PseaService {
                 // max rows to be processed
                 Integer maxRows = null;
 
-                // TODO pprocessing data from outside
+                // TODO processing data from outside
                 // buffer object to store rows temporarily
                 Map<String, Object> rowConsumptionInOut = rowConsumer.getRowConsumptionInOut();
                 if(rowConsumptionInOut != null){

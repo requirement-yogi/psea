@@ -25,7 +25,7 @@ package com.playsql.psea.api;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class ExcelImportConsumer {
+public final class ExcelImportConsumer {
 
     protected Workbook optionalOutput;
     protected Map<String, Object> rowConsumptionInOut;
