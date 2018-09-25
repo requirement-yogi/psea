@@ -101,7 +101,7 @@ public final class Workbook {
     public static class Worksheet {
 
         @XmlTransient
-        private Workbook workbook;
+        private transient Workbook workbook;
         /**
          * sheet name
          */
@@ -187,7 +187,7 @@ public final class Workbook {
     public static class Row {
 
         @XmlTransient
-        private Worksheet worksheet;
+        private transient Worksheet worksheet;
 
         /**
          *
@@ -230,12 +230,12 @@ public final class Workbook {
         /**
          *
          */
-        public Integer index;
+        private Integer index;
 
         /**
          *
          */
-        public String value;
+        private String value;
         /**
          * default constructor
          */
@@ -272,14 +272,19 @@ public final class Workbook {
         public static final String REQUIREMENT_PROPERTY = "PROPERTY";
 
         /**
-         * the name of a requirement field or a  "standalone" property
+         * a key designing the name of a requirement field or a "standalone" property
          */
-        public String mapping;
+        private String mappingKey;
+
+        /**
+         * the value of the mapping in case of a mapping to a "standalone" property
+         */
+        private String mappingValue;
 
         /**
          *
          */
-        public Integer index;
+        private Integer index;
 
         /**
          * default constructor
@@ -287,9 +292,10 @@ public final class Workbook {
         public ColumnMapping(){
         }
 
-        public ColumnMapping(Integer index, String mapping) {
+        public ColumnMapping(Integer index, String mappingKey, String mappingValue) {
             this.index = index;
-            this.mapping = mapping;
+            this.mappingKey = mappingKey;
+            this.mappingValue = mappingValue;
         }
 
         public Integer getIndex() {
@@ -300,12 +306,20 @@ public final class Workbook {
             this.index = index;
         }
 
-        public String getMapping() {
-            return mapping;
+        public String getMappingKey() {
+            return mappingKey;
         }
 
-        public void setMapping(String mapping) {
-            this.mapping = mapping;
+        public void setMappingKey(String mappingKey) {
+            this.mappingKey = mappingKey;
+        }
+
+        public String getMappingValue() {
+            return mappingValue;
+        }
+
+        public void setMappingValue(String mappingValue) {
+            this.mappingValue = mappingValue;
         }
     }
 

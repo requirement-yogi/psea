@@ -76,19 +76,17 @@ public class PseaServiceImpl implements PseaService {
         try  {
 
             // TODO implement processing when optional output is not ptovided
-            if (workbook == null){
-                return;
-            }
+//            if (workbook == null){
+//                return;
+//            }
 
             workbook.setName(fileName);
 
             workbook.setIntegrationState(IntegrationState.PENDING);
 
             // metadata on worksheets
-//            JsonArray worksheets = new JsonArray();
             List<Worksheet> worksheets = Lists.newArrayList();
 
-            //            workbook.add("worksheets", worksheets);
             workbook.setWorksheets(worksheets);
             // apache poi representation of a .xls excel file
             Workbook excelWorkbook = WorkbookFactory.create(stream);
@@ -100,8 +98,15 @@ public class PseaServiceImpl implements PseaService {
                 Sheet sheet = sheetIterator.next();
 
                 // metadata of the current sheet
-//                JsonObject sheetMetadata = new JsonObject();
                 com.playsql.psea.api.Workbook.Worksheet sheetMetadata = new Worksheet();
+
+                // store the name of the current sheet
+                sheetMetadata.setName(sheet.getSheetName());
+
+
+                // store the integration configuration
+                sheetMetadata.setIntegrationConfig(new IntegrationConfig());
+
 
                 //adding sheet Metadata to list
                 worksheets.add(sheetMetadata);
@@ -121,27 +126,21 @@ public class PseaServiceImpl implements PseaService {
 
                 }
 
-                //
                 // integration configuration of the current sheet
-//                JsonObject sheetIntegrationConfigMetadata = new JsonObject();
-                IntegrationConfig sheetIntegrationConfigMetadata = new IntegrationConfig();
+                IntegrationConfig sheetIntegrationConfigMetadata = sheetMetadata.getIntegrationConfig();
 
                 // grouping unit of data present on a sheet, all requirements on the sheet will have this property set
-//                sheetIntegrationConfigMetadata.addProperty("category", "");
                 sheetIntegrationConfigMetadata.setCategory("");
 
                 // integration configuration maps sheet columns to requirement properties
-//                JsonArray columnsMapping = new JsonArray();
                 List<ColumnMapping> columnsMapping =  Lists.newArrayList();
 
-//                sheetIntegrationConfigMetadata.add("columnsMapping", columnsMapping);
                 sheetIntegrationConfigMetadata.setColumnsMapping(columnsMapping);
 
                 // iterator on rows in a sheet
                 Iterator<Row> rowIterator = sheet.rowIterator();
 
                 int rowNum = -1;
-
 
 
                 // for each row
@@ -162,6 +161,8 @@ public class PseaServiceImpl implements PseaService {
                     // metadata of the current row
 //                    JsonObject rowMetadata = new JsonObject();
                     com.playsql.psea.api.Workbook.Row rowMetadata = new com.playsql.psea.api.Workbook.Row();
+                    //
+                    rowMetadata.setSheet(sheetMetadata);
 
                     // cells of the current row
 //                    JsonArray rowCellsMetadata = new JsonArray();
@@ -183,7 +184,7 @@ public class PseaServiceImpl implements PseaService {
                            /* JsonObject columnMapping = new JsonObject();
                             columnMapping.addProperty("index",colNum);
                             columnMapping.addProperty("mapping","");*/
-                            ColumnMapping columnMapping = new ColumnMapping(colNum, "");
+                            ColumnMapping columnMapping = new ColumnMapping(colNum, "", "");
 
                             columnsMapping.add(columnMapping);
                         }
@@ -198,39 +199,22 @@ public class PseaServiceImpl implements PseaService {
                                 break;
                         }
                         //adding cell Metadata to list
-                       /* JsonObject workbookCell = new JsonObject();
-                        workbookCell.addProperty("index", colNum);
-                        workbookCell.addProperty("value", cellValue == null ? "" : cellValue.toString());*/
                         com.playsql.psea.api.Workbook.Cell workbookCell = new com.playsql.psea.api.Workbook.Cell(colNum,cellValue == null ? "" : cellValue.toString());
                         rowCellsMetadata.add(workbookCell);
 
                     }
 
                     //store the row number
-//                    rowMetadata.addProperty("rowNum", rowNum);
                     rowMetadata.setRowNum(rowNum);
 
                     //store the cells
-//                    rowMetadata.add("cells", rowCellsMetadata);
                     rowMetadata.setCells(rowCellsMetadata);
 
                     // how to process rows and store their data
                     rowConsumer.consumeRow(rowMetadata);
 
                 }
-
-                // store the name of the current sheet
-//                sheetMetadata.addProperty("name", sheet.getSheetName());
-                sheetMetadata.setName(sheet.getSheetName());
-
-                // store the integration configuration
-//                sheetMetadata.add("integrationConfig", sheetIntegrationConfigMetadata);
-                sheetMetadata.setIntegrationConfig(sheetIntegrationConfigMetadata);
-
             }
-
-
-
         } catch (Exception ex) {
             throw new IllegalArgumentException("An error occured when trying to parse the provided file", ex);
         }
