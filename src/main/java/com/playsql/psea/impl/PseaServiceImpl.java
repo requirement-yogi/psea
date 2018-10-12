@@ -21,19 +21,16 @@ package com.playsql.psea.impl;
  */
 
 import com.google.common.collect.Lists;
-import com.playsql.psea.api.PseaService;
-import com.playsql.psea.api.ExcelImportConsumer;
-import com.playsql.psea.api.WorkbookAPI;
-import com.playsql.psea.api.Workbook.*;
+import com.playsql.psea.api.*;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -63,31 +60,17 @@ public class PseaServiceImpl implements PseaService {
         }
     }
 
-    public void extract2(FileInputStream stream, String fileName, ExcelImportConsumer rowConsumer){
+    public void extract(InputStream stream, String fileName, ExcelImportConsumer rowConsumer){
 
         // no data to parse
         if (fileName == null || stream == null)
             return;
 
-        com.playsql.psea.api.Workbook workbook = rowConsumer.getOptionalOutput();
-
-
         // try reading inputstream
         try  {
 
-            // TODO implement processing when optional output is not ptovided
-//            if (workbook == null){
-//                return;
-//            }
+            ImportableWorkbookAPI workbook = () -> fileName;
 
-            workbook.setName(fileName);
-
-            workbook.setIntegrationState(IntegrationState.PENDING);
-
-            // metadata on worksheets
-            List<Worksheet> worksheets = Lists.newArrayList();
-
-            workbook.setWorksheets(worksheets);
             // apache poi representation of a .xls excel file
             Workbook excelWorkbook = WorkbookFactory.create(stream);
             // iterator on sheets
@@ -98,23 +81,23 @@ public class PseaServiceImpl implements PseaService {
                 Sheet sheet = sheetIterator.next();
 
                 // metadata of the current sheet
-                com.playsql.psea.api.Workbook.Worksheet sheetMetadata = new Worksheet();
+                ImportableSheet sheetMetadata = new ImportableSheet() {
+                    @Override
+                    public ImportableWorkbookAPI getWorkbookAPI() {
+                        // store workbook definition
+                        return workbook;
+                    }
 
-                // store the name of the current sheet
-                sheetMetadata.setName(sheet.getSheetName());
-
-
-                // store the integration configuration
-                sheetMetadata.setIntegrationConfig(new IntegrationConfig());
-
-
-                //adding sheet Metadata to list
-                worksheets.add(sheetMetadata);
+                    @Override
+                    public String getName() {
+                        // store the name of the current sheet
+                        return sheet.getSheetName();
+                    }
+                };
 
                 // max rows to be processed
                 Integer maxRows = null;
 
-                // TODO processing data from outside
                 // buffer object to store rows temporarily
                 Map<String, Object> rowConsumptionInOut = rowConsumer.getRowConsumptionInOut();
                 if(rowConsumptionInOut != null){
@@ -126,70 +109,54 @@ public class PseaServiceImpl implements PseaService {
 
                 }
 
-                // integration configuration of the current sheet
-                IntegrationConfig sheetIntegrationConfigMetadata = sheetMetadata.getIntegrationConfig();
-
-                // grouping unit of data present on a sheet, all requirements on the sheet will have this property set
-                sheetIntegrationConfigMetadata.setCategory("");
-
-                // integration configuration maps sheet columns to requirement properties
-                List<ColumnMapping> columnsMapping =  Lists.newArrayList();
-
-                sheetIntegrationConfigMetadata.setColumnsMapping(columnsMapping);
-
                 // iterator on rows in a sheet
-                Iterator<Row> rowIterator = sheet.rowIterator();
-
-                int rowNum = -1;
-
+                Iterator<org.apache.poi.ss.usermodel.Row> rowIterator = sheet.rowIterator();
 
                 // for each row
                 while (rowIterator.hasNext()) {
 
                     Row row = rowIterator.next();
-                    rowNum = row.getRowNum();
+                    final  Integer rowNum = row.getRowNum();
 
                     // TODO
                     // if the current row need to be skipped
                     if(maxRows != null && rowNum >= maxRows){
-                    // skipping all rows with  index is greater maxRows
+                        // skipping all rows with  index is greater maxRows
                         rowIterator.forEachRemaining(skippedRow -> {});
                         continue;
                     }
 
+                    // cells of the current row
+                    List<ImportableCell> rowCellsMetadata = Lists.newArrayList();
 
                     // metadata of the current row
-//                    JsonObject rowMetadata = new JsonObject();
-                    com.playsql.psea.api.Workbook.Row rowMetadata = new com.playsql.psea.api.Workbook.Row();
-                    //
-                    rowMetadata.setSheet(sheetMetadata);
+                    ImportableRow rowMetadata = new ImportableRow() {
+                        @Override
+                        public ImportableSheet getSheet() {
+                            return sheetMetadata;
+                        }
 
-                    // cells of the current row
-//                    JsonArray rowCellsMetadata = new JsonArray();
-                    List<com.playsql.psea.api.Workbook.Cell> rowCellsMetadata = Lists.newArrayList();
+                        @Override
+                        public List<ImportableCell> getCells() {
+                            return rowCellsMetadata;
+                        }
 
+                        @Override
+                        public Integer getRowNum() {
+                            return rowNum;
+                        }
+                    };
 
                     // iterator on cells in a row
                     Iterator<Cell> cellIterator = row.cellIterator();
-                    // loop on cells
-                    int colNum = -1;
+
                     // for each cell
                     while (cellIterator.hasNext()) {
 
                         Cell cell = cellIterator.next();
-                        colNum = cell.getColumnIndex();
+                        final Integer colNum = cell.getColumnIndex();
 
-                        // if on the first row
-                        if (rowNum == 0) {
-                           /* JsonObject columnMapping = new JsonObject();
-                            columnMapping.addProperty("index",colNum);
-                            columnMapping.addProperty("mapping","");*/
-                            ColumnMapping columnMapping = new ColumnMapping(colNum, "", "");
-
-                            columnsMapping.add(columnMapping);
-                        }
-
-                        Object cellValue = null;
+                        final Object cellValue;
                         switch (cell.getCellType()) {
                             case Cell.CELL_TYPE_NUMERIC:
                                 cellValue = cell.getNumericCellValue();
@@ -197,18 +164,25 @@ public class PseaServiceImpl implements PseaService {
                             case Cell.CELL_TYPE_STRING:
                                 cellValue = cell.getStringCellValue();
                                 break;
+                            default:
+                                cellValue = null;
+                                break;
                         }
                         //adding cell Metadata to list
-                        com.playsql.psea.api.Workbook.Cell workbookCell = new com.playsql.psea.api.Workbook.Cell(colNum,cellValue == null ? "" : cellValue.toString());
+                        ImportableCell workbookCell = new ImportableCell() {
+                            @Override
+                            public Integer getIndex() {
+                                return cell.getColumnIndex();
+                            }
+
+                            @Override
+                            public String getValue() {
+                                return cellValue == null ? "" : cellValue.toString();
+                            }
+                        };
                         rowCellsMetadata.add(workbookCell);
 
                     }
-
-                    //store the row number
-                    rowMetadata.setRowNum(rowNum);
-
-                    //store the cells
-                    rowMetadata.setCells(rowCellsMetadata);
 
                     // how to process rows and store their data
                     rowConsumer.consumeRow(rowMetadata);

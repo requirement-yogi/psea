@@ -27,22 +27,14 @@ import java.util.function.Consumer;
 
 public final class ExcelImportConsumer {
 
-    protected Workbook optionalOutput;
     protected Map<String, Object> rowConsumptionInOut;
-    protected Consumer<Workbook.Row> rowConsumer;
+    protected Consumer<ImportableRow> rowConsumer;
 
     public ExcelImportConsumer() {
     }
 
-    public ExcelImportConsumer(Consumer<Workbook.Row> rowConsumer) {
+    public ExcelImportConsumer(Consumer<ImportableRow> rowConsumer) {
         this.rowConsumer = rowConsumer;
-    }
-
-    public Workbook getOptionalOutput() {
-        return optionalOutput;
-    }
-    public void setOptionalOutput(Workbook optionalOutput) {
-        this.optionalOutput = optionalOutput;
     }
 
     public Map<String, Object> getRowConsumptionInOut() {
@@ -53,16 +45,12 @@ public final class ExcelImportConsumer {
         this.rowConsumptionInOut = rowConsumptionInOut;
     }
 
-    public void consumeRow(Workbook.Row row) {
+    public void consumeRow(ImportableRow row) {
         if (rowConsumer != null)
             rowConsumer.accept(row);
     }
 
-    public Consumer<Workbook.Row> getRowConsumer() {
-        return rowConsumer;
-    }
-
-    public void setRowConsumer(Consumer<Workbook.Row> rowConsumer) {
+    public void setRowConsumer(Consumer<ImportableRow> rowConsumer) {
         this.rowConsumer = rowConsumer;
     }
 }
