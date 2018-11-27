@@ -22,6 +22,7 @@ package com.playsql.psea.impl;
 
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.*;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -66,6 +67,31 @@ public class PseaServiceImpl implements PseaService {
         if (fileName == null || stream == null)
             return;
 
+        // max rows to be processed per sheet
+        Integer maxRows = null;
+
+        // names of the sheets to skip
+        String[] inactiveSheets = null;
+
+
+        // buffer object to store rows temporarily
+        Map<String, Object> rowConsumptionInOut = rowConsumer.getRowConsumptionInOut();
+        if(rowConsumptionInOut != null){
+
+            // max
+            Object maxRowsObject = rowConsumptionInOut.get("max");
+            if(maxRowsObject != null){
+                maxRows = (Integer)maxRowsObject;
+            }
+
+            // inactiveSheets
+            Object inactiveSheetsObject = rowConsumptionInOut.get("inactiveSheets");
+            if(inactiveSheetsObject != null){
+                inactiveSheets = (String[])inactiveSheetsObject;
+            }
+
+        }
+
         // try reading inputstream
         try  {
 
@@ -79,6 +105,11 @@ public class PseaServiceImpl implements PseaService {
             while (sheetIterator.hasNext()) {
 
                 Sheet sheet = sheetIterator.next();
+                String sheetName = sheet.getSheetName();
+
+                // if the current sheet need to be skipped
+                if(inactiveSheets != null && Lists.newArrayList(inactiveSheets).contains(sheetName))
+                    continue;
 
                 // metadata of the current sheet
                 ImportableSheet sheetMetadata = new ImportableSheet() {
@@ -91,23 +122,9 @@ public class PseaServiceImpl implements PseaService {
                     @Override
                     public String getName() {
                         // store the name of the current sheet
-                        return sheet.getSheetName();
+                        return sheetName;
                     }
                 };
-
-                // max rows to be processed
-                Integer maxRows = null;
-
-                // buffer object to store rows temporarily
-                Map<String, Object> rowConsumptionInOut = rowConsumer.getRowConsumptionInOut();
-                if(rowConsumptionInOut != null){
-
-                    Object maxRowsObject = rowConsumptionInOut.get("max");
-                    if(maxRowsObject != null){
-                        maxRows = (Integer)maxRowsObject;
-                    }
-
-                }
 
                 // iterator on rows in a sheet
                 Iterator<org.apache.poi.ss.usermodel.Row> rowIterator = sheet.rowIterator();
@@ -118,7 +135,6 @@ public class PseaServiceImpl implements PseaService {
                     Row row = rowIterator.next();
                     final  Integer rowNum = row.getRowNum();
 
-                    // TODO
                     // if the current row need to be skipped
                     if(maxRows != null && rowNum >= maxRows){
                         // skipping all rows with  index is greater maxRows
