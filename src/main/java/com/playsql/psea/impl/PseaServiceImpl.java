@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -67,11 +68,19 @@ public class PseaServiceImpl implements PseaService {
         if (fileName == null || stream == null)
             return;
 
+        // first row skipping strategy
         // max rows to be processed per sheet
         Integer maxRows = null;
 
+        // second row skipping strategy (priority on max)
+        // variables
+        Object[] focusedElements;
+        Integer focusedRow = null;
+        String focusedSheet = null;
+
         // names of the sheets to skip
         String[] inactiveSheets = null;
+
 
 
         // buffer object to store rows temporarily
@@ -90,6 +99,13 @@ public class PseaServiceImpl implements PseaService {
                 inactiveSheets = (String[])inactiveSheetsObject;
             }
 
+            // row and sheet got focused on
+            Object focusedElementsObject = rowConsumptionInOut.get("focusedElements");
+            if(focusedElementsObject != null){
+                focusedElements = (Object[])focusedElementsObject;
+                focusedSheet = (String)focusedElements[0];
+                focusedRow = (Integer)focusedElements[1];
+            }
         }
 
         // try reading inputstream
@@ -129,17 +145,36 @@ public class PseaServiceImpl implements PseaService {
                 // iterator on rows in a sheet
                 Iterator<org.apache.poi.ss.usermodel.Row> rowIterator = sheet.rowIterator();
 
+                int rowCount = 0;
                 // for each row
                 while (rowIterator.hasNext()) {
+                    //increment rowCount
+                    rowCount ++;
 
                     Row row = rowIterator.next();
-                    final  Integer rowNum = row.getRowNum();
+                    final  int rowNum = row.getRowNum();
 
-                    // if the current row need to be skipped
-                    if(maxRows != null && rowNum >= maxRows){
-                        // skipping all rows with  index is greater maxRows
-                        rowIterator.forEachRemaining(skippedRow -> {});
-                        continue;
+                    // default row skipping strategy on current sheet
+                    if(!sheetName.equals(focusedSheet)) {
+                        // if the current row need to be skipped
+                        if (maxRows != null && rowCount > maxRows) {
+                            // skipping all rows with  index is greater maxRows
+                            rowIterator.forEachRemaining(skippedRow -> {
+                            });
+                            continue;
+                        }
+                    }
+                    // The current sheet is the focused one
+                    // focusedElements" row skipping strategy
+                    else if(focusedSheet != null && focusedRow != null){
+
+//                        // only process the focused row and the first read row (Apache POI skips empty rows when iterating over them)
+//                        if(rowNum != focusedRow && rowCount != 0)
+                        // array containing index of rows to keep
+                        int[] keepRows = new int[]{0, focusedRow-1, focusedRow,  focusedRow+1};
+                        // if a row don't have its index in the array, skip it
+                        if(Arrays.stream(keepRows).filter(r -> r == rowNum ).count() == 0)
+                            continue;
                     }
 
                     // cells of the current row
