@@ -22,7 +22,6 @@ package com.playsql.psea.impl;
 
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.*;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -84,23 +83,23 @@ public class PseaServiceImpl implements PseaService {
 
 
         // buffer object to store rows temporarily
-        Map<String, Object> rowConsumptionInOut = rowConsumer.getRowConsumptionInOut();
-        if(rowConsumptionInOut != null){
+        Map<String, Object> parseConfiguration = rowConsumer.getParseConfiguration();
+        if(parseConfiguration != null){
 
             // max
-            Object maxRowsObject = rowConsumptionInOut.get("max");
+            Object maxRowsObject = parseConfiguration.get("max");
             if(maxRowsObject != null){
                 maxRows = (Integer)maxRowsObject;
             }
 
             // inactiveSheets
-            Object inactiveSheetsObject = rowConsumptionInOut.get("inactiveSheets");
+            Object inactiveSheetsObject = parseConfiguration.get("inactiveSheets");
             if(inactiveSheetsObject != null){
                 inactiveSheets = (String[])inactiveSheetsObject;
             }
 
             // row and sheet got focused on
-            Object focusedElementsObject = rowConsumptionInOut.get("focusedElements");
+            Object focusedElementsObject = parseConfiguration.get("focusedElements");
             if(focusedElementsObject != null){
                 focusedElements = (Object[])focusedElementsObject;
                 focusedSheet = (String)focusedElements[0];

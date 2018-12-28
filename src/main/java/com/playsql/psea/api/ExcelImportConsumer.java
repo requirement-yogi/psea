@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 
 public final class ExcelImportConsumer {
 
-    protected Map<String, Object> rowConsumptionInOut;
+    protected Map<String, Object> parseConfiguration;
     protected Consumer<ImportableRow> rowConsumer;
 
     public ExcelImportConsumer() {
@@ -37,12 +37,12 @@ public final class ExcelImportConsumer {
         this.rowConsumer = rowConsumer;
     }
 
-    public Map<String, Object> getRowConsumptionInOut() {
-        return rowConsumptionInOut;
+    public Map<String, Object> getParseConfiguration() {
+        return parseConfiguration;
     }
 
-    public void setRowConsumptionInOut(Map<String, Object> rowConsumptionInOut) {
-        this.rowConsumptionInOut = rowConsumptionInOut;
+    public void setParseConfiguration(Map<String, Object> parseConfiguration) {
+        this.parseConfiguration = parseConfiguration;
     }
 
     public void consumeRow(ImportableRow row) {
