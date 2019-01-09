@@ -25,7 +25,8 @@ import java.io.InputStream;
 import java.util.function.Consumer;
 
 public interface PseaService {
+
     File export(Consumer<WorkbookAPI> f);
-    String getVersion();
+
     void extract(InputStream stream, String excelFileName, ExcelImportConsumer rowConsumer);
 }

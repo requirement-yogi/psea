@@ -37,12 +37,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class PseaServiceImpl implements PseaService {
+import static com.google.common.base.Preconditions.checkNotNull;
 
-    @Override
-    public String getVersion() {
-        return "1.2";
-    }
+public class PseaServiceImpl implements PseaService {
 
     public File export(Consumer<WorkbookAPI> f) {
         XSSFWorkbook xlWorkbook = new XSSFWorkbook();
@@ -67,45 +64,20 @@ public class PseaServiceImpl implements PseaService {
         if (fileName == null || stream == null)
             return;
 
+        Map<String, Object> config = checkNotNull(rowConsumer.getParseConfiguration());
+
         // first row skipping strategy
         // max rows to be processed per sheet
-        Integer maxRows = null;
+        Integer maxRows = (Integer) config.get("max");
 
         // second row skipping strategy (priority on max)
         // variables
-        Object[] focusedElements;
-        Integer focusedRow = null;
-        String focusedSheet = null;
+        Object[] focusedElements = (Object[]) config.get("focusedElements");
+        String focusedSheet = focusedElements == null ? null : (String) focusedElements[0];
+        Integer focusedRow = focusedElements == null ? null : (Integer) focusedElements[1];
 
         // names of the sheets to skip
-        String[] inactiveSheets = null;
-
-
-
-        // buffer object to store rows temporarily
-        Map<String, Object> parseConfiguration = rowConsumer.getParseConfiguration();
-        if(parseConfiguration != null){
-
-            // max
-            Object maxRowsObject = parseConfiguration.get("max");
-            if(maxRowsObject != null){
-                maxRows = (Integer)maxRowsObject;
-            }
-
-            // inactiveSheets
-            Object inactiveSheetsObject = parseConfiguration.get("inactiveSheets");
-            if(inactiveSheetsObject != null){
-                inactiveSheets = (String[])inactiveSheetsObject;
-            }
-
-            // row and sheet got focused on
-            Object focusedElementsObject = parseConfiguration.get("focusedElements");
-            if(focusedElementsObject != null){
-                focusedElements = (Object[])focusedElementsObject;
-                focusedSheet = (String)focusedElements[0];
-                focusedRow = (Integer)focusedElements[1];
-            }
-        }
+        List<String> inactiveSheets = Lists.newArrayList((String[]) checkNotNull(config.get("inactiveSheets")));
 
         // try reading inputstream
         try  {
@@ -123,7 +95,7 @@ public class PseaServiceImpl implements PseaService {
                 String sheetName = sheet.getSheetName();
 
                 // if the current sheet need to be skipped
-                if(inactiveSheets != null && Lists.newArrayList(inactiveSheets).contains(sheetName))
+                if (inactiveSheets.contains(sheetName))
                     continue;
 
                 // metadata of the current sheet
@@ -148,31 +120,30 @@ public class PseaServiceImpl implements PseaService {
                 // for each row
                 while (rowIterator.hasNext()) {
                     //increment rowCount
-                    rowCount ++;
+                    rowCount++;
 
                     Row row = rowIterator.next();
-                    final  int rowNum = row.getRowNum();
+                    final int rowNum = row.getRowNum();
 
                     // default row skipping strategy on current sheet
-                    if(!sheetName.equals(focusedSheet)) {
+                    if (!sheetName.equals(focusedSheet)) {
                         // if the current row need to be skipped
                         if (maxRows != null && rowCount > maxRows) {
-                            // skipping all rows with  index is greater maxRows
-                            rowIterator.forEachRemaining(skippedRow -> {
-                            });
-                            continue;
+                            // skipping all rows with index greater than maxRows
+                            rowIterator.forEachRemaining(skippedRow -> {}); // TODO Why is that necessary? I think it could be removed
+                            continue; // TODO Why is that necessary? I think it could be "break;"
                         }
                     }
                     // The current sheet is the focused one
                     // focusedElements" row skipping strategy
-                    else if(focusedSheet != null && focusedRow != null){
+                    else if (focusedSheet != null && focusedRow != null) {
 
 //                        // only process the focused row and the first read row (Apache POI skips empty rows when iterating over them)
 //                        if(rowNum != focusedRow && rowCount != 0)
                         // array containing index of rows to keep
                         int[] keepRows = new int[]{0, focusedRow-1, focusedRow,  focusedRow+1};
                         // if a row don't have its index in the array, skip it
-                        if(Arrays.stream(keepRows).filter(r -> r == rowNum ).count() == 0)
+                        if (Arrays.stream(keepRows).filter(r -> r == rowNum ).count() == 0)
                             continue;
                     }
 
@@ -218,7 +189,7 @@ public class PseaServiceImpl implements PseaService {
                                 cellValue = null;
                                 break;
                         }
-                        //adding cell Metadata to list
+                        // adding cell metadata to the list
                         ImportableCell workbookCell = new ImportableCell() {
                             @Override
                             public Integer getIndex() {

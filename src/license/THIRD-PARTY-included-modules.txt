@@ -1,6 +1,7 @@
 
-Lists of 4 third-party dependencies.
+Lists of 5 third-party dependencies.
      (BSD License) curvesapi (com.github.virtuald:curvesapi:1.03 - https://github.com/virtuald/curvesapi)
+     (The Apache Software License, Version 2.0) Gson (com.google.code.gson:gson:2.2.2-atlassian-1 - http://code.google.com/p/google-gson/)
      (Apache License, Version 2.0) Apache Commons Codec (commons-codec:commons-codec:1.10 - http://commons.apache.org/proper/commons-codec/)
      (The Apache Software License, Version 2.0) Apache POI (org.apache.poi:poi:3.14 - http://poi.apache.org/)
      (The Apache Software License, Version 2.0) XmlBeans (org.apache.xmlbeans:xmlbeans:2.6.0 - http://xmlbeans.apache.org)
