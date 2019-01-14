@@ -130,8 +130,7 @@ public class PseaServiceImpl implements PseaService {
                         // if the current row need to be skipped
                         if (maxRows != null && rowCount > maxRows) {
                             // skipping all rows with index greater than maxRows
-                            rowIterator.forEachRemaining(skippedRow -> {}); // TODO Why is that necessary? I think it could be removed
-                            continue; // TODO Why is that necessary? I think it could be "break;"
+                            break;
                         }
                     }
                     // The current sheet is the focused one
