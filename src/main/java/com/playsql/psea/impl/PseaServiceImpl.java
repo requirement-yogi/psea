@@ -77,8 +77,10 @@ public class PseaServiceImpl implements PseaService {
         Integer focusedRow = focusedElements == null ? null : (Integer) focusedElements[1];
 
         // names of the sheets to skip
-        List<String> inactiveSheets = Lists.newArrayList((String[]) checkNotNull(config.get("inactiveSheets")));
+//        List<String> inactiveSheets = Lists.newArrayList((String[]) checkNotNull(config.get("inactiveSheets"))); // inactiveSheets configuration is not mandatory when parsing to extract configuration for example
 
+        Object inactiveSheetsConfiguration = config.get("inactiveSheets");
+        List<String> inactiveSheets = inactiveSheetsConfiguration == null ? Lists.newArrayList() : Lists.newArrayList((String[]) inactiveSheetsConfiguration);
         // try reading inputstream
         try  {
 
