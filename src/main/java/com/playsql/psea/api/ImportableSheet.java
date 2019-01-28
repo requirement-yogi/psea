@@ -23,4 +23,5 @@ package com.playsql.psea.api;
 public interface ImportableSheet {
     ImportableWorkbookAPI getWorkbookAPI();
     String getName();
+    int getHeaderRowNum();
 }

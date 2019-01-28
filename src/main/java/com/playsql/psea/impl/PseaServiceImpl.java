@@ -22,9 +22,12 @@ package com.playsql.psea.impl;
 
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.*;
+import org.apache.poi.ss.formula.eval.NotImplementedException;
+import org.apache.poi.ss.formula.eval.NotImplementedFunctionException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
@@ -88,6 +91,12 @@ public class PseaServiceImpl implements PseaService {
 
             // apache poi representation of a .xls excel file
             Workbook excelWorkbook = WorkbookFactory.create(stream);
+            // formula eveluator for workbook
+            FormulaEvaluator evaluator = excelWorkbook.getCreationHelper().createFormulaEvaluator();
+            // clear cached values
+            evaluator.clearAllCachedResultValues();
+            // ignore cross workbook references (formula referencing external workbook cells)
+            evaluator.setIgnoreMissingWorkbooks(true);
             // iterator on sheets
             Iterator<Sheet> sheetIterator = excelWorkbook.sheetIterator();
             // for each sheet
@@ -112,6 +121,12 @@ public class PseaServiceImpl implements PseaService {
                     public String getName() {
                         // store the name of the current sheet
                         return sheetName;
+                    }
+
+                    @Override
+                    public int getHeaderRowNum() {
+                        // store the num of the header row
+                        return 0;
                     }
                 };
 
@@ -176,20 +191,9 @@ public class PseaServiceImpl implements PseaService {
                     while (cellIterator.hasNext()) {
 
                         Cell cell = cellIterator.next();
-                        final Integer colNum = cell.getColumnIndex();
 
-                        final Object cellValue;
-                        switch (cell.getCellType()) {
-                            case Cell.CELL_TYPE_NUMERIC:
-                                cellValue = cell.getNumericCellValue();
-                                break;
-                            case Cell.CELL_TYPE_STRING:
-                                cellValue = cell.getStringCellValue();
-                                break;
-                            default:
-                                cellValue = null;
-                                break;
-                        }
+                        final Object cellValue = computeCellValue(cell, evaluator);
+
                         // adding cell metadata to the list
                         ImportableCell workbookCell = new ImportableCell() {
                             @Override
@@ -214,5 +218,39 @@ public class PseaServiceImpl implements PseaService {
         } catch (Exception ex) {
             throw new IllegalArgumentException("An error occured when trying to parse the provided file", ex);
         }
+    }
+
+    private Object computeCellValue(Cell cell, FormulaEvaluator evaluator){
+        Object cellValue;
+        try{
+            CellValue computedFormulaValue = evaluator.evaluate(cell) ;
+            if(computedFormulaValue != null){
+                switch (computedFormulaValue.getCellType()) {
+                    case Cell.CELL_TYPE_NUMERIC:
+                        cellValue = cell.getNumericCellValue();
+                        break;
+                    case Cell.CELL_TYPE_STRING:
+                        cellValue = cell.getStringCellValue();
+                        break;
+                    case Cell.CELL_TYPE_BOOLEAN:
+                        cellValue = cell.getBooleanCellValue();
+                        break;
+                    case Cell.CELL_TYPE_BLANK:
+                        cellValue = "";
+                        break;
+                    case Cell.CELL_TYPE_ERROR:
+                        cellValue = ((XSSFCell) cell).getErrorCellString();
+                        break;
+                    default:
+                        cellValue = null;
+                        break;
+                }
+            }else{
+                cellValue = null;
+            }
+        } catch(NotImplementedException ex){
+            cellValue = cell.getCellFormula();
+        }
+        return cellValue;
     }
 }
