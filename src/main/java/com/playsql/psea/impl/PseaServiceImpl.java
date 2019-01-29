@@ -108,7 +108,7 @@ public class PseaServiceImpl implements PseaService {
                 // if the current sheet need to be skipped
                 if (inactiveSheets.contains(sheetName))
                     continue;
-
+                int[] headerRowNum = new int[]{0};
                 // metadata of the current sheet
                 ImportableSheet sheetMetadata = new ImportableSheet() {
                     @Override
@@ -124,9 +124,9 @@ public class PseaServiceImpl implements PseaService {
                     }
 
                     @Override
-                    public int getHeaderRowNum() {
+                    public Integer getHeaderRowNum() {
                         // store the num of the header row
-                        return 0;
+                        return headerRowNum[0];
                     }
                 };
 
@@ -141,6 +141,10 @@ public class PseaServiceImpl implements PseaService {
 
                     Row row = rowIterator.next();
                     final int rowNum = row.getRowNum();
+                    // the header row is the first one in the loop
+                    if(rowCount == 1){
+                        headerRowNum[0] = rowNum;
+                    }
 
                     // default row skipping strategy on current sheet
                     if (!sheetName.equals(focusedSheet)) {
@@ -157,7 +161,7 @@ public class PseaServiceImpl implements PseaService {
 //                        // only process the focused row and the first read row (Apache POI skips empty rows when iterating over them)
 //                        if(rowNum != focusedRow && rowCount != 0)
                         // array containing index of rows to keep
-                        int[] keepRows = new int[]{0, focusedRow-1, focusedRow,  focusedRow+1};
+                        int[] keepRows = new int[]{headerRowNum[0], focusedRow-1, focusedRow,  focusedRow+1};
                         // if a row don't have its index in the array, skip it
                         if (Arrays.stream(keepRows).filter(r -> r == rowNum ).count() == 0)
                             continue;
