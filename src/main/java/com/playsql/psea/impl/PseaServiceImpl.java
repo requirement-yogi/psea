@@ -70,14 +70,15 @@ public class PseaServiceImpl implements PseaService {
     }
 
     public void extract(InputStream stream, String fileName, ExcelImportConsumer rowConsumer) {
-        basicExtract(stream, fileName, rowConsumer);
+        optimizedExtract(stream, fileName, rowConsumer);
     }
 
     private void optimizedExtract(InputStream stream, String fileName, ExcelImportConsumer rowConsumer){
+
         // no data to parse
         if (fileName == null || stream == null)
             return;
-
+        // parse configuration is mandatory
         Map<String, Object> config = checkNotNull(rowConsumer.getParseConfiguration());
 
         // first row skipping strategy
@@ -91,24 +92,15 @@ public class PseaServiceImpl implements PseaService {
         Integer focusedRow = focusedElements == null ? null : (Integer) focusedElements[1];
 
         // names of the sheets to skip
-//        List<String> inactiveSheets = Lists.newArrayList((String[]) checkNotNull(config.get("inactiveSheets"))); // inactiveSheets configuration is not mandatory when parsing to extract configuration for example
-
         Object inactiveSheetsConfiguration = config.get("inactiveSheets");
         List<String> inactiveSheets = inactiveSheetsConfiguration == null ? Lists.newArrayList() : Lists.newArrayList((String[]) inactiveSheetsConfiguration);
         // try reading inputstream
-
-
         try  {
 
             ImportableWorkbookAPI workbook = () -> fileName;
+
             // apache poi representation of a .xls excel file
-
-
-            XSSFWorkbook excelWorkbook = null;
-            if(!fileName.endsWith(".xlsx")){
-                return ;
-            }
-            excelWorkbook = new XSSFWorkbook(stream);
+            Workbook excelWorkbook = WorkbookFactory.create(stream);
             // formula eveluator for workbook
             FormulaEvaluator evaluator = excelWorkbook.getCreationHelper().createFormulaEvaluator();
             // clear cached values
@@ -117,23 +109,7 @@ public class PseaServiceImpl implements PseaService {
             evaluator.setIgnoreMissingWorkbooks(true);
             // iterator on sheets
             Iterator<Sheet> sheetIterator = excelWorkbook.sheetIterator();
-
-            OPCPackage pkg = OPCPackage.open(stream);
-            XSSFReader reader = new XSSFReader( pkg );
-            SharedStringsTable sst = reader.getSharedStringsTable();
-
-            XMLReader parser = fetchSheetParser(sst);
-
-            Iterator<InputStream> sheets = reader.getSheetsData();
-            while(sheets.hasNext()) {
-                System.out.println("Processing new sheet:\n");
-                InputStream sheet = sheets.next();
-                InputSource sheetSource = new InputSource(sheet);
-                parser.parse(sheetSource);
-                sheet.close();
-                System.out.println("");
-            }
-
+            List<Sheet> sheets =  Lists.newArrayList();
 
             // for each sheet
             while (sheetIterator.hasNext()) {
@@ -144,7 +120,13 @@ public class PseaServiceImpl implements PseaService {
                 // if the current sheet need to be skipped
                 if (inactiveSheets.contains(sheetName))
                     continue;
-                int[] headerRowNum = new int[]{0};
+
+                sheets.add(sheet);
+            }
+
+            sheets.stream().forEach(sheet -> {
+                String sheetName = sheet.getSheetName();
+                final int headerRowNum = sheet.getFirstRowNum();
                 // metadata of the current sheet
                 ImportableSheet sheetMetadata = new ImportableSheet() {
                     @Override
@@ -162,46 +144,11 @@ public class PseaServiceImpl implements PseaService {
                     @Override
                     public Integer getHeaderRowNum() {
                         // store the num of the header row
-                        return headerRowNum[0];
+                        return headerRowNum;
                     }
                 };
 
-                // iterator on rows in a sheet
-                Iterator<org.apache.poi.ss.usermodel.Row> rowIterator = sheet.rowIterator();
-
-                int rowCount = 0;
-                // for each row
-                while (rowIterator.hasNext()) {
-                    //increment rowCount
-                    rowCount++;
-
-                    Row row = rowIterator.next();
-                    final int rowNum = row.getRowNum();
-                    // the header row is the first one in the loop
-                    if(rowCount == 1){
-                        headerRowNum[0] = rowNum;
-                    }
-
-                    // default row skipping strategy on current sheet
-                    if (!sheetName.equals(focusedSheet)) {
-                        // if the current row need to be skipped
-                        if (maxRows != null && rowCount > maxRows) {
-                            // skipping all rows with index greater than maxRows
-                            break;
-                        }
-                    }
-                    // The current sheet is the focused one
-                    // focusedElements" row skipping strategy
-                    else if (focusedSheet != null && focusedRow != null) {
-
-//                        // only process the focused row and the first read row (Apache POI skips empty rows when iterating over them)
-//                        if(rowNum != focusedRow && rowCount != 0)
-                        // array containing index of rows to keep
-                        int[] keepRows = new int[]{headerRowNum[0], focusedRow-1, focusedRow,  focusedRow+1};
-                        // if a row don't have its index in the array, skip it
-                        if (Arrays.stream(keepRows).filter(r -> r == rowNum ).count() == 0)
-                            continue;
-                    }
+                Consumer<Row> internalRowConsumer =  internalRow -> {
 
                     // cells of the current row
                     List<ImportableCell> rowCellsMetadata = Lists.newArrayList();
@@ -220,12 +167,12 @@ public class PseaServiceImpl implements PseaService {
 
                         @Override
                         public Integer getRowNum() {
-                            return rowNum;
+                            return internalRow.getRowNum();
                         }
                     };
 
                     // iterator on cells in a row
-                    Iterator<Cell> cellIterator = row.cellIterator();
+                    Iterator<Cell> cellIterator = internalRow.cellIterator();
 
                     // for each cell
                     while (cellIterator.hasNext()) {
@@ -252,9 +199,44 @@ public class PseaServiceImpl implements PseaService {
 
                     // how to process rows and store their data
                     rowConsumer.consumeRow(rowMetadata);
+                };
 
+
+                if (maxRows != null && maxRows == 1) {
+                    // here we only process one row : only the first one for each sheet
+                    internalRowConsumer.accept(sheet.getRow(headerRowNum));
+                } else {
+                    // here we need to process many rows
+
+
+                    if(!sheetName.equals(focusedSheet)){
+                        // for a normal sheet
+                        if(maxRows == null){
+                            // if there is no rows to skip  we process them all
+                            // iterator on rows in a sheet
+                            Iterator<Row> rowIterator = sheet.rowIterator();
+                            while (rowIterator.hasNext())
+                                // invoking internal row consumer
+                                internalRowConsumer.accept(rowIterator.next());
+
+                        } else {
+                            // if otherwies we need to skip some rows,  we process "maxRows" including the first one
+                            for (int i = 0; i < maxRows ; i++) {
+                                internalRowConsumer.accept(sheet.getRow(headerRowNum + i));
+                            }
+                        }
+                    } else if(focusedSheet != null && focusedRow != null){
+                        // for a focused sheet
+                        final int[] keepRows = new int[]{headerRowNum, focusedRow - 1, focusedRow, focusedRow + 1};
+                        // if a row don't have its index in the array, skip it
+                        Arrays.stream(keepRows)
+                                .distinct()
+                                .mapToObj(i -> sheet.getRow(i))
+                                .filter(row -> row != null)
+                                .forEach( internalRowConsumer::accept);
+                    }
                 }
-            }
+            });
         } catch (Exception ex) {
             throw new IllegalArgumentException("An error occured when trying to parse the provided file", ex);
         }
@@ -280,8 +262,6 @@ public class PseaServiceImpl implements PseaService {
         Integer focusedRow = focusedElements == null ? null : (Integer) focusedElements[1];
 
         // names of the sheets to skip
-//        List<String> inactiveSheets = Lists.newArrayList((String[]) checkNotNull(config.get("inactiveSheets"))); // inactiveSheets configuration is not mandatory when parsing to extract configuration for example
-
         Object inactiveSheetsConfiguration = config.get("inactiveSheets");
         List<String> inactiveSheets = inactiveSheetsConfiguration == null ? Lists.newArrayList() : Lists.newArrayList((String[]) inactiveSheetsConfiguration);
         // try reading inputstream
@@ -316,7 +296,7 @@ public class PseaServiceImpl implements PseaService {
             
             sheets.stream().forEach(sheet -> {
                 String sheetName = sheet.getSheetName();
-                int[] headerRowNum = new int[]{0};
+                final int headerRowNum = sheet.getFirstRowNum();
                 // metadata of the current sheet
                 ImportableSheet sheetMetadata = new ImportableSheet() {
                     @Override
@@ -334,46 +314,11 @@ public class PseaServiceImpl implements PseaService {
                     @Override
                     public Integer getHeaderRowNum() {
                         // store the num of the header row
-                        return headerRowNum[0];
+                        return headerRowNum;
                     }
                 };
 
-                // iterator on rows in a sheet
-                Iterator<org.apache.poi.ss.usermodel.Row> rowIterator = sheet.rowIterator();
-
-                int rowCount = 0;
-                // for each row
-                while (rowIterator.hasNext()) {
-                    //increment rowCount
-                    rowCount++;
-
-                    Row row = rowIterator.next();
-                    final int rowNum = row.getRowNum();
-                    // the header row is the first one in the loop
-                    if(rowCount == 1){
-                        headerRowNum[0] = rowNum;
-                    }
-
-                    // default row skipping strategy on current sheet
-                    if (!sheetName.equals(focusedSheet)) {
-                        // if the current row need to be skipped
-                        if (maxRows != null && rowCount > maxRows) {
-                            // skipping all rows with index greater than maxRows
-                            break;
-                        }
-                    }
-                    // The current sheet is the focused one
-                    // focusedElements" row skipping strategy
-                    else if (focusedSheet != null && focusedRow != null) {
-
-//                        // only process the focused row and the first read row (Apache POI skips empty rows when iterating over them)
-//                        if(rowNum != focusedRow && rowCount != 0)
-                        // array containing index of rows to keep
-                        int[] keepRows = new int[]{headerRowNum[0], focusedRow-1, focusedRow,  focusedRow+1};
-                        // if a row don't have its index in the array, skip it
-                        if (Arrays.stream(keepRows).filter(r -> r == rowNum ).count() == 0)
-                            continue;
-                    }
+                Consumer<Row> internalRowConsumer =  internalRow -> {
 
                     // cells of the current row
                     List<ImportableCell> rowCellsMetadata = Lists.newArrayList();
@@ -392,12 +337,12 @@ public class PseaServiceImpl implements PseaService {
 
                         @Override
                         public Integer getRowNum() {
-                            return rowNum;
+                            return internalRow.getRowNum();
                         }
                     };
 
                     // iterator on cells in a row
-                    Iterator<Cell> cellIterator = row.cellIterator();
+                    Iterator<Cell> cellIterator = internalRow.cellIterator();
 
                     // for each cell
                     while (cellIterator.hasNext()) {
@@ -424,10 +369,53 @@ public class PseaServiceImpl implements PseaService {
 
                     // how to process rows and store their data
                     rowConsumer.consumeRow(rowMetadata);
+                };
 
+
+                if (maxRows != null && maxRows == 1) {
+                    // here we only process one row : only the first one for each sheet
+                    internalRowConsumer.accept(sheet.getRow(headerRowNum));
+                } else {
+
+                    // here we need to process many rows
+
+                    // iterator on rows in a sheet
+                    Iterator<Row> rowIterator = sheet.rowIterator();
+
+                    int rowCount = 0;
+                    // for each row
+                    while (rowIterator.hasNext()) {
+                        //increment rowCount
+                        rowCount++;
+
+                        Row row = rowIterator.next();
+                        final int rowNum = row.getRowNum();
+
+                        // default row skipping strategy on current sheet
+                        if (!sheetName.equals(focusedSheet)) {
+                            // if the current row need to be skipped
+                            if (maxRows != null && rowCount > maxRows) {
+                                // skipping all rows with index greater than maxRows
+                                break;
+                            }
+                        }
+                        // The current sheet is the focused one
+                        // focusedElements" row skipping strategy
+                        else if (focusedSheet != null && focusedRow != null) {
+
+//                        // only process the focused row and the first read row (Apache POI skips empty rows when iterating over them)
+//                        if(rowNum != focusedRow && rowCount != 0)
+                            // array containing index of rows to keep
+                            int[] keepRows = new int[]{headerRowNum, focusedRow - 1, focusedRow, focusedRow + 1};
+                            // if a row don't have its index in the array, skip it
+                            if (Arrays.stream(keepRows).filter(r -> r == rowNum).count() == 0)
+                                continue;
+                        }
+
+                        internalRowConsumer.accept(row);
+
+                    }
                 }
-
-
             });
         } catch (Exception ex) {
             throw new IllegalArgumentException("An error occured when trying to parse the provided file", ex);
