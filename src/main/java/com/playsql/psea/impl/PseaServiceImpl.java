@@ -339,6 +339,10 @@ public class PseaServiceImpl implements PseaService {
                         public Integer getRowNum() {
                             return internalRow.getRowNum();
                         }
+
+                        public String toString() {
+                            return "ImportableRow " + sheetMetadata.getName() + "#" + internalRow.getRowNum();
+                        }
                     };
 
                     // iterator on cells in a row
@@ -361,6 +365,10 @@ public class PseaServiceImpl implements PseaService {
                             @Override
                             public String getValue() {
                                 return cellValue == null ? "" : cellValue.toString();
+                            }
+
+                            public String toString() {
+                                return cell.getColumnIndex() + "-" + (cellValue != null ? cellValue : "");
                             }
                         };
                         rowCellsMetadata.add(workbookCell);
