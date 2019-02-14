@@ -110,28 +110,19 @@ public class PseaServiceImpl implements PseaService {
             evaluator.setIgnoreMissingWorkbooks(true);
             // iterator on sheets
             Iterator<Sheet> sheetIterator = excelWorkbook.sheetIterator();
-            List<Sheet> sheets =  Lists.newArrayList();
-
-            // for each sheet
-            while (sheetIterator.hasNext()) {
-
-                Sheet sheet = sheetIterator.next();
-                String sheetName = sheet.getSheetName();
-
-                // if the current sheet need to be skipped
-                if (inactiveSheets.contains(sheetName))
-                    continue;
-
-                sheets.add(sheet);
-            }
 
             LOG.debug(clock.time("Done reading the file"));
 
-            sheets.stream().forEach(sheet -> {
+            while (sheetIterator.hasNext()) {
+                Sheet sheet = sheetIterator.next();
                 String sheetName = sheet.getSheetName();
                 final int headerRowNum = sheet.getFirstRowNum();
+                if (inactiveSheets.contains(sheetName)) {
+                    continue;
+                }
+
                 // metadata of the current sheet
-                ImportableSheet sheetMetadata = new ImportableSheet() {
+                rowConsumer.consumeNewSheet(new ImportableSheet() {
 
                     @Override
                     public String getName() {
@@ -144,9 +135,7 @@ public class PseaServiceImpl implements PseaService {
                         // store the num of the header row
                         return headerRowNum;
                     }
-                };
-
-                rowConsumer.consumeNewSheet(sheetMetadata);
+                });
 
                 Consumer<Row> internalRowConsumer =  internalRow -> {
 
@@ -233,7 +222,7 @@ public class PseaServiceImpl implements PseaService {
                     }
                 }
                 LOG.debug(clock.time("Done reading one sheet"));
-            });
+            }
         } catch (Exception ex) {
             throw new IllegalArgumentException("An error occured when trying to parse the file: " + fileName, ex);
         }
@@ -293,7 +282,8 @@ public class PseaServiceImpl implements PseaService {
                 String sheetName = sheet.getSheetName();
                 final int headerRowNum = sheet.getFirstRowNum();
                 // metadata of the current sheet
-                ImportableSheet sheetMetadata = new ImportableSheet() {
+
+                rowConsumer.consumeNewSheet(new ImportableSheet() {
 
                     @Override
                     public String getName() {
@@ -306,9 +296,7 @@ public class PseaServiceImpl implements PseaService {
                         // store the num of the header row
                         return headerRowNum;
                     }
-                };
-
-                rowConsumer.consumeNewSheet(sheetMetadata);
+                });
 
                 Consumer<Row> internalRowConsumer =  internalRow -> {
 
@@ -329,7 +317,7 @@ public class PseaServiceImpl implements PseaService {
                         }
 
                         public String toString() {
-                            return "ImportableRow " + sheetMetadata.getName() + "#" + internalRow.getRowNum();
+                            return "ImportableRow " + sheetName + "#" + internalRow.getRowNum();
                         }
                     };
 
