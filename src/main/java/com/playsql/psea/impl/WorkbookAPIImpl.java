@@ -20,6 +20,7 @@ package com.playsql.psea.impl;
  * #L%
  */
 
+import com.atlassian.extras.common.log.Logger;
 import com.google.common.collect.Maps;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.WorkbookAPI;
@@ -30,6 +31,8 @@ import org.apache.poi.xssf.usermodel.*;
 import java.util.Map;
 
 public final class WorkbookAPIImpl implements WorkbookAPI {
+
+    private final static Logger.Log log = Logger.getInstance(WorkbookAPIImpl.class);
     final XSSFWorkbook workbook;
     final Map<Style, CellStyle> styles = Maps.newHashMap();
 

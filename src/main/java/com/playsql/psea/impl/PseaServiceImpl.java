@@ -20,28 +20,29 @@ package com.playsql.psea.impl;
  * #L%
  */
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.*;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.openxml4j.opc.OPCPackage;
+import com.playsql.psea.utils.Utils.Clock;
 import org.apache.poi.ss.formula.eval.NotImplementedException;
-import org.apache.poi.ss.formula.eval.NotImplementedFunctionException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.util.SAXHelper;
-import org.apache.poi.xssf.eventusermodel.ReadOnlySharedStringsTable;
-import org.apache.poi.xssf.eventusermodel.XSSFReader;
-import org.apache.poi.xssf.eventusermodel.XSSFSheetXMLHandler;
-import org.apache.poi.xssf.extractor.XSSFEventBasedExcelExtractor;
 import org.apache.poi.xssf.model.SharedStringsTable;
-import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.xml.sax.*;
+import org.xml.sax.Attributes;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -51,6 +52,10 @@ import java.util.function.Consumer;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PseaServiceImpl implements PseaService {
+
+    private final static Logger LOG = Logger.getLogger(PseaServiceImpl.class); {
+        LOG.setLevel(Level.DEBUG); // NO_RELEASE
+    }
 
     public File export(Consumer<WorkbookAPI> f) {
         XSSFWorkbook xlWorkbook = new XSSFWorkbook();
@@ -74,6 +79,7 @@ public class PseaServiceImpl implements PseaService {
     }
 
     private void optimizedExtract(InputStream stream, String fileName, ExcelImportConsumer rowConsumer){
+        Clock clock = Clock.start("Reading Excel file " + fileName + " - ");
 
         // no data to parse
         if (fileName == null || stream == null)
@@ -123,6 +129,8 @@ public class PseaServiceImpl implements PseaService {
 
                 sheets.add(sheet);
             }
+
+            LOG.debug(clock.time("Done reading the file"));
 
             sheets.stream().forEach(sheet -> {
                 String sheetName = sheet.getSheetName();
@@ -194,11 +202,12 @@ public class PseaServiceImpl implements PseaService {
                             }
                         };
                         rowCellsMetadata.add(workbookCell);
-
+                        LOG.debug(clock.time("Done reading one cell"));
                     }
 
                     // how to process rows and store their data
                     rowConsumer.consumeRow(rowMetadata);
+                    LOG.debug(clock.time("Done reading one row"));
                 };
 
 
@@ -236,9 +245,10 @@ public class PseaServiceImpl implements PseaService {
                                 .forEach( internalRowConsumer::accept);
                     }
                 }
+                LOG.debug(clock.time("Done reading one sheet"));
             });
         } catch (Exception ex) {
-            throw new IllegalArgumentException("An error occured when trying to parse the provided file", ex);
+            throw new IllegalArgumentException("An error occured when trying to parse the file: " + fileName, ex);
         }
     }
 
@@ -432,30 +442,30 @@ public class PseaServiceImpl implements PseaService {
 
     private Object computeCellValue(Cell cell, FormulaEvaluator evaluator){
         Object cellValue;
-        try{
+        try {
             CellValue computedFormulaValue = evaluator.evaluate(cell) ;
             if(computedFormulaValue != null){
                 switch (computedFormulaValue.getCellType()) {
                     case Cell.CELL_TYPE_NUMERIC:
-                        cellValue = cell.getNumericCellValue();
+                        cellValue = computedFormulaValue.getNumberValue();
                         break;
                     case Cell.CELL_TYPE_STRING:
-                        cellValue = cell.getStringCellValue();
+                        cellValue = computedFormulaValue.getStringValue();
                         break;
                     case Cell.CELL_TYPE_BOOLEAN:
-                        cellValue = cell.getBooleanCellValue();
+                        cellValue = computedFormulaValue.getBooleanValue();
                         break;
                     case Cell.CELL_TYPE_BLANK:
                         cellValue = "";
                         break;
                     case Cell.CELL_TYPE_ERROR:
-                        cellValue = ((XSSFCell) cell).getErrorCellString();
+                        cellValue = computedFormulaValue.formatAsString();
                         break;
                     default:
                         cellValue = null;
                         break;
                 }
-            }else{
+            } else {
                 cellValue = null;
             }
         } catch(NotImplementedException ex){
