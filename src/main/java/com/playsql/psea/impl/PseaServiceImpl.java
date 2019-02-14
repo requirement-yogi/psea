@@ -186,40 +186,22 @@ public class PseaServiceImpl implements PseaService {
                     LOG.debug(clock.time("Done reading one row"));
                 };
 
+                if (focusedSheet != null && !sheetName.equals(focusedSheet)) {
+                    continue;
+                }
+                // If the focusedSheet is not specified, then we process at least the headerRow.
+                internalRowConsumer.accept(sheet.getRow(headerRowNum));
 
-                if (maxRows != null && maxRows == 1) {
-                    // here we only process one row : only the first one for each sheet
-                    internalRowConsumer.accept(sheet.getRow(headerRowNum));
+                // here we need to process many rows
+                int start;
+                if (focusedRow != null) {
+                    start = focusedRow - 1;
                 } else {
-                    // here we need to process many rows
-
-
-                    if(!sheetName.equals(focusedSheet)){
-                        // for a normal sheet
-                        if(maxRows == null){
-                            // if there is no rows to skip  we process them all
-                            // iterator on rows in a sheet
-                            Iterator<Row> rowIterator = sheet.rowIterator();
-                            while (rowIterator.hasNext())
-                                // invoking internal row consumer
-                                internalRowConsumer.accept(rowIterator.next());
-
-                        } else {
-                            // if otherwies we need to skip some rows,  we process "maxRows" including the first one
-                            for (int i = 0; i < maxRows ; i++) {
-                                internalRowConsumer.accept(sheet.getRow(headerRowNum + i));
-                            }
-                        }
-                    } else if(focusedSheet != null && focusedRow != null){
-                        // for a focused sheet
-                        final int[] keepRows = new int[]{headerRowNum, focusedRow - 1, focusedRow, focusedRow + 1};
-                        // if a row don't have its index in the array, skip it
-                        Arrays.stream(keepRows)
-                                .distinct()
-                                .mapToObj(i -> sheet.getRow(i))
-                                .filter(row -> row != null)
-                                .forEach( internalRowConsumer::accept);
-                    }
+                    start = headerRowNum + 1;
+                }
+                int end = Math.min(start + maxRows - 1, sheet.getLastRowNum());
+                for (int i = start ; i <= end ; i++) {
+                    internalRowConsumer.accept(sheet.getRow(i));
                 }
                 LOG.debug(clock.time("Done reading one sheet"));
             }
