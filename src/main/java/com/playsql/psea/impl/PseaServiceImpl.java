@@ -20,11 +20,11 @@ package com.playsql.psea.impl;
  * #L%
  */
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.*;
 import com.playsql.psea.utils.Utils.Clock;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.apache.poi.ss.formula.eval.NotImplementedException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Row;
@@ -46,10 +46,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PseaServiceImpl implements PseaService {
 
@@ -84,21 +81,19 @@ public class PseaServiceImpl implements PseaService {
         // no data to parse
         if (fileName == null || stream == null)
             return;
-        // parse configuration is mandatory
-        Map<String, Object> config = checkNotNull(rowConsumer.getParseConfiguration());
 
         // first row skipping strategy
         // max rows to be processed per sheet
-        Integer maxRows = (Integer) config.get("max");
+        Integer maxRows = rowConsumer.getMaxRows();
 
         // second row skipping strategy (priority on max)
         // variables
-        Object[] focusedElements = (Object[]) config.get("focusedElements");
+        Object[] focusedElements = rowConsumer.getFocusedElements();
         String focusedSheet = focusedElements == null ? null : (String) focusedElements[0];
         Integer focusedRow = focusedElements == null ? null : (Integer) focusedElements[1];
 
         // names of the sheets to skip
-        Object inactiveSheetsConfiguration = config.get("inactiveSheets");
+        Object inactiveSheetsConfiguration = rowConsumer.getInactiveSheets();
         List<String> inactiveSheets = inactiveSheetsConfiguration == null ? Lists.newArrayList() : Lists.newArrayList((String[]) inactiveSheetsConfiguration);
         // try reading inputstream
         try  {
@@ -259,20 +254,18 @@ public class PseaServiceImpl implements PseaService {
         if (fileName == null || stream == null)
             return;
 
-        Map<String, Object> config = checkNotNull(rowConsumer.getParseConfiguration());
-
         // first row skipping strategy
         // max rows to be processed per sheet
-        Integer maxRows = (Integer) config.get("max");
+        Integer maxRows = rowConsumer.getMaxRows();
 
         // second row skipping strategy (priority on max)
         // variables
-        Object[] focusedElements = (Object[]) config.get("focusedElements");
+        Object[] focusedElements = rowConsumer.getFocusedElements();
         String focusedSheet = focusedElements == null ? null : (String) focusedElements[0];
         Integer focusedRow = focusedElements == null ? null : (Integer) focusedElements[1];
 
         // names of the sheets to skip
-        Object inactiveSheetsConfiguration = config.get("inactiveSheets");
+        Object inactiveSheetsConfiguration = rowConsumer.getInactiveSheets();
         List<String> inactiveSheets = inactiveSheetsConfiguration == null ? Lists.newArrayList() : Lists.newArrayList((String[]) inactiveSheetsConfiguration);
         // try reading inputstream
         try  {

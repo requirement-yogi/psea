@@ -22,35 +22,32 @@ package com.playsql.psea.api;
 
 // TODO OSGI can’t load from RY
 
-import java.util.Map;
-import java.util.function.Consumer;
+public abstract class ExcelImportConsumer {
 
-public final class ExcelImportConsumer {
-
-    protected Map<String, Object> parseConfiguration;
-    protected Consumer<ImportableRow> rowConsumer;
+    private Integer maxRows;
+    private Object[] focusedElements;
+    private String[] inactiveSheets;
 
     public ExcelImportConsumer() {
     }
 
-    public ExcelImportConsumer(Consumer<ImportableRow> rowConsumer) {
-        this.rowConsumer = rowConsumer;
+    public ExcelImportConsumer(Integer maxRows, Object[] focusedElements, String[] inactiveSheets) {
+        this.maxRows = maxRows;
+        this.focusedElements = focusedElements;
+        this.inactiveSheets = inactiveSheets;
     }
 
-    public Map<String, Object> getParseConfiguration() {
-        return parseConfiguration;
+    public abstract void consumeRow(ImportableRow row);
+
+    public Integer getMaxRows() {
+        return maxRows;
     }
 
-    public void setParseConfiguration(Map<String, Object> parseConfiguration) {
-        this.parseConfiguration = parseConfiguration;
+    public Object[] getFocusedElements() {
+        return focusedElements;
     }
 
-    public void consumeRow(ImportableRow row) {
-        if (rowConsumer != null)
-            rowConsumer.accept(row);
-    }
-
-    public void setRowConsumer(Consumer<ImportableRow> rowConsumer) {
-        this.rowConsumer = rowConsumer;
+    public String[] getInactiveSheets() {
+        return inactiveSheets;
     }
 }
