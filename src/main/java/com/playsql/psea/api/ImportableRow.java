@@ -23,7 +23,6 @@ package com.playsql.psea.api;
 import java.util.List;
 
 public interface ImportableRow {
-    ImportableSheet getSheet();
     List<ImportableCell> getCells();
     Integer getRowNum();
 }

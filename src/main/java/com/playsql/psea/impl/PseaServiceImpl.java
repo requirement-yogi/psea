@@ -132,11 +132,6 @@ public class PseaServiceImpl implements PseaService {
                 final int headerRowNum = sheet.getFirstRowNum();
                 // metadata of the current sheet
                 ImportableSheet sheetMetadata = new ImportableSheet() {
-                    @Override
-                    public ImportableWorkbookAPI getWorkbookAPI() {
-                        // store workbook definition
-                        return workbook;
-                    }
 
                     @Override
                     public String getName() {
@@ -151,6 +146,8 @@ public class PseaServiceImpl implements PseaService {
                     }
                 };
 
+                rowConsumer.consumeNewSheet(sheetMetadata);
+
                 Consumer<Row> internalRowConsumer =  internalRow -> {
 
                     // cells of the current row
@@ -158,11 +155,6 @@ public class PseaServiceImpl implements PseaService {
 
                     // metadata of the current row
                     ImportableRow rowMetadata = new ImportableRow() {
-                        @Override
-                        public ImportableSheet getSheet() {
-                            return sheetMetadata;
-                        }
-
                         @Override
                         public List<ImportableCell> getCells() {
                             return rowCellsMetadata;
@@ -302,11 +294,6 @@ public class PseaServiceImpl implements PseaService {
                 final int headerRowNum = sheet.getFirstRowNum();
                 // metadata of the current sheet
                 ImportableSheet sheetMetadata = new ImportableSheet() {
-                    @Override
-                    public ImportableWorkbookAPI getWorkbookAPI() {
-                        // store workbook definition
-                        return workbook;
-                    }
 
                     @Override
                     public String getName() {
@@ -321,6 +308,8 @@ public class PseaServiceImpl implements PseaService {
                     }
                 };
 
+                rowConsumer.consumeNewSheet(sheetMetadata);
+
                 Consumer<Row> internalRowConsumer =  internalRow -> {
 
                     // cells of the current row
@@ -328,10 +317,6 @@ public class PseaServiceImpl implements PseaService {
 
                     // metadata of the current row
                     ImportableRow rowMetadata = new ImportableRow() {
-                        @Override
-                        public ImportableSheet getSheet() {
-                            return sheetMetadata;
-                        }
 
                         @Override
                         public List<ImportableCell> getCells() {

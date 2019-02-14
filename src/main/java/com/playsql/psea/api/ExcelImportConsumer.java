@@ -37,6 +37,7 @@ public abstract class ExcelImportConsumer {
         this.inactiveSheets = inactiveSheets;
     }
 
+    public abstract void consumeNewSheet(ImportableSheet sheet);
     public abstract void consumeRow(ImportableRow row);
 
     public Integer getMaxRows() {
