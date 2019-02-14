@@ -27,15 +27,17 @@ import java.util.List;
 public abstract class ExcelImportConsumer {
 
     private Integer maxRows;
-    private Object[] focusedElements;
+    private String focusedSheet;
+    private Integer focusedRow;
     private String[] inactiveSheets;
 
     public ExcelImportConsumer() {
     }
 
-    public ExcelImportConsumer(Integer maxRows, Object[] focusedElements, String[] inactiveSheets) {
+    public ExcelImportConsumer(Integer maxRows, String focusedSheet, Integer focusedRow, String[] inactiveSheets) {
         this.maxRows = maxRows;
-        this.focusedElements = focusedElements;
+        this.focusedSheet = focusedSheet;
+        this.focusedRow = focusedRow;
         this.inactiveSheets = inactiveSheets;
     }
 
@@ -56,11 +58,16 @@ public abstract class ExcelImportConsumer {
         return maxRows;
     }
 
-    public Object[] getFocusedElements() {
-        return focusedElements;
+    public String getFocusedSheet() {
+        return focusedSheet;
+    }
+
+    public Integer getFocusedRow() {
+        return focusedRow;
     }
 
     public String[] getInactiveSheets() {
         return inactiveSheets;
     }
+
 }

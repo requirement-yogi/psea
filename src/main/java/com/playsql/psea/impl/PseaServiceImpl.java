@@ -46,12 +46,13 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class PseaServiceImpl implements PseaService {
 
     private final static Logger LOG = Logger.getLogger(PseaServiceImpl.class); {
-        LOG.setLevel(Level.DEBUG); // NO_RELEASE
+        Logger.getLogger("com.playsql").setLevel(Level.DEBUG); // NO_RELEASE
     }
 
     public File export(Consumer<WorkbookAPI> f) {
@@ -72,33 +73,22 @@ public class PseaServiceImpl implements PseaService {
     }
 
     public void extract(InputStream stream, String fileName, ExcelImportConsumer rowConsumer) {
-        optimizedExtract(stream, fileName, rowConsumer);
-    }
-
-    private void optimizedExtract(InputStream stream, String fileName, ExcelImportConsumer rowConsumer){
         Clock clock = Clock.start("Reading Excel file " + fileName + " - ");
 
         // no data to parse
         if (fileName == null || stream == null)
             return;
 
-        // first row skipping strategy
-        // max rows to be processed per sheet
+        // 3 ways to skip parts of the spreadsheet
         Integer maxRows = rowConsumer.getMaxRows();
-
-        // second row skipping strategy (priority on max)
-        // variables
-        Object[] focusedElements = rowConsumer.getFocusedElements();
-        String focusedSheet = focusedElements == null ? null : (String) focusedElements[0];
-        Integer focusedRow = focusedElements == null ? null : (Integer) focusedElements[1];
+        String focusedSheet = rowConsumer.getFocusedSheet();
+        Integer focusedRow = rowConsumer.getFocusedRow();
 
         // names of the sheets to skip
         Object inactiveSheetsConfiguration = rowConsumer.getInactiveSheets();
         List<String> inactiveSheets = inactiveSheetsConfiguration == null ? Lists.newArrayList() : Lists.newArrayList((String[]) inactiveSheetsConfiguration);
         // try reading inputstream
         try  {
-
-            ImportableWorkbookAPI workbook = () -> fileName;
 
             // apache poi representation of a .xls excel file
             Workbook excelWorkbook = WorkbookFactory.create(stream);
@@ -165,12 +155,7 @@ public class PseaServiceImpl implements PseaService {
                 if (cell == null) {
                     values.add(null);
                 } else {
-                    CellValue value = evaluator.evaluate(cell);
-                    if (value != null) {
-                        values.add(value.formatAsString());
-                    } else {
-                        values.add(null);
-                    }
+                    values.add(computeCellValue(cell, evaluator));
                 }
             }
             return values;
@@ -357,7 +342,7 @@ public class PseaServiceImpl implements PseaService {
 //        }
 //    }
 
-    private Object computeCellValue(Cell cell, FormulaEvaluator evaluator){
+    private String computeCellValue(Cell cell, FormulaEvaluator evaluator){
         Object cellValue;
         try {
             CellValue computedFormulaValue = evaluator.evaluate(cell) ;
@@ -385,10 +370,10 @@ public class PseaServiceImpl implements PseaService {
             } else {
                 cellValue = null;
             }
-        } catch(NotImplementedException ex){
+        } catch (NotImplementedException ex) {
             cellValue = cell.getCellFormula();
         }
-        return cellValue;
+        return Objects.toString(cellValue);
     }
 
 
