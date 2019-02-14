@@ -120,88 +120,35 @@ public class PseaServiceImpl implements PseaService {
                 if (inactiveSheets.contains(sheetName)) {
                     continue;
                 }
-
-                // metadata of the current sheet
-                rowConsumer.consumeNewSheet(new ImportableSheet() {
-
-                    @Override
-                    public String getName() {
-                        // store the name of the current sheet
-                        return sheetName;
-                    }
-
-                    @Override
-                    public Integer getHeaderRowNum() {
-                        // store the num of the header row
-                        return headerRowNum;
-                    }
-                });
-
-                Consumer<Row> internalRowConsumer =  internalRow -> {
-
-                    // cells of the current row
-                    List<ImportableCell> rowCellsMetadata = Lists.newArrayList();
-
-                    // metadata of the current row
-                    ImportableRow rowMetadata = new ImportableRow() {
-                        @Override
-                        public List<ImportableCell> getCells() {
-                            return rowCellsMetadata;
-                        }
-
-                        @Override
-                        public Integer getRowNum() {
-                            return internalRow.getRowNum();
-                        }
-                    };
-
-                    // iterator on cells in a row
-                    Iterator<Cell> cellIterator = internalRow.cellIterator();
-
-                    // for each cell
-                    while (cellIterator.hasNext()) {
-
-                        Cell cell = cellIterator.next();
-
-                        final Object cellValue = computeCellValue(cell, evaluator);
-
-                        // adding cell metadata to the list
-                        ImportableCell workbookCell = new ImportableCell() {
-                            @Override
-                            public Integer getIndex() {
-                                return cell.getColumnIndex();
-                            }
-
-                            @Override
-                            public String getValue() {
-                                return cellValue == null ? "" : cellValue.toString();
-                            }
-                        };
-                        rowCellsMetadata.add(workbookCell);
-                        LOG.debug(clock.time("Done reading one cell"));
-                    }
-
-                    // how to process rows and store their data
-                    rowConsumer.consumeRow(rowMetadata);
-                    LOG.debug(clock.time("Done reading one row"));
-                };
-
                 if (focusedSheet != null && !sheetName.equals(focusedSheet)) {
+                    // We push the sheet without providing the cells, because we want the 'excel tab' to display, but only
+                    // the focused one to display with cells
+                    rowConsumer.consumeNewSheet(sheetName, 0, null);
                     continue;
                 }
+
                 // If the focusedSheet is not specified, then we process at least the headerRow.
-                internalRowConsumer.accept(sheet.getRow(headerRowNum));
+                Row row = sheet.getRow(headerRowNum);
+                short firstCellNum = row.getFirstCellNum();
+                short lastCellNum = row.getLastCellNum();
+                List<String> headers = readRow(row, firstCellNum, lastCellNum, evaluator);
+                if (headers == null) {
+                    throw new RuntimeException("The header row is empty for sheet '" + sheetName + "'");
+                }
+                rowConsumer.consumeNewSheet(sheetName, headerRowNum, headers);
 
                 // here we need to process many rows
-                int start;
+                int start = headerRowNum + 1;
                 if (focusedRow != null) {
-                    start = focusedRow - 1;
-                } else {
-                    start = headerRowNum + 1;
+                    start = Math.max(focusedRow - 1, start);
                 }
-                int end = Math.min(start + maxRows - 1, sheet.getLastRowNum());
+                int end = sheet.getLastRowNum();
+                if (maxRows != null) {
+                    end = Math.min(start + maxRows - 1, end);
+                }
                 for (int i = start ; i <= end ; i++) {
-                    internalRowConsumer.accept(sheet.getRow(i));
+                    boolean isFocused = focusedRow != null && focusedRow == i;
+                    rowConsumer.consumeRow(isFocused, i - headerRowNum, readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator));
                 }
                 LOG.debug(clock.time("Done reading one sheet"));
             }
@@ -210,183 +157,205 @@ public class PseaServiceImpl implements PseaService {
         }
     }
 
-
-    private void basicExtract(InputStream stream, String fileName, ExcelImportConsumer rowConsumer){
-
-        // no data to parse
-        if (fileName == null || stream == null)
-            return;
-
-        // first row skipping strategy
-        // max rows to be processed per sheet
-        Integer maxRows = rowConsumer.getMaxRows();
-
-        // second row skipping strategy (priority on max)
-        // variables
-        Object[] focusedElements = rowConsumer.getFocusedElements();
-        String focusedSheet = focusedElements == null ? null : (String) focusedElements[0];
-        Integer focusedRow = focusedElements == null ? null : (Integer) focusedElements[1];
-
-        // names of the sheets to skip
-        Object inactiveSheetsConfiguration = rowConsumer.getInactiveSheets();
-        List<String> inactiveSheets = inactiveSheetsConfiguration == null ? Lists.newArrayList() : Lists.newArrayList((String[]) inactiveSheetsConfiguration);
-        // try reading inputstream
-        try  {
-
-            ImportableWorkbookAPI workbook = () -> fileName;
-
-            // apache poi representation of a .xls excel file
-            Workbook excelWorkbook = WorkbookFactory.create(stream);
-            // formula eveluator for workbook
-            FormulaEvaluator evaluator = excelWorkbook.getCreationHelper().createFormulaEvaluator();
-            // clear cached values
-            evaluator.clearAllCachedResultValues();
-            // ignore cross workbook references (formula referencing external workbook cells)
-            evaluator.setIgnoreMissingWorkbooks(true);
-            // iterator on sheets
-            Iterator<Sheet> sheetIterator = excelWorkbook.sheetIterator();
-            List<Sheet> sheets =  Lists.newArrayList();
-
-            // for each sheet
-            while (sheetIterator.hasNext()) {
-
-                Sheet sheet = sheetIterator.next();
-                String sheetName = sheet.getSheetName();
-
-                // if the current sheet need to be skipped
-                if (inactiveSheets.contains(sheetName))
-                    continue;
-
-               sheets.add(sheet);
-            }
-            
-            sheets.stream().forEach(sheet -> {
-                String sheetName = sheet.getSheetName();
-                final int headerRowNum = sheet.getFirstRowNum();
-                // metadata of the current sheet
-
-                rowConsumer.consumeNewSheet(new ImportableSheet() {
-
-                    @Override
-                    public String getName() {
-                        // store the name of the current sheet
-                        return sheetName;
-                    }
-
-                    @Override
-                    public Integer getHeaderRowNum() {
-                        // store the num of the header row
-                        return headerRowNum;
-                    }
-                });
-
-                Consumer<Row> internalRowConsumer =  internalRow -> {
-
-                    // cells of the current row
-                    List<ImportableCell> rowCellsMetadata = Lists.newArrayList();
-
-                    // metadata of the current row
-                    ImportableRow rowMetadata = new ImportableRow() {
-
-                        @Override
-                        public List<ImportableCell> getCells() {
-                            return rowCellsMetadata;
-                        }
-
-                        @Override
-                        public Integer getRowNum() {
-                            return internalRow.getRowNum();
-                        }
-
-                        public String toString() {
-                            return "ImportableRow " + sheetName + "#" + internalRow.getRowNum();
-                        }
-                    };
-
-                    // iterator on cells in a row
-                    Iterator<Cell> cellIterator = internalRow.cellIterator();
-
-                    // for each cell
-                    while (cellIterator.hasNext()) {
-
-                        Cell cell = cellIterator.next();
-
-                        final Object cellValue = computeCellValue(cell, evaluator);
-
-                        // adding cell metadata to the list
-                        ImportableCell workbookCell = new ImportableCell() {
-                            @Override
-                            public Integer getIndex() {
-                                return cell.getColumnIndex();
-                            }
-
-                            @Override
-                            public String getValue() {
-                                return cellValue == null ? "" : cellValue.toString();
-                            }
-
-                            public String toString() {
-                                return cell.getColumnIndex() + "-" + (cellValue != null ? cellValue : "");
-                            }
-                        };
-                        rowCellsMetadata.add(workbookCell);
-
-                    }
-
-                    // how to process rows and store their data
-                    rowConsumer.consumeRow(rowMetadata);
-                };
-
-
-                if (maxRows != null && maxRows == 1) {
-                    // here we only process one row : only the first one for each sheet
-                    internalRowConsumer.accept(sheet.getRow(headerRowNum));
+    private List<String> readRow(Row row, short firstCellNum, short lastCellNum, FormulaEvaluator evaluator) {
+        if (row != null) {
+            List<String> values = Lists.newArrayList();
+            for (int i = firstCellNum ; i < lastCellNum ; i++) {
+                Cell cell = row.getCell(i);
+                if (cell == null) {
+                    values.add(null);
                 } else {
-
-                    // here we need to process many rows
-
-                    // iterator on rows in a sheet
-                    Iterator<Row> rowIterator = sheet.rowIterator();
-
-                    int rowCount = 0;
-                    // for each row
-                    while (rowIterator.hasNext()) {
-                        //increment rowCount
-                        rowCount++;
-
-                        Row row = rowIterator.next();
-                        final int rowNum = row.getRowNum();
-
-                        // default row skipping strategy on current sheet
-                        if (!sheetName.equals(focusedSheet)) {
-                            // if the current row need to be skipped
-                            if (maxRows != null && rowCount > maxRows) {
-                                // skipping all rows with index greater than maxRows
-                                break;
-                            }
-                        }
-                        // The current sheet is the focused one
-                        // focusedElements" row skipping strategy
-                        else if (focusedSheet != null && focusedRow != null) {
-
-//                        // only process the focused row and the first read row (Apache POI skips empty rows when iterating over them)
-//                        if(rowNum != focusedRow && rowCount != 0)
-                            // array containing index of rows to keep
-                            int[] keepRows = new int[]{headerRowNum, focusedRow - 1, focusedRow, focusedRow + 1};
-                            // if a row don't have its index in the array, skip it
-                            if (Arrays.stream(keepRows).filter(r -> r == rowNum).count() == 0)
-                                continue;
-                        }
-
-                        internalRowConsumer.accept(row);
-
+                    CellValue value = evaluator.evaluate(cell);
+                    if (value != null) {
+                        values.add(value.formatAsString());
+                    } else {
+                        values.add(null);
                     }
                 }
-            });
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("An error occured when trying to parse the provided file", ex);
+            }
+            return values;
+        } else {
+            return null;
         }
     }
+
+
+//    private void basicExtract(InputStream stream, String fileName, ExcelImportConsumer rowConsumer){
+//
+//        // no data to parse
+//        if (fileName == null || stream == null)
+//            return;
+//
+//        // first row skipping strategy
+//        // max rows to be processed per sheet
+//        Integer maxRows = rowConsumer.getMaxRows();
+//
+//        // second row skipping strategy (priority on max)
+//        // variables
+//        Object[] focusedElements = rowConsumer.getFocusedElements();
+//        String focusedSheet = focusedElements == null ? null : (String) focusedElements[0];
+//        Integer focusedRow = focusedElements == null ? null : (Integer) focusedElements[1];
+//
+//        // names of the sheets to skip
+//        Object inactiveSheetsConfiguration = rowConsumer.getInactiveSheets();
+//        List<String> inactiveSheets = inactiveSheetsConfiguration == null ? Lists.newArrayList() : Lists.newArrayList((String[]) inactiveSheetsConfiguration);
+//        // try reading inputstream
+//        try  {
+//
+//            ImportableWorkbookAPI workbook = () -> fileName;
+//
+//            // apache poi representation of a .xls excel file
+//            Workbook excelWorkbook = WorkbookFactory.create(stream);
+//            // formula eveluator for workbook
+//            FormulaEvaluator evaluator = excelWorkbook.getCreationHelper().createFormulaEvaluator();
+//            // clear cached values
+//            evaluator.clearAllCachedResultValues();
+//            // ignore cross workbook references (formula referencing external workbook cells)
+//            evaluator.setIgnoreMissingWorkbooks(true);
+//            // iterator on sheets
+//            Iterator<Sheet> sheetIterator = excelWorkbook.sheetIterator();
+//            List<Sheet> sheets =  Lists.newArrayList();
+//
+//            // for each sheet
+//            while (sheetIterator.hasNext()) {
+//
+//                Sheet sheet = sheetIterator.next();
+//                String sheetName = sheet.getSheetName();
+//
+//                // if the current sheet need to be skipped
+//                if (inactiveSheets.contains(sheetName))
+//                    continue;
+//
+//               sheets.add(sheet);
+//            }
+//
+//            sheets.stream().forEach(sheet -> {
+//                String sheetName = sheet.getSheetName();
+//                final int headerRowNum = sheet.getFirstRowNum();
+//                // metadata of the current sheet
+//
+//                rowConsumer.consumeNewSheet(new ImportableSheet() {
+//
+//                    @Override
+//                    public String getName() {
+//                        // store the name of the current sheet
+//                        return sheetName;
+//                    }
+//
+//                    @Override
+//                    public Integer getHeaderRowNum() {
+//                        // store the num of the header row
+//                        return headerRowNum;
+//                    }
+//                });
+//
+//                Consumer<Row> internalRowConsumer =  internalRow -> {
+//
+//                    // cells of the current row
+//                    List<ImportableCell> rowCellsMetadata = Lists.newArrayList();
+//
+//                    // metadata of the current row
+//                    ImportableRow rowMetadata = new ImportableRow() {
+//
+//                        @Override
+//                        public List<ImportableCell> getCells() {
+//                            return rowCellsMetadata;
+//                        }
+//
+//                        @Override
+//                        public Integer getRowNum() {
+//                            return internalRow.getRowNum();
+//                        }
+//
+//                        public String toString() {
+//                            return "ImportableRow " + sheetName + "#" + internalRow.getRowNum();
+//                        }
+//                    };
+//
+//                    // iterator on cells in a row
+//                    Iterator<Cell> cellIterator = internalRow.cellIterator();
+//
+//                    // for each cell
+//                    while (cellIterator.hasNext()) {
+//
+//                        Cell cell = cellIterator.next();
+//
+//                        final Object cellValue = computeCellValue(cell, evaluator);
+//
+//                        // adding cell metadata to the list
+//                        ImportableCell workbookCell = new ImportableCell() {
+//                            @Override
+//                            public Integer getIndex() {
+//                                return cell.getColumnIndex();
+//                            }
+//
+//                            @Override
+//                            public String getValue() {
+//                                return cellValue == null ? "" : cellValue.toString();
+//                            }
+//
+//                            public String toString() {
+//                                return cell.getColumnIndex() + "-" + (cellValue != null ? cellValue : "");
+//                            }
+//                        };
+//                        rowCellsMetadata.add(workbookCell);
+//
+//                    }
+//
+//                    // how to process rows and store their data
+//                    rowConsumer.consumeRow(rowMetadata);
+//                };
+//
+//
+//                if (maxRows != null && maxRows == 1) {
+//                    // here we only process one row : only the first one for each sheet
+//                    internalRowConsumer.accept(sheet.getRow(headerRowNum));
+//                } else {
+//
+//                    // here we need to process many rows
+//
+//                    // iterator on rows in a sheet
+//                    Iterator<Row> rowIterator = sheet.rowIterator();
+//
+//                    int rowCount = 0;
+//                    // for each row
+//                    while (rowIterator.hasNext()) {
+//                        //increment rowCount
+//                        rowCount++;
+//
+//                        Row row = rowIterator.next();
+//                        final int rowNum = row.getRowNum();
+//
+//                        // default row skipping strategy on current sheet
+//                        if (!sheetName.equals(focusedSheet)) {
+//                            // if the current row need to be skipped
+//                            if (maxRows != null && rowCount > maxRows) {
+//                                // skipping all rows with index greater than maxRows
+//                                break;
+//                            }
+//                        }
+//                        // The current sheet is the focused one
+//                        // focusedElements" row skipping strategy
+//                        else if (focusedSheet != null && focusedRow != null) {
+//
+////                        // only process the focused row and the first read row (Apache POI skips empty rows when iterating over them)
+////                        if(rowNum != focusedRow && rowCount != 0)
+//                            // array containing index of rows to keep
+//                            int[] keepRows = new int[]{headerRowNum, focusedRow - 1, focusedRow, focusedRow + 1};
+//                            // if a row don't have its index in the array, skip it
+//                            if (Arrays.stream(keepRows).filter(r -> r == rowNum).count() == 0)
+//                                continue;
+//                        }
+//
+//                        internalRowConsumer.accept(row);
+//
+//                    }
+//                }
+//            });
+//        } catch (Exception ex) {
+//            throw new IllegalArgumentException("An error occured when trying to parse the provided file", ex);
+//        }
+//    }
 
     private Object computeCellValue(Cell cell, FormulaEvaluator evaluator){
         Object cellValue;

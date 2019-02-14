@@ -22,6 +22,8 @@ package com.playsql.psea.api;
 
 // TODO OSGI can’t load from RY
 
+import java.util.List;
+
 public abstract class ExcelImportConsumer {
 
     private Integer maxRows;
@@ -37,8 +39,18 @@ public abstract class ExcelImportConsumer {
         this.inactiveSheets = inactiveSheets;
     }
 
-    public abstract void consumeNewSheet(ImportableSheet sheet);
-    public abstract void consumeRow(ImportableRow row);
+    public abstract void consumeNewSheet(String name, Integer headerRowNum, List<String> headerRow);
+    //public abstract void consumeNewSheet(ImportableSheet sheet);
+    //public abstract void consumeRow(ImportableRow row);
+
+    /**
+     * Push a row to the consumer.
+     *
+     * @param isFocused whether the row matches `focusedElements`
+     * @param rowNum the row number, counted from the headerRow.
+     * @param cells the list of cell values
+     */
+    public abstract void consumeRow(boolean isFocused, int rowNum, List<String> cells);
 
     public Integer getMaxRows() {
         return maxRows;
