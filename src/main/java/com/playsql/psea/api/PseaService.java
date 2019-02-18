@@ -29,4 +29,6 @@ public interface PseaService {
     File export(Consumer<WorkbookAPI> f);
 
     void extract(InputStream stream, String excelFileName, ExcelImportConsumer rowConsumer);
+
+    void extract(File file, String excelFileName, ExcelImportConsumer rowConsumer);
 }

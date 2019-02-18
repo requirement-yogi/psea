@@ -142,6 +142,86 @@ public class PseaServiceImpl implements PseaService {
                 }
                 LOG.debug(clock.time("Done reading one sheet"));
             }
+        } catch (OutOfMemoryError oome) {
+            LOG.debug("Memory amount is too low to process current file"); // NO_RELEASE
+            throw new OutOfMemoryError("Memory amount is too low to process current file");
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("An error occured when trying to parse the file: " + fileName, ex);
+        }
+    }
+
+    public void extract(File file, String fileName, ExcelImportConsumer rowConsumer) {
+        Clock clock = Clock.start("Reading Excel file " + fileName + " - ");
+
+        // no data to parse
+        if (fileName == null || file == null)
+            return;
+
+        // 3 ways to skip parts of the spreadsheet
+        Integer maxRows = rowConsumer.getMaxRows();
+        String focusedSheet = rowConsumer.getFocusedSheet();
+        Integer focusedRow = rowConsumer.getFocusedRow();
+
+        // names of the sheets to skip
+        Object inactiveSheetsConfiguration = rowConsumer.getInactiveSheets();
+        List<String> inactiveSheets = inactiveSheetsConfiguration == null ? Lists.newArrayList() : Lists.newArrayList((String[]) inactiveSheetsConfiguration);
+        // try reading inputstream
+        try  {
+
+            // apache poi representation of a .xls excel file
+            Workbook excelWorkbook = WorkbookFactory.create(file);
+            // formula eveluator for workbook
+            FormulaEvaluator evaluator = excelWorkbook.getCreationHelper().createFormulaEvaluator();
+            // clear cached values
+            evaluator.clearAllCachedResultValues();
+            // ignore cross workbook references (formula referencing external workbook cells)
+            evaluator.setIgnoreMissingWorkbooks(true);
+            // iterator on sheets
+            Iterator<Sheet> sheetIterator = excelWorkbook.sheetIterator();
+
+            LOG.debug(clock.time("Done reading the file"));
+
+            while (sheetIterator.hasNext()) {
+                Sheet sheet = sheetIterator.next();
+                String sheetName = sheet.getSheetName();
+                final int headerRowNum = sheet.getFirstRowNum();
+                if (inactiveSheets.contains(sheetName)) {
+                    continue;
+                }
+                if (focusedSheet != null && !sheetName.equals(focusedSheet)) {
+                    // We push the sheet without providing the cells, because we want the 'excel tab' to display, but only
+                    // the focused one to display with cells
+                    rowConsumer.consumeNewSheet(sheetName, 0, null);
+                    continue;
+                }
+
+                // If the focusedSheet is not specified, then we process at least the headerRow.
+                Row row = sheet.getRow(headerRowNum);
+                short firstCellNum = row.getFirstCellNum();
+                short lastCellNum = row.getLastCellNum();
+                List<String> headers = readRow(row, firstCellNum, lastCellNum, evaluator);
+                if (headers == null) {
+                    throw new RuntimeException("The header row is empty for sheet '" + sheetName + "'");
+                }
+                rowConsumer.consumeNewSheet(sheetName, headerRowNum, headers);
+
+                // here we need to process many rows
+                int start = headerRowNum + 1;
+                if (focusedRow != null) {
+                    start = Math.max(focusedRow - 1, start);
+                }
+                int end = sheet.getLastRowNum();
+                if (maxRows != null) {
+                    end = Math.min(start + maxRows - 1, end);
+                }
+                for (int i = start ; i <= end ; i++) {
+                    boolean isFocused = focusedRow != null && focusedRow == i;
+                    rowConsumer.consumeRow(isFocused, i - headerRowNum, readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator));
+                }
+                LOG.debug(clock.time("Done reading one sheet"));
+            }
+        } catch (OutOfMemoryError oome) {
+            // NO_RELEASE
         } catch (Exception ex) {
             throw new IllegalArgumentException("An error occured when trying to parse the file: " + fileName, ex);
         }
