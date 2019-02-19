@@ -71,7 +71,7 @@ public class PseaServiceImpl implements PseaService {
             throw new RuntimeException(e);
         }
     }
-
+    // TODO merge with method below
     public void extract(InputStream stream, String fileName, ExcelImportConsumer rowConsumer) {
         Clock clock = Clock.start("Reading Excel file " + fileName + " - ");
 
@@ -149,7 +149,7 @@ public class PseaServiceImpl implements PseaService {
             throw new IllegalArgumentException("An error occured when trying to parse the file: " + fileName, ex);
         }
     }
-
+    // TODO merge with method above
     public void extract(File file, String fileName, ExcelImportConsumer rowConsumer) {
         Clock clock = Clock.start("Reading Excel file " + fileName + " - ");
 
