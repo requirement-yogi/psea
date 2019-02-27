@@ -20,19 +20,22 @@ package com.playsql.psea.impl;
  * #L%
  */
 
-import com.atlassian.extras.common.log.Logger;
 import com.google.common.collect.Maps;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.WorkbookAPI;
+import org.apache.log4j.Logger;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.util.Map;
 
 public final class WorkbookAPIImpl implements WorkbookAPI {
 
-    private final static Logger.Log log = Logger.getInstance(WorkbookAPIImpl.class);
+    private final static org.apache.log4j.Logger LOG = Logger.getLogger(WorkbookAPIImpl.class);
     final XSSFWorkbook workbook;
     final Map<Style, CellStyle> styles = Maps.newHashMap();
 
