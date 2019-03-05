@@ -51,9 +51,7 @@ import java.util.function.Consumer;
 
 public class PseaServiceImpl implements PseaService {
 
-    private final static Logger LOG = Logger.getLogger(PseaServiceImpl.class); {
-        Logger.getLogger("com.playsql").setLevel(Level.DEBUG); // NO_RELEASE
-    }
+    private final static Logger LOG = Logger.getLogger(PseaServiceImpl.class);
 
     public File export(Consumer<WorkbookAPI> f) {
         XSSFWorkbook xlWorkbook = new XSSFWorkbook();
