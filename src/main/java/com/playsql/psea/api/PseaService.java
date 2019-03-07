@@ -28,7 +28,50 @@ public interface PseaService {
 
     File export(Consumer<WorkbookAPI> f);
 
-    void extract(InputStream stream, String excelFileName, ExcelImportConsumer rowConsumer);
+    void extract(PseaInput file, ExcelImportConsumer rowConsumer);
 
-    void extract(File file, String excelFileName, ExcelImportConsumer rowConsumer);
+    /**
+     * A file or an inputstream that is used as an input for the Excel import
+      */
+    interface PseaInput {
+        String getFileName();
+    }
+
+    class PseaFileInput implements PseaInput {
+        private final File file;
+        private final String fileName;
+
+        public PseaFileInput(File file, String fileName) {
+            this.file = file;
+            this.fileName = fileName;
+        }
+
+        public File getFile() {
+            return file;
+        }
+
+        @Override
+        public String getFileName() {
+            return file.getName();
+        }
+    }
+    class PseaInputStream implements PseaInput {
+        private final InputStream inputStream;
+        private final String fileName;
+
+        public PseaInputStream(InputStream inputStream, String fileName) {
+            this.inputStream = inputStream;
+            this.fileName = fileName;
+        }
+
+        public InputStream getInputStream() {
+            return inputStream;
+        }
+
+        @Override
+        public String getFileName() {
+            return fileName;
+        }
+    }
+
 }
