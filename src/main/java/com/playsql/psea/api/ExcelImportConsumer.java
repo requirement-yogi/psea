@@ -33,11 +33,11 @@ public abstract class ExcelImportConsumer {
     private Integer focusedRow;
     private List<String> inactiveSheets;
 
-    public ExcelImportConsumer(Integer maxRows, String focusedSheet, Integer focusedRow, String[] inactiveSheets) {
+    public ExcelImportConsumer(Integer maxRows, String focusedSheet, Integer focusedRow, List<String> inactiveSheets) {
         this.maxRows = maxRows;
         this.focusedSheet = focusedSheet;
         this.focusedRow = focusedRow;
-        this.inactiveSheets = inactiveSheets != null ? Lists.newArrayList(inactiveSheets) : null;
+        this.inactiveSheets = inactiveSheets != null ? inactiveSheets : null;
     }
 
     public abstract void consumeNewSheet(String name, Integer headerRowNum, List<String> headerRow);
