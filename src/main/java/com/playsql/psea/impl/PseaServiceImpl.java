@@ -102,7 +102,7 @@ public class PseaServiceImpl implements PseaService {
                 if (focusedSheet != null && !sheetName.equals(focusedSheet)) {
                     // We push the sheet without providing the cells, because we want the 'excel tab' to display, but only
                     // the focused one to display with cells
-                    rowConsumer.consumeNewSheet(sheetName, 0, null);
+                    rowConsumer.consumeNewSheet(sheetName, null);
                     continue;
                 }
 
@@ -114,7 +114,7 @@ public class PseaServiceImpl implements PseaService {
                 if (headers == null) {
                     throw new RuntimeException("The header row is empty for sheet '" + sheetName + "'");
                 }
-                rowConsumer.consumeNewSheet(sheetName, headerRowNum, headers);
+                rowConsumer.consumeNewSheet(sheetName, headers);
 
                 // here we need to process many rows
                 int start = headerRowNum + 1;

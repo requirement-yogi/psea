@@ -40,7 +40,7 @@ public abstract class ExcelImportConsumer {
         this.inactiveSheets = inactiveSheets != null ? inactiveSheets : null;
     }
 
-    public abstract void consumeNewSheet(String name, Integer headerRowNum, List<String> headerRow);
+    public abstract void consumeNewSheet(String name, List<String> headerRow);
     //public abstract void consumeNewSheet(ImportableSheet sheet);
     //public abstract void consumeRow(ImportableRow row);
 
