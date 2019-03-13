@@ -48,7 +48,8 @@ public abstract class ExcelImportConsumer {
      * Push a row to the consumer.
      *
      * @param isFocused whether the row matches `focusedElements`
-     * @param rowNum the row number, counted from the headerRow.
+     * @param rowNum the row number, counted as in the original file, 1-based. It means rowNum is never 1, because
+     *               even if title are stacked at the top of the sheet, the first row is still the titles
      * @param cells the list of cell values
      */
     public abstract void consumeRow(boolean isFocused, int rowNum, List<String> cells);

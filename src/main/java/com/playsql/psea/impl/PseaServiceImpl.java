@@ -119,15 +119,18 @@ public class PseaServiceImpl implements PseaService {
                 // here we need to process many rows
                 int start = headerRowNum + 1;
                 if (focusedRow != null) {
-                    start = Math.max(focusedRow - 1, start);
+                    // focusedRow is 1-based, because it is extracted from rowNum, whereas 'start' or 'i' is 0-based
+                    // And we want the row before focusedRow
+                    start = Math.max(focusedRow - 2, start);
                 }
                 int end = sheet.getLastRowNum();
                 if (maxRows != null) {
                     end = Math.min(start + maxRows - 1, end);
                 }
                 for (int i = start ; i <= end ; i++) {
-                    boolean isFocused = focusedRow != null && focusedRow == i;
-                    rowConsumer.consumeRow(isFocused, i - headerRowNum, readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator));
+                    int rowNum = i + 1;
+                    boolean isFocused = focusedRow != null && focusedRow == rowNum;
+                    rowConsumer.consumeRow(isFocused, rowNum, readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator));
                 }
                 LOG.debug(clock.time("Done reading one sheet"));
             }
