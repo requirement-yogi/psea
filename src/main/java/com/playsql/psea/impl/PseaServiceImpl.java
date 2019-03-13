@@ -22,6 +22,7 @@ package com.playsql.psea.impl;
 
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.*;
+import com.playsql.psea.api.PSEAFlowControlException;
 import com.playsql.psea.utils.Utils.Clock;
 import org.apache.log4j.Logger;
 import org.apache.poi.ss.formula.eval.NotImplementedException;
@@ -132,6 +133,8 @@ public class PseaServiceImpl implements PseaService {
             }
         } catch (OutOfMemoryError oome) {
             // NO_RELEASE
+        } catch (PSEAFlowControlException ex) {
+            throw ex;
         } catch (Exception ex) {
             throw new IllegalArgumentException("An error occured when trying to parse the file: " + workbookFile.getFileName(), ex);
         }
