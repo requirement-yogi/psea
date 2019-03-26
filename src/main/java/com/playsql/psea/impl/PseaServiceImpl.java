@@ -132,8 +132,10 @@ public class PseaServiceImpl implements PseaService {
                     boolean isFocused = focusedRow != null && focusedRow == rowNum;
                     rowConsumer.consumeRow(isFocused, rowNum, readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator));
                 }
+                rowConsumer.endOfSheet(sheetName);
                 LOG.debug(clock.time("Done reading one sheet"));
             }
+            rowConsumer.endOfWorkbook();
         } catch (OutOfMemoryError oome) {
             // NO_RELEASE
         } catch (PSEAFlowControlException ex) {

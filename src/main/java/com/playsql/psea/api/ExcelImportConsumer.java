@@ -20,10 +20,6 @@ package com.playsql.psea.api;
  * #L%
  */
 
-// TODO OSGI can’t load from RY
-
-import com.google.common.collect.Lists;
-
 import java.util.List;
 
 public abstract class ExcelImportConsumer {
@@ -53,6 +49,21 @@ public abstract class ExcelImportConsumer {
      * @param cells the list of cell values
      */
     public abstract void consumeRow(boolean isFocused, int rowNum, List<String> cells);
+
+    /**
+     * This method is called when a sheet is done processing. If it is the last sheet,
+     * {@link #endOfWorkbook()} is also called after this method.
+     * @param sheetName the name of the sheet
+     */
+    public void endOfSheet(String sheetName) {}
+
+    /**
+     * This method is called when a workbook is done processing.
+     * @return a value which is returned to the caller
+     */
+    public Object endOfWorkbook() {
+        return null;
+    }
 
     public Integer getMaxRows() {
         return maxRows;
