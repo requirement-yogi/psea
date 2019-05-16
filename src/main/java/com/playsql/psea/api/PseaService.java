@@ -28,7 +28,14 @@ public interface PseaService {
 
     File export(Consumer<WorkbookAPI> f);
 
-    void extract(PseaInput file, ExcelImportConsumer rowConsumer);
+    /**
+     * Read an Excel file, and feed it to the consumer
+     * @param file the file, either a physical file or an InputStream
+     * @param consumer the consumer
+     * @throws OutOfMemoryError if the underlying Apache POI throws an OOME. It is recommended to catch this exception in the calling method.
+     * @throws PSEAImportException if the file is not in a readable format, or if an IOException was encountered
+     */
+    void extract(PseaInput file, ExcelImportConsumer consumer) throws OutOfMemoryError, PSEAImportException;
 
     /**
      * A file or an inputstream that is used as an input for the Excel import

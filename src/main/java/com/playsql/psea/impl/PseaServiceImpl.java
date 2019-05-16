@@ -21,14 +21,14 @@ package com.playsql.psea.impl;
  */
 
 import com.google.common.collect.Lists;
-import com.playsql.psea.api.*;
-import com.playsql.psea.api.PSEAFlowControlException;
+import com.playsql.psea.api.ExcelImportConsumer;
+import com.playsql.psea.api.PSEAImportException;
+import com.playsql.psea.api.PseaService;
+import com.playsql.psea.api.WorkbookAPI;
 import com.playsql.psea.utils.Utils.Clock;
 import org.apache.log4j.Logger;
-import org.apache.poi.ss.formula.eval.NotImplementedException;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
@@ -60,7 +60,7 @@ public class PseaServiceImpl implements PseaService {
         }
     }
 
-    public void extract(PseaInput workbookFile, ExcelImportConsumer rowConsumer) {
+    public void extract(PseaInput workbookFile, ExcelImportConsumer rowConsumer) throws OutOfMemoryError, PSEAImportException {
         Clock clock = Clock.start("Reading Excel file " + workbookFile.getFileName() + " - ");
 
         // 3 ways to skip parts of the spreadsheet
@@ -77,7 +77,7 @@ public class PseaServiceImpl implements PseaService {
             } else if (workbookFile instanceof PseaInputStream) {
                 workbook = WorkbookFactory.create(((PseaInputStream) workbookFile).getInputStream());
             } else {
-                throw new NotImplementedException("Unknown PseaInput class: " + workbookFile);
+                throw new RuntimeException("Unknown PseaInput class: " + workbookFile);
             }
 
             // apache poi representation of a .xls excel file
@@ -136,12 +136,10 @@ public class PseaServiceImpl implements PseaService {
                 LOG.debug(clock.time("Done reading one sheet"));
             }
             rowConsumer.endOfWorkbook();
-        } catch (OutOfMemoryError oome) {
-            // NO_RELEASE
-        } catch (PSEAFlowControlException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("An error occured when trying to parse the file: " + workbookFile.getFileName(), ex);
+        } catch (InvalidFormatException e) {
+            throw new PSEAImportException(workbookFile, e);
+        } catch (IOException e) {
+            throw new PSEAImportException(workbookFile, e);
         }
     }
 
@@ -172,6 +170,8 @@ public class PseaServiceImpl implements PseaService {
                         cellValue = computedFormulaValue.getNumberValue();
                         break;
                     case Cell.CELL_TYPE_STRING:
+                        // TODO We could get the RTF to get bolds and similar, but it throws an exception if it's not text
+                        // RichTextString richValue = cell.getRichStringCellValue();
                         cellValue = computedFormulaValue.getStringValue();
                         break;
                     case Cell.CELL_TYPE_BOOLEAN:
@@ -190,7 +190,7 @@ public class PseaServiceImpl implements PseaService {
             } else {
                 cellValue = null;
             }
-        } catch (NotImplementedException ex) {
+        } catch (RuntimeException ex) {
             cellValue = cell.getCellFormula();
         }
         return (cellValue == null) ? null : Objects.toString(cellValue);

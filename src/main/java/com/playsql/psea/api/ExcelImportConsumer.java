@@ -82,5 +82,5 @@ public abstract class ExcelImportConsumer {
             return !inactiveSheets.contains(sheetName);
         }
         return true;
-    };
+    }
 }

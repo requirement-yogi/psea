@@ -224,14 +224,10 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <upm.license.compatibility.version>2.8.1</upm.license.compatibility.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <allowGoogleTracking>false</allowGoogleTracking>
-        <jira.version>7.0.0</jira.version>
-        <confluence.version>5.8.6</confluence.version>
-        <confluence.data.version>5.8.6</confluence.data.version>
-        <plugin.create.content.version>5.2.1</plugin.create.content.version>
-        <ao.version>0.28.1</ao.version>
+        <confluence.version>6.6.0</confluence.version>
+        <confluence.data.version>6.6.0</confluence.data.version>
         <amps.version>6.0.8</amps.version>
         <plugin.testrunner.version>1.2.3</plugin.testrunner.version>
         <skipTests>false</skipTests>
