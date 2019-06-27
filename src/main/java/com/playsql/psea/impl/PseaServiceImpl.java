@@ -108,32 +108,35 @@ public class PseaServiceImpl implements PseaService {
 
                 // If the focusedSheet is not specified, then we process at least the headerRow.
                 Row row = sheet.getRow(headerRowNum);
-                short firstCellNum = row.getFirstCellNum();
-                short lastCellNum = row.getLastCellNum();
-                List<String> headers = readRow(row, firstCellNum, lastCellNum, evaluator);
-                if (headers == null) {
-                    throw new RuntimeException("The header row is empty for sheet '" + sheetName + "'");
-                }
-                rowConsumer.consumeNewSheet(sheetName, headers);
+                // If there is no first row, then there is no data on this sheet. Skip it.
+                if (row != null) {
+                    short firstCellNum = row.getFirstCellNum();
+                    short lastCellNum = row.getLastCellNum();
+                    List<String> headers = readRow(row, firstCellNum, lastCellNum, evaluator);
+                    if (headers == null) {
+                        throw new RuntimeException("The header row is empty for sheet '" + sheetName + "'");
+                    }
+                    rowConsumer.consumeNewSheet(sheetName, headers);
 
-                // here we need to process many rows
-                int start = headerRowNum + 1;
-                if (focusedRow != null) {
-                    // focusedRow is 1-based, because it is extracted from rowNum, whereas 'start' or 'i' is 0-based
-                    // And we want the row before focusedRow
-                    start = Math.max(focusedRow - 2, start);
+                    // here we need to process many rows
+                    int start = headerRowNum + 1;
+                    if (focusedRow != null) {
+                        // focusedRow is 1-based, because it is extracted from rowNum, whereas 'start' or 'i' is 0-based
+                        // And we want the row before focusedRow
+                        start = Math.max(focusedRow - 2, start);
+                    }
+                    int end = sheet.getLastRowNum();
+                    if (maxRows != null) {
+                        end = Math.min(start + maxRows - 1, end);
+                    }
+                    for (int i = start ; i <= end ; i++) {
+                        int rowNum = i + 1;
+                        boolean isFocused = focusedRow != null && focusedRow == rowNum;
+                        rowConsumer.consumeRow(isFocused, rowNum, readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator));
+                    }
+                    rowConsumer.endOfSheet(sheetName);
+                    LOG.debug(clock.time("Done reading one sheet"));
                 }
-                int end = sheet.getLastRowNum();
-                if (maxRows != null) {
-                    end = Math.min(start + maxRows - 1, end);
-                }
-                for (int i = start ; i <= end ; i++) {
-                    int rowNum = i + 1;
-                    boolean isFocused = focusedRow != null && focusedRow == rowNum;
-                    rowConsumer.consumeRow(isFocused, rowNum, readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator));
-                }
-                rowConsumer.endOfSheet(sheetName);
-                LOG.debug(clock.time("Done reading one sheet"));
             }
             rowConsumer.endOfWorkbook();
         } catch (InvalidFormatException e) {
