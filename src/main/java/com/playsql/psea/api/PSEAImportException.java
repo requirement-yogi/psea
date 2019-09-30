@@ -21,7 +21,6 @@ package com.playsql.psea.api;
  */
 
 import com.playsql.psea.api.PseaService.PseaInput;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
 /**
  * A checked exception, for all situations where an import fails (most often when Apache POI fails)

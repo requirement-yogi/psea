@@ -36,8 +36,8 @@ public class AboutAction extends ConfluenceActionSupport {
         pseaService.export(new Consumer<WorkbookAPI>() {
             @Override
             public void accept(WorkbookAPI workbookAPI) {
-                Sheet sh = workbookAPI.newSheet("lanket");
-                sh.addRow(Lists.newArrayList(new Value("Someval")));
+                Sheet sh = workbookAPI.newSheet("Blanket");
+                sh.addRow(Lists.newArrayList(new Value("Jail")));
             }
         });
         return SUCCESS;

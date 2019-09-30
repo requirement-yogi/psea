@@ -21,7 +21,6 @@ package com.playsql.psea.impl;
  */
 
 import com.playsql.psea.api.Row;
-import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Hyperlink;
