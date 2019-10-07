@@ -27,12 +27,14 @@
 
         <param name="plugin-icon">img/psea-ry-16px.png</param>
         <param name="plugin-logo">img/psea-ry-72px.png</param>
+        <param name="plugin-type">both</param>
 
         <!--<param name="plugin-banner">img/Banner.png</param>-->
         <param name="vendor-icon">img/playsql-16px.png</param>
         <param name="vendor-logo">img/playsql-72px.png</param>
 
         <param name="atlassian-data-center-compatible">true</param>
+        <param name="atlassian-data-center-status">compatible</param>
     </plugin-info>
 
     <resource type="i18n" name="Internationalization" location="com/playsql/psea/i18n" />
