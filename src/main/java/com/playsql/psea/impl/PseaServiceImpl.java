@@ -139,9 +139,7 @@ public class PseaServiceImpl implements PseaService {
                 }
             }
             rowConsumer.endOfWorkbook();
-        } catch (InvalidFormatException e) {
-            throw new PSEAImportException(workbookFile, e);
-        } catch (IOException e) {
+        } catch (InvalidFormatException | IOException e) {
             throw new PSEAImportException(workbookFile, e);
         }
     }

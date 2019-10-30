@@ -63,7 +63,7 @@ public class Utils {
 
         public String time(String message) {
             long now = System.nanoTime();
-            String result = new StringBuilder(prefix).append(message).append(" at ").append(TimeUnit.NANOSECONDS.toMillis(now - start)).append("ms.").toString();
+            String result = prefix + message + " at " + TimeUnit.NANOSECONDS.toMillis(now - start) + "ms.";
             lap = now;
             return result;
         }
