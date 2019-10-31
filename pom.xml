@@ -136,66 +136,6 @@
                     </instructions>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>1.8</version>
-                <configuration>
-                    <!--
-                        You don't need to run the license plugin manually, it is part of the build (see executions).
-                        It retrieves all licenses of all dependencies into src/licenses/THIRD-PARTY-included-modules.txt
-
-                        NB: How to retrieve licenses on a new project:
-                        mvn clean license:download-licenses
-                    -->
-                    <projectName>Play SQL Exports</projectName>
-                    <organizationName>Play SQL S.A.S.U.</organizationName>
-                    <inceptionYear>2016</inceptionYear>
-
-                    <!-- This is an open-source project under APL v2 -->
-                    <licenseName>apache_v2</licenseName>
-                    <skipUpdateLicense>false</skipUpdateLicense>
-
-                    <!-- Skips the goal download-licenses -->
-                    <skipDownloadLicenses>false</skipDownloadLicenses>
-                    <!-- Skips the goal download-licenses -->
-                    <skipUpdateLicense>false</skipUpdateLicense>
-                    <!-- The license of each module -->
-                    <licenseFile>${basedir}/src/license/LICENSE.txt</licenseFile>
-                    <useMissingFile>true</useMissingFile>
-                    <sortArtifactByName>true</sortArtifactByName>
-                    <!-- The file with the list of licenses, for those which can't be found automatically -->
-                    <missingFile>src/license/THIRD-PARTY.properties</missingFile>
-                    <!-- Same as 'missingFile' but in XML, probably -->
-                    <licensesConfigFile>src/license/licenses-manual.xml</licensesConfigFile>
-                    <!-- All licenses which could automatically be fetched. About the current module only.-->
-                    <licensesOutputFile>src/license/licenses-generated.xml</licensesOutputFile>
-                    <!-- Dump the text of all licenses of third parties. About the current module only. -->
-                    <licensesOutputDirectory>src/license/text</licensesOutputDirectory>
-                    <!-- A list of dependencies for the subtree and their licenses -->
-                    <thirdPartyFilename>THIRD-PARTY-included-modules.txt</thirdPartyFilename>
-                    <!-- Where to put the THIRD-PARTY.txt file -->
-                    <outputDirectory>${project.basedir}/src/license</outputDirectory>
-                    <!-- In the binary distribution, we exclude libraries which are only compiled against, as long
-                         as they're not GPL. Atlassian Confluence is considered with a developer license. -->
-                    <includedScopes>compile</includedScopes>
-
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>download-licenses2</id>
-                        <!-- This phase is before 'package' so the license information is included in the binary
-                             distribution. -->
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>download-licenses</goal>
-                            <goal>update-file-header</goal>
-                            <goal>update-project-license</goal>
-                            <goal>add-third-party</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
         <resources>
             <resource>
@@ -281,6 +221,66 @@
             <id>release</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <version>1.8</version>
+                        <configuration>
+                            <!--
+                                You don't need to run the license plugin manually, it is part of the build (see executions).
+                                It retrieves all licenses of all dependencies into src/licenses/THIRD-PARTY-included-modules.txt
+
+                                NB: How to retrieve licenses on a new project:
+                                mvn clean license:download-licenses
+                            -->
+                            <projectName>Play SQL Exports</projectName>
+                            <organizationName>Play SQL S.A.S.U.</organizationName>
+                            <inceptionYear>2016</inceptionYear>
+
+                            <!-- This is an open-source project under APL v2 -->
+                            <licenseName>apache_v2</licenseName>
+                            <skipUpdateLicense>false</skipUpdateLicense>
+
+                            <!-- Skips the goal download-licenses -->
+                            <skipDownloadLicenses>false</skipDownloadLicenses>
+                            <!-- Skips the goal download-licenses -->
+                            <skipUpdateLicense>false</skipUpdateLicense>
+                            <!-- The license of each module -->
+                            <licenseFile>${basedir}/src/license/LICENSE.txt</licenseFile>
+                            <useMissingFile>true</useMissingFile>
+                            <sortArtifactByName>true</sortArtifactByName>
+                            <!-- The file with the list of licenses, for those which can't be found automatically -->
+                            <missingFile>src/license/THIRD-PARTY.properties</missingFile>
+                            <!-- Same as 'missingFile' but in XML, probably -->
+                            <licensesConfigFile>src/license/licenses-manual.xml</licensesConfigFile>
+                            <!-- All licenses which could automatically be fetched. About the current module only.-->
+                            <licensesOutputFile>src/license/licenses-generated.xml</licensesOutputFile>
+                            <!-- Dump the text of all licenses of third parties. About the current module only. -->
+                            <licensesOutputDirectory>src/license/text</licensesOutputDirectory>
+                            <!-- A list of dependencies for the subtree and their licenses -->
+                            <thirdPartyFilename>THIRD-PARTY-included-modules.txt</thirdPartyFilename>
+                            <!-- Where to put the THIRD-PARTY.txt file -->
+                            <outputDirectory>${project.basedir}/src/license</outputDirectory>
+                            <!-- In the binary distribution, we exclude libraries which are only compiled against, as long
+                                 as they're not GPL. Atlassian Confluence is considered with a developer license. -->
+                            <includedScopes>compile</includedScopes>
+
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>download-licenses2</id>
+                                <!-- This phase is before 'package' so the license information is included in the binary
+                                     distribution. -->
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>download-licenses</goal>
+                                    <goal>update-file-header</goal>
+                                    <goal>update-project-license</goal>
+                                    <goal>add-third-party</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
