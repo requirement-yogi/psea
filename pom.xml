@@ -137,14 +137,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.5.1</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <version>1.8</version>
@@ -223,7 +215,105 @@
                 </excludes>
             </resource>
         </resources>
+        <pluginManagement>
+            <!-- We set the plugin versions to get a deterministic build. To list versions to upgrade, see
+                 mvn versions:display-dependency-updates
+                 mvn versions:display-plugin-updates
+                 mvn versions:display-property-updates -->
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.5.1</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>3.0.0-M1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>3.0.0-M1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.1.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.1.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>2.7</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <extensions>
+            <extension>
+                <!-- This is necessary for mvn deploy:deploy to work.
+                     If not, it doesn't use the user/pass from the settings.xml to upload
+                     in the Maven repository. Funny thing is, deploy:deploy-file always uses it.
+                     Thanks https://stackoverflow.com/questions/56201944/maven-deploydeploy-file-working-but-maven-deploy-not-working for this tip.
+                 -->
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-http</artifactId>
+                <version>2.10</version>
+            </extension>
+        </extensions>
     </build>
+
+    <profiles>
+        <profile>
+            <!-- You can activate this profile manually using: mvn install -Prelease -->
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <distributionManagement>
+        <!-- To deploy, either run ./release.sh, or run: mvn clean deploy -Prelease
+        
+            If you have a 401:Unauthorized error when doing 'mvn deploy', check that:
+             - You have set your user/password in the <servers> section of ~/.m2/settings.xml
+             - You have a section <extensions> with wagon-http 2.10, to fix a bug of maven-deploy-plugin.
+         -->
+        <repository>
+            <id>playsql.public.releases</id>
+            <url>https://maven.play-sql.com/repository/public-release</url>
+        </repository>
+        <snapshotRepository>
+            <id>playsql.public.snapshots</id>
+            <url>https://maven.play-sql.com/repository/public-snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <properties>
         <java.version>1.8</java.version>

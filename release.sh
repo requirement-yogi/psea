@@ -88,7 +88,7 @@ echo
 echo "Changing version to $VER"
 echo
 mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$VER
-mvn clean install
+mvn clean deploy -Prelease
 git commit -am "[auto] Set version to $VER"
 git tag -a psea-parent-$VER -m "Release $VER"
 
@@ -96,7 +96,6 @@ git tag -a psea-parent-$VER -m "Release $VER"
 ls target/*.jar
 cp target/*.jar ../releases/
 read
-
 
 echo
 echo
