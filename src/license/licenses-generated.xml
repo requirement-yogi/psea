@@ -3,7 +3,7 @@
   #%L
   Play SQL Exports
   %%
-  Copyright (C) 2016 - 2019 Play SQL S.A.S.U.
+  Copyright (C) 2016 - 2020 Play SQL S.A.S.U.
   %%
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -29,18 +29,6 @@
         <license>
           <name>BSD License</name>
           <url>http://opensource.org/licenses/BSD-3-Clause</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.2.2-atlassian-1</version>
-      <licenses>
-        <license>
-          <name>The Apache Software License, Version 2.0</name>
-          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
           <distribution>repo</distribution>
         </license>
       </licenses>
