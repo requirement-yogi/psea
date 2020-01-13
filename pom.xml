@@ -20,12 +20,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2.2-atlassian-1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
             <version>3.14</version>
@@ -319,8 +313,8 @@
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <allowGoogleTracking>false</allowGoogleTracking>
-        <confluence.version>6.6.0</confluence.version>
-        <confluence.data.version>6.6.0</confluence.data.version>
+        <confluence.version>6.13.7</confluence.version>
+        <confluence.data.version>6.13.7</confluence.data.version>
         <amps.version>6.0.8</amps.version>
         <plugin.testrunner.version>1.2.3</plugin.testrunner.version>
         <skipTests>false</skipTests>
