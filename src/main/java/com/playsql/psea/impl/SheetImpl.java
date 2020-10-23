@@ -24,7 +24,7 @@ import com.playsql.psea.api.Row;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.ss.util.SheetUtil;
 import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -36,6 +36,9 @@ public class SheetImpl implements Sheet {
     private final XSSFCreationHelper helper;
     private final XSSFSheet sheet;
     private int rowNum = 1;
+    private final static int CHARACTER_WIDTH = 256;
+    private final static int MAX_COLUMN_WIDTH = 255;
+    private final static int MIN_COLUMN_WIDTH = 3500; // About 12 characters, 256 units wide
 
     public SheetImpl(WorkbookAPIImpl workbook, XSSFSheet sheet) {
         this.workbook = workbook;
@@ -47,6 +50,7 @@ public class SheetImpl implements Sheet {
     public Row addRow(List<? extends Value> values) {
         return addRow(rowNum++, values);
     }
+
     @Override
     public Row addRow(int position, List<? extends Value> values) {
         XSSFRow xlRow = sheet.createRow(position);
@@ -61,22 +65,51 @@ public class SheetImpl implements Sheet {
     }
 
     @Override
-    public void autoSizeHeaders() {
-        XSSFRow row0 = sheet.getRow(0);
-        if (row0 != null) {
-            int col = 0;
+    public int shiftRows(int count) {
+        sheet.shiftRows(0, sheet.getLastRowNum(), count);
+        return count;
+    }
 
-            XSSFCell cell;
-            while (col < 3000 && null != (cell = row0.getCell(col))) {
-                String rawValue = cell.getRawValue();
-                if (rawValue != null && !rawValue.equals("")) {
-                    sheet.autoSizeColumn(col);
-                    /*final int CHARACTER_WIDTH = 256;
-                    final int MAX_COLUMN_WIDTH = 255 * CHARACTER_WIDTH;
-                    sheet.setColumnWidth(col, Math.min(sheet.getColumnWidth(col) + CHARACTER_WIDTH * 3, MAX_COLUMN_WIDTH));*/
+    @Override
+    public void autoSizeHeaders() {
+        int col = 0;
+        int countEmptyColumns = 0;
+
+        while (col < 3000) {
+            // First, check there are values in the first 5 rows
+            boolean isEmpty = true;
+            for (int i = sheet.getFirstRowNum() ; i < sheet.getFirstRowNum() + 5 ; i++) {
+                XSSFRow row = sheet.getRow(i);
+                if (row == null || row.getCell(col) != null) {
+                    isEmpty = false;
+                    break;
                 }
-                col++;
             }
+            if (isEmpty) {
+                countEmptyColumns++;
+                if (countEmptyColumns > 3) return; // We stop autosizing after 3 empty columns
+                continue; // We don't autosize if there is no value in the first 5 rows.
+            }
+
+            // Ok, autosize this column:
+            double widthInChars = SheetUtil.getColumnWidth(sheet, col, false);
+
+            if (widthInChars != -1) {
+                int widthInChars2 = Math.min((int) widthInChars, MAX_COLUMN_WIDTH);
+                if (widthInChars2 > 20) {
+                    // Above 20, characters count half
+                    widthInChars2 = 20 + (widthInChars2 - 20) / 2;
+                }
+                int widthIn256th = widthInChars2 * CHARACTER_WIDTH;
+                int widthIn256thWithMinimum = Math.max(widthIn256th, MIN_COLUMN_WIDTH);
+                sheet.setColumnWidth(col, widthIn256thWithMinimum);
+            }
+
+            // sheet.autoSizeColumn(col);
+            /*final int CHARACTER_WIDTH = 256;
+            final int MAX_COLUMN_WIDTH = 255 * CHARACTER_WIDTH;
+            sheet.setColumnWidth(col, Math.min(sheet.getColumnWidth(col) + CHARACTER_WIDTH * 3, MAX_COLUMN_WIDTH));*/
+            col++;
         }
     }
 
@@ -93,6 +126,13 @@ public class SheetImpl implements Sheet {
         sheet.createFreezePane(colSplit, rowSplit, leftmostColumn, topRow);
     }
 
+    /**
+     * Merges cells
+     * @param firstRow the first row, 0-based
+     * @param lastRow the first row, 0-based, inclusive
+     * @param firstCol the first column, 0-based
+     * @param lastCol the last column, 0-based, inclusive
+     */
     @Override
     public void addMergedRegion(int firstRow, int lastRow, int firstCol, int lastCol) {
         sheet.addMergedRegion(new CellRangeAddress(firstRow, lastRow, firstCol, lastCol));

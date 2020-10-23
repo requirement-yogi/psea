@@ -25,11 +25,9 @@ import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.WorkbookAPI;
 import org.apache.log4j.Logger;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 
 import java.util.Map;
 
@@ -41,8 +39,22 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
 
     public WorkbookAPIImpl(XSSFWorkbook workbook) {
         this.workbook = workbook;
+
+        // The colors
+        XSSFColor RED = new XSSFColor(new java.awt.Color(255,0, 0));
+        XSSFColor RED_CELL_COLOR = new XSSFColor(new java.awt.Color(172,80, 80));
+
+        // The fonts
         XSSFFont BOLD_FONT = workbook.createFont();
         BOLD_FONT.setBold(true);
+
+        XSSFFont BOLD_RED_FONT = workbook.createFont();
+        BOLD_RED_FONT.setBold(true);
+        BOLD_RED_FONT.setColor(RED);
+
+        XSSFFont BOLD_WHITE_FONT = workbook.createFont();
+        BOLD_WHITE_FONT.setBold(true);
+        BOLD_WHITE_FONT.setColor(IndexedColors.WHITE.getIndex());
 
         XSSFCellStyle STYLE_TH = workbook.createCellStyle();
         STYLE_TH.setFont(BOLD_FONT);
@@ -60,13 +72,19 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
         styles.put(Style.WORKBOOK_TITLE, STYLE_WORKBOOK_TITLE);
 
         XSSFCellStyle STYLE_RED_CELL = workbook.createCellStyle();
-        STYLE_RED_CELL.setFont(BOLD_FONT);
+        STYLE_RED_CELL.setFont(BOLD_WHITE_FONT);
+        STYLE_RED_CELL.setFillForegroundColor(RED_CELL_COLOR);
+        STYLE_RED_CELL.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         styles.put(Style.RED_CELL, STYLE_RED_CELL);
 
         XSSFCellStyle STYLE_MIRROR_CELL = workbook.createCellStyle();
-        STYLE_MIRROR_CELL.setFillBackgroundColor(IndexedColors.BLUE_GREY.getIndex());
-        STYLE_MIRROR_CELL.setFillPattern(CellStyle.NO_FILL); // or SOLID_FOREGROUND?
+        STYLE_MIRROR_CELL.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
+        STYLE_MIRROR_CELL.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         styles.put(Style.MIRROR_CELL, STYLE_MIRROR_CELL);
+
+        XSSFCellStyle STYLE_ERROR_CELL = workbook.createCellStyle();
+        STYLE_ERROR_CELL.setFont(BOLD_RED_FONT);
+        styles.put(Style.ERROR_CELL, STYLE_ERROR_CELL);
     }
 
     @Override

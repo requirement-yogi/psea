@@ -30,6 +30,8 @@ public interface WorkbookAPI {
         WORKBOOK_TITLE,
         RED_CELL,
         /** The cell in a dependency matrix which is in the diagonal */
-        MIRROR_CELL
+        MIRROR_CELL,
+        /** A cell with red text - Since 1.5 */
+        ERROR_CELL
     }
 }
