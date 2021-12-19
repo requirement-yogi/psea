@@ -375,14 +375,16 @@
                                 NB: How to retrieve licenses on a new project:
                                 mvn clean license:download-licenses
                             -->
-                            <projectName>Play SQL Exports</projectName>
-                            <organizationName>Play SQL S.A.S.U.</organizationName>
+                            <projectName>PSEA</projectName>
+                            <organizationName>Requirement Yogi S.A.S.U.</organizationName>
                             <inceptionYear>2016</inceptionYear>
 
                             <!-- This is an open-source project under APL v2 -->
                             <licenseName>apache_v2</licenseName>
                             <skipUpdateLicense>false</skipUpdateLicense>
 
+                            <!-- Forcefully updates the copyright in the headers of files -->
+                            <canUpdateCopyright>true</canUpdateCopyright>
                             <!-- Skips the goal download-licenses -->
                             <skipDownloadLicenses>false</skipDownloadLicenses>
                             <!-- Skips the goal download-licenses -->

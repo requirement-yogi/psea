@@ -74,6 +74,12 @@ if [ -n "$HAS_MVN" ] ; then
     echo
 fi
 
+if grep -i "GPL" src/license/* ; then
+  echo "There is a GPL dependency"
+fi
+
+
+
 echo "Press any key to continue"
 read
 
