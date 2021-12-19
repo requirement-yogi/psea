@@ -22,7 +22,7 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.2.2-atlassian-1</version>
+            <version>2.8.6</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -89,17 +89,15 @@
         <plugins>
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
-                <artifactId>maven-amps-plugin</artifactId>
-                <version>6.0.8</version>
+                <artifactId>amps-maven-plugin</artifactId>
+                <version>8.4.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <systemPropertyVariables>
                         <upm.pac.disable>true</upm.pac.disable>
                     </systemPropertyVariables>
-                    <enableFastdev>false</enableFastdev>
                     <instanceId>confluence</instanceId>
                     <installPlugin>false</installPlugin>
-                    <cliPort>4338</cliPort>
                     <httpPort>1991</httpPort>
                     <contextPath>/confluence</contextPath>
                     <products>
@@ -136,6 +134,29 @@
                     </instructions>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                  <version>3.6.1</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>[1.8.0, 1.8.1]</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <resources>
             <resource>
@@ -163,7 +184,7 @@
             <plugins>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.5.1</version>
+                    <version>3.8.1</version>
                     <configuration>
                         <source>${java.version}</source>
                         <target>${java.version}</target>
@@ -182,7 +203,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>3.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -192,12 +213,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.1.1</version>
+                    <version>3.3.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.7</version>
+                    <version>2.8.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -217,6 +238,32 @@
 
     <profiles>
         <profile>
+            <id>vulnerabilities</id>
+            <build>
+                <!-- We set the plugin versions to get a deterministic build. To list versions to upgrade, see
+                     mvn versions:display-dependency-updates
+                     mvn versions:display-plugin-updates
+                     mvn versions:display-property-updates -->
+                <plugins>
+                    <plugin>
+                        <!-- Suggest to upgrade our libraries, plugins and properties -->
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>versions-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>display-dependency-updates</goal>
+                                    <goal>display-plugin-updates</goal>
+                                    <goal>display-property-updates</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <!-- You can activate this profile manually using: mvn install -Prelease -->
             <id>release</id>
             <build>
@@ -224,7 +271,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>license-maven-plugin</artifactId>
-                        <version>1.8</version>
+                        <version>2.0.0</version>
                         <configuration>
                             <!--
                                 You don't need to run the license plugin manually, it is part of the build (see executions).
@@ -321,7 +368,6 @@
         <allowGoogleTracking>false</allowGoogleTracking>
         <confluence.version>7.13.0</confluence.version>
         <confluence.data.version>7.13.0</confluence.data.version>
-        <amps.version>6.0.8</amps.version>
         <plugin.testrunner.version>1.2.3</plugin.testrunner.version>
         <skipTests>false</skipTests>
 
