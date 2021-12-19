@@ -83,6 +83,9 @@ fi
 echo "Press any key to continue"
 read
 
+echo "Just checking the vulnerabilities"
+mvn validate -Pvulnerabilities
+
 
 if [ -d target/confluence/home ] ; then
     echo "Moving ./target to ../target-psea"
@@ -94,7 +97,7 @@ echo
 echo "Changing version to $VER"
 echo
 mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$VER
-mvn clean deploy -Prelease
+mvn clean deploy -Prelease,vulnerabilities
 git commit -am "[auto] Set version to $VER"
 git tag -a psea-parent-$VER -m "Release $VER"
 
