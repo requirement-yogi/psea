@@ -22,6 +22,7 @@ package com.playsql.psea.impl;
 
 import com.playsql.psea.api.Row;
 import com.playsql.psea.api.Value;
+import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -47,7 +48,7 @@ public class RowImpl implements Row {
                 xlCell.setCellStyle(style);
             }
             if (value.getHref() != null) {
-                Hyperlink link = sheet.getHelper().createHyperlink(Hyperlink.LINK_URL);
+                Hyperlink link = sheet.getHelper().createHyperlink(HyperlinkType.URL);
                 link.setAddress(value.getHref());
                 xlCell.setHyperlink(link);
             }

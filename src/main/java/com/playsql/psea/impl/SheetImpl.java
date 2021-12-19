@@ -105,6 +105,7 @@ public class SheetImpl implements Sheet {
                 sheet.setColumnWidth(col, widthIn256thWithMinimum);
             }
 
+            sheet.autoSizeColumn(col); // TODO Check
             // sheet.autoSizeColumn(col);
             /*final int CHARACTER_WIDTH = 256;
             final int MAX_COLUMN_WIDTH = 255 * CHARACTER_WIDTH;

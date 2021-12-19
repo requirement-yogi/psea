@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.xssf.usermodel.*;
 
 import java.util.Map;
@@ -41,8 +42,9 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
         this.workbook = workbook;
 
         // The colors
-        XSSFColor RED = new XSSFColor(new java.awt.Color(255,0, 0));
-        XSSFColor RED_CELL_COLOR = new XSSFColor(new java.awt.Color(172,80, 80));
+        IndexedColorMap colorMap = new DefaultIndexedColorMap();
+        XSSFColor RED = new XSSFColor(new java.awt.Color(255,0, 0), colorMap);
+        XSSFColor RED_CELL_COLOR = new XSSFColor(new java.awt.Color(172,80, 80), colorMap);
 
         // The fonts
         XSSFFont BOLD_FONT = workbook.createFont();
@@ -68,7 +70,7 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
         XSSFCellStyle STYLE_WORKBOOK_TITLE = workbook.createCellStyle();
         STYLE_WORKBOOK_TITLE.setFont(WORKBOOK_TITLE_FONT);
         //STYLE_WORKBOOK_TITLE.setAlignment(CellStyle.ALIGN_LEFT);
-        STYLE_WORKBOOK_TITLE.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+        STYLE_WORKBOOK_TITLE.setVerticalAlignment(VerticalAlignment.CENTER);
         styles.put(Style.WORKBOOK_TITLE, STYLE_WORKBOOK_TITLE);
 
         XSSFCellStyle STYLE_RED_CELL = workbook.createCellStyle();

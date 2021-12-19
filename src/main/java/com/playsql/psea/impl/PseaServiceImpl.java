@@ -27,7 +27,6 @@ import com.playsql.psea.api.PseaService;
 import com.playsql.psea.api.WorkbookAPI;
 import com.playsql.psea.utils.Utils.Clock;
 import org.apache.log4j.Logger;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -139,7 +138,7 @@ public class PseaServiceImpl implements PseaService {
                 }
             }
             rowConsumer.endOfWorkbook();
-        } catch (InvalidFormatException | IOException e) {
+        } catch (IOException e) {
             throw new PSEAImportException(workbookFile, e);
         }
     }
@@ -167,21 +166,21 @@ public class PseaServiceImpl implements PseaService {
             CellValue computedFormulaValue = evaluator.evaluate(cell) ;
             if(computedFormulaValue != null){
                 switch (computedFormulaValue.getCellType()) {
-                    case Cell.CELL_TYPE_NUMERIC:
+                    case NUMERIC:
                         cellValue = computedFormulaValue.getNumberValue();
                         break;
-                    case Cell.CELL_TYPE_STRING:
+                    case STRING:
                         // TODO We could get the RTF to get bolds and similar, but it throws an exception if it's not text
                         // RichTextString richValue = cell.getRichStringCellValue();
                         cellValue = computedFormulaValue.getStringValue();
                         break;
-                    case Cell.CELL_TYPE_BOOLEAN:
+                    case BOOLEAN:
                         cellValue = computedFormulaValue.getBooleanValue();
                         break;
-                    case Cell.CELL_TYPE_BLANK:
+                    case BLANK:
                         cellValue = "";
                         break;
-                    case Cell.CELL_TYPE_ERROR:
+                    case ERROR:
                         cellValue = computedFormulaValue.formatAsString();
                         break;
                     default:
