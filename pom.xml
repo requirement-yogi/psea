@@ -26,6 +26,18 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.5.8</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.5.8</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
             <version>5.1.0</version>
@@ -34,10 +46,6 @@
                 <exclusion>
                     <groupId>commons-io</groupId>
                     <artifactId>commons-io</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -58,10 +66,6 @@
                 <exclusion>
                     <groupId>commons-io</groupId>
                     <artifactId>commons-io</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -93,16 +97,25 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
-<!--    <repositories>
-        <repository>
-            <id>codehaus-mule-repo</id>
-            <name>codehaus-mule-repo</name>
-            <url>https://repository-master.mulesoft.org/nexus/content/groups/public/</url>
-            <layout>default</layout>
-        </repository>
-    </repositories>-->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <!-- To ensure that Apache POI uses the non-vulnerable version of Log4j -->
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>2.17.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 
     <build>
@@ -131,21 +144,18 @@
                     </products>
                     <instructions>
                         <Export-Package>
-                            com.playsql.psea.api<!--,
-                            com.microsoft.schemas.office.x2006.digsig,
-                            org.apache.poi*,
-                            org.openxmlformats.schemas.*,
-                            org.w3.x2000.x09.xmldsig,
-                            org.w3.x2000.x09.xmldsig.impl,
-                            schemaorg_apache_xmlbeans.*
--->
+                            com.playsql.psea.api
                         </Export-Package>
                         <Import-Package>
                             com.google.common.collect;version="0.0.0",
                             com.google.common.base;version="0.0.0",
                             com.google.common.io;version="0.0.0",
+                            org.apache.commons.io;version="0.0.0",
+                            org.apache.commons.io.*;version="0.0.0",
                             com.atlassian.confluence.core;version="0.0.0",
                             org.apache.log4j;version="0.0.0",
+                            org.slf4j*;version="0.0.0",
+                            org.slf4j.spi;version="0.0.0",
                             org.xml.sax*;version="0.0.0",
                             org.w3c.dom*;version="0.0.0",
                             com.ctc.wstx*;version="0.0.0",
@@ -448,6 +458,7 @@
         <confluence.version>7.13.0</confluence.version>
         <confluence.data.version>7.13.0</confluence.data.version>
         <plugin.testrunner.version>1.2.3</plugin.testrunner.version>
+        <junit.version>4.13.2</junit.version>
         <skipTests>false</skipTests>
 
     </properties>
