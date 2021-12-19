@@ -76,6 +76,8 @@ fi
 
 if grep -i "GPL" src/license/* ; then
   echo "There is a GPL dependency"
+else
+  echo "Disregard the previous line if it says \"grep: src/license/text: Is a directory\""
 fi
 
 
