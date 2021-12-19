@@ -26,9 +26,9 @@ import com.playsql.psea.api.PSEAImportException;
 import com.playsql.psea.api.PseaService;
 import com.playsql.psea.api.WorkbookAPI;
 import com.playsql.psea.utils.Utils.Clock;
-import org.apache.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
@@ -41,22 +41,31 @@ import java.util.function.Consumer;
 
 public class PseaServiceImpl implements PseaService {
 
-    private final static org.slf4j.Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
+    private final static Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
 
     public File export(Consumer<WorkbookAPI> f) {
-        XSSFWorkbook xlWorkbook = new XSSFWorkbook();
-        WorkbookAPI workbook = new WorkbookAPIImpl(xlWorkbook);
-        f.accept(workbook);
-
+        XSSFWorkbook xlWorkbook = null;
         try {
+            xlWorkbook = new XSSFWorkbook();
+            WorkbookAPI workbook = new WorkbookAPIImpl(xlWorkbook);
+            f.accept(workbook);
+
             File file = File.createTempFile("excel-export-", ".xlsx");
             file.deleteOnExit();
-            FileOutputStream fileOut = new FileOutputStream(file);
-            xlWorkbook.write(fileOut);
-            fileOut.close();
+            try (FileOutputStream fileOut = new FileOutputStream(file)) {
+                xlWorkbook.write(fileOut);
+            }
             return file;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error while writing an Excel file to disk", e);
+        } finally {
+            if (xlWorkbook != null) {
+                try {
+                    xlWorkbook.close();
+                } catch (IOException e) {
+                    LOG.error("Error while closing an Excel file that we were creating", e);
+                }
+            }
         }
     }
 
@@ -69,9 +78,9 @@ public class PseaServiceImpl implements PseaService {
         Integer focusedRow = rowConsumer.getFocusedRow();
 
         // try reading inputstream
+        Workbook workbook = null;
         try {
 
-            Workbook workbook;
             if (workbookFile instanceof PseaFileInput) {
                 workbook = WorkbookFactory.create(((PseaFileInput) workbookFile).getFile());
             } else if (workbookFile instanceof PseaInputStream) {
@@ -141,6 +150,14 @@ public class PseaServiceImpl implements PseaService {
             rowConsumer.endOfWorkbook();
         } catch (IOException e) {
             throw new PSEAImportException(workbookFile, e);
+        } finally {
+            if (workbook != null) {
+                try {
+                    workbook.close();
+                } catch (IOException e) {
+                    LOG.error("Error while closing the Excel file that we were reading", e);
+                }
+            }
         }
     }
 
