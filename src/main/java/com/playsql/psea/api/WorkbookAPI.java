@@ -4,7 +4,7 @@ package com.playsql.psea.api;
  * #%L
  * Play SQL Exports
  * %%
- * Copyright (C) 2016 - 2021 Requirement Yogi S.A.S.U.
+ * Copyright (C) 2016 - 2022 Requirement Yogi S.A.S.U.
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
