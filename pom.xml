@@ -14,7 +14,7 @@
         <url>https://www.requirementyogi.com</url>
     </organization>
 
-    <name>PSEA - Play SQL Export Add-on</name>
+    <name>PSEA - Export Add-on</name>
     <description>The add-on is a technical library that helps Requirement Yogi and Play SQL Spreadsheets export documents to Excel.</description>
     <packaging>atlassian-plugin</packaging>
 
@@ -49,13 +49,13 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
             <version>5.1.0</version>
-            <scope>compile</scope>
+            <scope>compile</scope><!--
             <exclusions>
                 <exclusion>
                     <groupId>commons-io</groupId>
                     <artifactId>commons-io</artifactId>
                 </exclusion>
-            </exclusions>
+            </exclusions>-->
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
@@ -70,11 +70,11 @@
                 <exclusion>
                     <groupId>xml-apis</groupId>
                     <artifactId>xml-apis</artifactId>
-                </exclusion>
+                </exclusion><!--
                 <exclusion>
                     <groupId>commons-io</groupId>
                     <artifactId>commons-io</artifactId>
-                </exclusion>
+                </exclusion>-->
             </exclusions>
         </dependency>
         <dependency>
@@ -164,8 +164,6 @@
                             com.google.common.collect;version="0.0.0",
                             com.google.common.base;version="0.0.0",
                             com.google.common.io;version="0.0.0",
-                            org.apache.commons.io;version="0.0.0",
-                            org.apache.commons.io.*;version="0.0.0",
                             com.atlassian.confluence.core;version="0.0.0",
                             org.apache.log4j;version="0.0.0",
                             org.slf4j*;version="0.0.0",
@@ -176,6 +174,12 @@
                             javax.xml*;version="0.0.0"
                         </Import-Package>
                     </instructions>
+                    <banningExcludes>
+                        <!-- We can't import it because Apache POI uses 2.11, which has
+                             org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream,
+                             and Confluence's commons-io is 2.8.0 -->
+                        <exclude>commons-io:commons-io</exclude>
+                    </banningExcludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -354,7 +358,6 @@
                     <plugin>
                         <groupId>org.owasp</groupId>
                         <artifactId>dependency-check-maven</artifactId>
-                        <version>6.3.2</version>
                         <reportSets>
                             <reportSet>
                                 <reports>
