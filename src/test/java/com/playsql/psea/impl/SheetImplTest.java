@@ -31,7 +31,7 @@ public class SheetImplTest {
 
     @Test
     public void testRowLimit() {
-        WorkbookAPIImpl workbookAPI = new WorkbookAPIImpl(workbook, 1L, 1000L);
+        WorkbookAPIImpl workbookAPI = new WorkbookAPIImpl(workbook, 1, 1000);
         SheetImpl sheet = new SheetImpl(workbookAPI, workbook.createSheet("foo"));
 
         sheet.addRow(Lists.newArrayList(new Value("v1")));
@@ -41,7 +41,7 @@ public class SheetImplTest {
 
     @Test
     public void testTimeLimit() throws InterruptedException {
-        WorkbookAPIImpl workbookAPI = new WorkbookAPIImpl(workbook, 10L, 1000L); // takes 300ms
+        WorkbookAPIImpl workbookAPI = new WorkbookAPIImpl(workbook, 10, 1000); // takes 300ms
         SheetImpl sheet = new SheetImpl(workbookAPI, workbook.createSheet("foo")); // takes 400ms
         sheet.addRow(Lists.newArrayList(new Value("v1")));
         TimeUnit.MILLISECONDS.sleep(1000);

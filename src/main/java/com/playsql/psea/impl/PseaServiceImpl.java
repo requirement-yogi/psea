@@ -50,7 +50,7 @@ public class PseaServiceImpl implements PseaService {
         return export(f, null, null);
     }
 
-    public File export(Consumer<WorkbookAPI> f, Long rowLimit, Long timeLimit) {
+    public File export(Consumer<WorkbookAPI> f, Integer rowLimit, Integer timeLimit) {
         SXSSFWorkbook xlWorkbook = null;
         try {
             xlWorkbook = new SXSSFWorkbook(null, 1000, false);

@@ -50,18 +50,18 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
     /**
      * max authorized rows
      */
-    private final Long rowLimit;
+    private final Integer rowLimit;
     /**
      * max time to achieve export, in milliseconds
      */
-    private final Long timeLimit;
+    private final Integer timeLimit;
     private final Utils.Clock timer;
     private final Map<Style, CellStyle> styles = Maps.newHashMap();
 
-    public WorkbookAPIImpl(SXSSFWorkbook workbook, @Nullable Long rowLimit, @Nullable Long timeLimit) {
+    public WorkbookAPIImpl(SXSSFWorkbook workbook, @Nullable Integer rowLimit, @Nullable Integer timeLimit) {
         this.workbook = workbook;
         this.rowLimit = rowLimit;
-        this.timeLimit = timeLimit != null ? timeLimit : MAX_DURATION;
+        this.timeLimit = timeLimit != null ? timeLimit : MAX_DURATION.intValue();
         this.timer = Utils.Clock.start();
 
         // The colors
@@ -132,7 +132,7 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
         return styles;
     }
 
-    public Long getRowLimit() {
+    public Integer getRowLimit() {
         return rowLimit;
     }
 

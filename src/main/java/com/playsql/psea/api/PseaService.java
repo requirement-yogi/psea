@@ -43,7 +43,7 @@ public interface PseaService {
      * @param timeLimit the max amount of time allowed to generated the excel file. If null, a default value is used
      * @return File where the file is stored
      */
-    File export(Consumer<WorkbookAPI> f, @Nullable Long rowLimit, @Nullable Long timeLimit);
+    File export(Consumer<WorkbookAPI> f, @Nullable Integer rowLimit, @Nullable Integer timeLimit);
 
     /**
      * Offers the possibility to delete a file before the JVM stops.
