@@ -23,27 +23,51 @@ package com.playsql.psea.impl;
 import com.google.common.collect.Maps;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.WorkbookAPI;
+import com.playsql.psea.utils.Utils;
 import org.apache.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.DefaultIndexedColorMap;
+import org.apache.poi.xssf.usermodel.IndexedColorMap;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 
+import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public final class WorkbookAPIImpl implements WorkbookAPI {
 
     private final static org.apache.log4j.Logger LOG = Logger.getLogger(WorkbookAPIImpl.class);
+
+    /**
+     * Max allowed time for generating an excel file
+     */
+    private static final Long MAX_DURATION = TimeUnit.MINUTES.toMillis(2);
+
     private final SXSSFWorkbook workbook;
+
+    /**
+     * max authorized rows
+     */
+    private final Long rowLimit;
+    /**
+     * max time to achieve export, in milliseconds
+     */
+    private final Long timeLimit;
+    private final Utils.Clock timer;
     private final Map<Style, CellStyle> styles = Maps.newHashMap();
 
-    public WorkbookAPIImpl(SXSSFWorkbook workbook) {
+    public WorkbookAPIImpl(SXSSFWorkbook workbook, @Nullable Long rowLimit, @Nullable Long timeLimit) {
         this.workbook = workbook;
+        this.rowLimit = rowLimit;
+        this.timeLimit = timeLimit != null ? timeLimit : MAX_DURATION;
+        this.timer = Utils.Clock.start();
 
         // The colors
         IndexedColorMap colorMap = new DefaultIndexedColorMap();
-        XSSFColor RED = new XSSFColor(new java.awt.Color(255,0, 0), colorMap);
-        XSSFColor RED_CELL_COLOR = new XSSFColor(new java.awt.Color(172,80, 80), colorMap);
+        XSSFColor RED = new XSSFColor(new java.awt.Color(255, 0, 0), colorMap);
+        XSSFColor RED_CELL_COLOR = new XSSFColor(new java.awt.Color(172, 80, 80), colorMap);
 
         // The fonts
         Font BOLD_FONT = workbook.createFont();
@@ -106,5 +130,17 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
 
     public Map<Style, CellStyle> getStyles() {
         return styles;
+    }
+
+    public Long getRowLimit() {
+        return rowLimit;
+    }
+
+    public void checkTimer() {
+        long elapsedTime = timer.timeMillis();
+        if (elapsedTime > timeLimit) {
+            throw new IllegalArgumentException(
+                    "Export time (" + elapsedTime + " ms) exceeded max configured time (" + timeLimit + " ms)");
+        }
     }
 }

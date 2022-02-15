@@ -54,6 +54,12 @@ public class SheetImpl implements Sheet {
 
     @Override
     public Row addRow(int position, List<? extends Value> values) {
+        workbook.checkTimer();
+        if (workbook.getRowLimit() != null && position > workbook.getRowLimit()) {
+            throw new IllegalArgumentException(
+                    "Row number (" + position + ") is outside the configured range (0.." + workbook.getRowLimit() + ")");
+        }
+
         SXSSFRow xlRow = sheet.createRow(position);
         Row row = new RowImpl(this, xlRow);
         for (int col = 0 ; col < values.size() ; col++) {

@@ -47,11 +47,15 @@ public class PseaServiceImpl implements PseaService {
     private static final String FILE_EXTENSION = ".xlsx";
 
     public File export(Consumer<WorkbookAPI> f) {
+        return export(f, null, null);
+    }
+
+    public File export(Consumer<WorkbookAPI> f, Long rowLimit, Long timeLimit) {
         SXSSFWorkbook xlWorkbook = null;
         try {
             xlWorkbook = new SXSSFWorkbook(null, 1000, false);
             xlWorkbook.setCompressTempFiles(false);
-            WorkbookAPI workbook = new WorkbookAPIImpl(xlWorkbook);
+            WorkbookAPI workbook = new WorkbookAPIImpl(xlWorkbook, rowLimit, timeLimit);
             f.accept(workbook);
 
             File file = File.createTempFile(FILE_PREFIX, FILE_EXTENSION);

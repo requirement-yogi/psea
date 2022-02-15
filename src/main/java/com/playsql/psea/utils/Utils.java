@@ -50,6 +50,11 @@ public class Utils {
             return result;
         }
 
+        public long timeMillis() {
+            long now = System.nanoTime();
+            return TimeUnit.NANOSECONDS.toMillis(now - start);
+        }
+
         public Clock lap() {
             long now = System.nanoTime();
             lapDuration = now - lap;

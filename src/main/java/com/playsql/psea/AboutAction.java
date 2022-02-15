@@ -36,7 +36,7 @@ public class AboutAction extends ConfluenceActionSupport {
         pseaService.export(workbookAPI -> {
             Sheet sh = workbookAPI.newSheet("Blanket");
             sh.addRow(Lists.newArrayList(new Value("Jail")));
-        });
+        }, null, null);
         return SUCCESS;
     }
 

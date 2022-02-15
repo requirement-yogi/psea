@@ -20,13 +20,30 @@ package com.playsql.psea.api;
  * #L%
  */
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.InputStream;
 import java.util.function.Consumer;
 
 public interface PseaService {
 
+    /**
+     * Export excel file with default constraints
+     *
+     * @param f the consumer
+     * @return File where the file is stored
+     */
     File export(Consumer<WorkbookAPI> f);
+
+    /**
+     * Export excel file with constraints
+     *
+     * @param f         the consumer
+     * @param rowLimit  the max number of rows allowed for this export. If null, the default is used.
+     * @param timeLimit the max amount of time allowed to generated the excel file. If null, a default value is used
+     * @return File where the file is stored
+     */
+    File export(Consumer<WorkbookAPI> f, @Nullable Long rowLimit, @Nullable Long timeLimit);
 
     /**
      * Offers the possibility to delete a file before the JVM stops.

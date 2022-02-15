@@ -114,7 +114,7 @@ public class TestCreateExcelFile {
             ));
 
             workbookAPI.newSheet("Helicopter");
-        });
+        }, null, null);
 
         File targetFile = writeToTarget(file);
         assertTrue(targetFile.exists());
