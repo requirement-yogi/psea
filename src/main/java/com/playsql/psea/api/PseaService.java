@@ -29,6 +29,14 @@ public interface PseaService {
     File export(Consumer<WorkbookAPI> f);
 
     /**
+     * Offers the possibility to delete a file before the JVM stops.
+     * The implementation ensures the validity of the file before deleting it.
+     *
+     * @return true if the file is successfully deleted
+     */
+    boolean deleteFile(File file);
+
+    /**
      * Read an Excel file, and feed it to the consumer
      * @param file the file, either a physical file or an InputStream
      * @param consumer the consumer

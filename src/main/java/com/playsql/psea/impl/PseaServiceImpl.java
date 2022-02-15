@@ -27,10 +27,11 @@ import com.playsql.psea.api.PseaService;
 import com.playsql.psea.api.WorkbookAPI;
 import com.playsql.psea.utils.Utils.Clock;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -42,15 +43,18 @@ import java.util.function.Consumer;
 public class PseaServiceImpl implements PseaService {
 
     private final static Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
+    private static final String FILE_PREFIX = "excel-export-";
+    private static final String FILE_EXTENSION = ".xlsx";
 
     public File export(Consumer<WorkbookAPI> f) {
-        XSSFWorkbook xlWorkbook = null;
+        SXSSFWorkbook xlWorkbook = null;
         try {
-            xlWorkbook = new XSSFWorkbook();
+            xlWorkbook = new SXSSFWorkbook(null, 1000, false);
+            xlWorkbook.setCompressTempFiles(false);
             WorkbookAPI workbook = new WorkbookAPIImpl(xlWorkbook);
             f.accept(workbook);
 
-            File file = File.createTempFile("excel-export-", ".xlsx");
+            File file = File.createTempFile(FILE_PREFIX, FILE_EXTENSION);
             file.deleteOnExit();
             try (FileOutputStream fileOut = new FileOutputStream(file)) {
                 xlWorkbook.write(fileOut);
@@ -61,12 +65,24 @@ public class PseaServiceImpl implements PseaService {
         } finally {
             if (xlWorkbook != null) {
                 try {
+                    xlWorkbook.dispose();
                     xlWorkbook.close();
                 } catch (IOException e) {
                     LOG.error("Error while closing an Excel file that we were creating", e);
                 }
             }
         }
+    }
+
+    @Override
+    public boolean deleteFile(@Nullable File file) {
+        if (file != null
+                && file.exists()
+                && file.getName().contains(FILE_PREFIX)
+                && file.getName().endsWith(FILE_EXTENSION)) {
+            return file.delete();
+        }
+        return false;
     }
 
     public void extract(PseaInput workbookFile, ExcelImportConsumer rowConsumer) throws OutOfMemoryError, PSEAImportException {

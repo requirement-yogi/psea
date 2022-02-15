@@ -23,27 +23,28 @@ package com.playsql.psea.impl;
 import com.playsql.psea.api.Row;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
+import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.SheetUtil;
-import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFRow;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 
 import java.util.List;
 
 public class SheetImpl implements Sheet {
     private final WorkbookAPIImpl workbook;
-    private final XSSFCreationHelper helper;
-    private final XSSFSheet sheet;
+    private final CreationHelper helper;
+    private final SXSSFSheet sheet;
     private int rowNum = 1;
     private final static int CHARACTER_WIDTH = 256;
     private final static int MAX_COLUMN_WIDTH = 255;
     private final static int MIN_COLUMN_WIDTH = 3500; // About 12 characters, 256 units wide
 
-    public SheetImpl(WorkbookAPIImpl workbook, XSSFSheet sheet) {
+    public SheetImpl(WorkbookAPIImpl workbook, SXSSFSheet sheet) {
         this.workbook = workbook;
         this.helper = workbook.getWorkbook().getCreationHelper();
         this.sheet = sheet;
+        this.sheet.trackAllColumnsForAutoSizing();
     }
 
     @Override
@@ -53,7 +54,7 @@ public class SheetImpl implements Sheet {
 
     @Override
     public Row addRow(int position, List<? extends Value> values) {
-        XSSFRow xlRow = sheet.createRow(position);
+        SXSSFRow xlRow = sheet.createRow(position);
         Row row = new RowImpl(this, xlRow);
         for (int col = 0 ; col < values.size() ; col++) {
             Value value = values.get(col);
@@ -79,7 +80,7 @@ public class SheetImpl implements Sheet {
             // First, check there are values in the first 5 rows
             boolean isEmpty = true;
             for (int i = sheet.getFirstRowNum() ; i < sheet.getFirstRowNum() + 5 ; i++) {
-                XSSFRow row = sheet.getRow(i);
+                SXSSFRow row = sheet.getRow(i);
                 if (row == null || row.getCell(col) != null) {
                     isEmpty = false;
                     break;
@@ -116,7 +117,7 @@ public class SheetImpl implements Sheet {
 
     @Override
     public void setHeightInPoints(int rowNumber, float height) {
-        XSSFRow row = sheet.getRow(rowNumber);
+        SXSSFRow row = sheet.getRow(rowNumber);
         if (row != null) {
             row.setHeightInPoints(height);
         }
@@ -151,7 +152,7 @@ public class SheetImpl implements Sheet {
         return workbook;
     }
 
-    XSSFCreationHelper getHelper() {
+    CreationHelper getHelper() {
         return helper;
     }
 }
