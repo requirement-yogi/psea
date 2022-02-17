@@ -30,7 +30,7 @@ import com.playsql.psea.api.PseaService;
 import com.playsql.psea.api.WorkbookAPI;
 import com.playsql.psea.utils.Utils.Clock;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,12 +66,11 @@ public class PseaServiceImpl implements PseaService {
     }
 
     public File export(Consumer<WorkbookAPI> f) {
-        SXSSFWorkbook xlWorkbook = null;
+        XSSFWorkbook xlWorkbook = null;
         long rowLimit = getRowLimit();
         long timeLimit = getTimeLimit();
         try {
-            xlWorkbook = new SXSSFWorkbook(null, 1000, false);
-            xlWorkbook.setCompressTempFiles(false);
+            xlWorkbook = new XSSFWorkbook();
             WorkbookAPI workbook = new WorkbookAPIImpl(xlWorkbook, rowLimit, timeLimit);
             f.accept(workbook);
 
@@ -86,7 +85,6 @@ public class PseaServiceImpl implements PseaService {
         } finally {
             if (xlWorkbook != null) {
                 try {
-                    xlWorkbook.dispose();
                     xlWorkbook.close();
                 } catch (IOException e) {
                     LOG.error("Error while closing an Excel file that we were creating", e);

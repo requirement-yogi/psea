@@ -2,7 +2,7 @@ package com.playsql.psea.impl;
 
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.Value;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
@@ -16,16 +16,15 @@ import static org.junit.Assert.assertThrows;
 
 public class SheetImplTest {
 
-    private SXSSFWorkbook workbook = new SXSSFWorkbook();
+    private XSSFWorkbook workbook;
 
     @Before
     public void setUp() {
-        workbook = new SXSSFWorkbook();
+        workbook = new XSSFWorkbook();
     }
 
     @After
     public void tearDown() throws Exception {
-        workbook.dispose();
         workbook.close();
     }
 

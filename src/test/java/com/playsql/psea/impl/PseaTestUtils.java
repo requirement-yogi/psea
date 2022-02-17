@@ -71,4 +71,6 @@ public class PseaTestUtils {
         }
     };
 
+    public static PseaServiceImpl PSEA = new PseaServiceImpl(PLUGIN_SETTINGS, ACCESS_MODE_SERVICE);
+
 }

@@ -25,14 +25,13 @@ import com.playsql.psea.api.Value;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Hyperlink;
-import org.apache.poi.xssf.streaming.SXSSFCell;
-import org.apache.poi.xssf.streaming.SXSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 
 public class RowImpl implements Row {
     private final SheetImpl sheet;
-    private final SXSSFRow xlRow;
-
-    public RowImpl(SheetImpl sheet, SXSSFRow xlRow) {
+    private final XSSFRow xlRow;
+    public RowImpl(SheetImpl sheet, XSSFRow xlRow) {
         this.sheet = sheet;
         this.xlRow = xlRow;
     }
@@ -40,7 +39,7 @@ public class RowImpl implements Row {
     @Override
     public void setCell(int col, Value value) {
         if (value != null) {
-            SXSSFCell xlCell = xlRow.createCell(col);
+            XSSFCell xlCell = xlRow.createCell(col);
 
             xlCell.setCellValue(value.getValue());
             CellStyle style = sheet.getWorkbook().getStyles().get(value.getFormat());

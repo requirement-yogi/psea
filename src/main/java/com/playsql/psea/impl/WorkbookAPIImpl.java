@@ -26,21 +26,15 @@ import com.playsql.psea.api.WorkbookAPI;
 import com.playsql.psea.utils.Utils;
 import org.apache.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.streaming.SXSSFSheet;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.DefaultIndexedColorMap;
-import org.apache.poi.xssf.usermodel.IndexedColorMap;
-import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.*;
 
-import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public final class WorkbookAPIImpl implements WorkbookAPI {
 
     private final static org.apache.log4j.Logger LOG = Logger.getLogger(WorkbookAPIImpl.class);
 
-    private final SXSSFWorkbook workbook;
+    private final XSSFWorkbook workbook;
 
     /**
      * max authorized rows
@@ -53,7 +47,7 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
     private final Utils.Clock timer;
     private final Map<Style, CellStyle> styles = Maps.newHashMap();
 
-    public WorkbookAPIImpl(SXSSFWorkbook workbook, long rowLimit, long timeLimit) {
+    public WorkbookAPIImpl(XSSFWorkbook workbook, long rowLimit, long timeLimit) {
         this.workbook = workbook;
         this.rowLimit = rowLimit;
         this.timeLimit = timeLimit;
@@ -114,12 +108,12 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
 
     @Override
     public Sheet getSheet(String title) {
-        SXSSFSheet sheet = workbook.getSheet(title);
+        XSSFSheet sheet = workbook.getSheet(title);
         if (sheet == null) return null;
         return new SheetImpl(this, sheet);
     }
 
-    public SXSSFWorkbook getWorkbook() {
+    public XSSFWorkbook getWorkbook() {
         return workbook;
     }
 
