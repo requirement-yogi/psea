@@ -40,28 +40,23 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
 
     private final static org.apache.log4j.Logger LOG = Logger.getLogger(WorkbookAPIImpl.class);
 
-    /**
-     * Max allowed time for generating an excel file
-     */
-    private static final Long MAX_DURATION = TimeUnit.MINUTES.toMillis(2);
-
     private final SXSSFWorkbook workbook;
 
     /**
      * max authorized rows
      */
-    private final Integer rowLimit;
+    private final long rowLimit;
     /**
      * max time to achieve export, in milliseconds
      */
-    private final Integer timeLimit;
+    private final long timeLimit;
     private final Utils.Clock timer;
     private final Map<Style, CellStyle> styles = Maps.newHashMap();
 
-    public WorkbookAPIImpl(SXSSFWorkbook workbook, @Nullable Integer rowLimit, @Nullable Integer timeLimit) {
+    public WorkbookAPIImpl(SXSSFWorkbook workbook, long rowLimit, long timeLimit) {
         this.workbook = workbook;
         this.rowLimit = rowLimit;
-        this.timeLimit = timeLimit != null ? timeLimit : MAX_DURATION.intValue();
+        this.timeLimit = timeLimit;
         this.timer = Utils.Clock.start();
 
         // The colors
@@ -132,7 +127,7 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
         return styles;
     }
 
-    public Integer getRowLimit() {
+    public long getRowLimit() {
         return rowLimit;
     }
 

@@ -20,6 +20,9 @@ package com.playsql.psea.impl;
  * #L%
  */
 
+import com.atlassian.confluence.api.service.accessmode.AccessModeService;
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.ExcelImportConsumer;
 import com.playsql.psea.api.PSEAImportException;
@@ -38,6 +41,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class PseaServiceImpl implements PseaService {
@@ -45,13 +49,26 @@ public class PseaServiceImpl implements PseaService {
     private final static Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
     private static final String FILE_PREFIX = "excel-export-";
     private static final String FILE_EXTENSION = ".xlsx";
+    private static final String SETTINGS_ROW_LIMIT = "com.requirementyogi.psea.row-limit";
+    private static final String SETTINGS_TIME_LIMIT = "com.requirementyogi.psea.time-limit";
+    public static final long MAX_ROWS_DEFAULT = 1000000;
+    public static final long TIME_LIMIT_DEFAULT = TimeUnit.MINUTES.toMillis(2);
+    public static final long TIME_LIMIT_MAX = TimeUnit.MINUTES.toHours(6);
 
-    public File export(Consumer<WorkbookAPI> f) {
-        return export(f, null, null);
+    private final PluginSettingsFactory pluginSettingsFactory;
+    private final AccessModeService accessModeService;
+
+    public PseaServiceImpl(PluginSettingsFactory pluginSettingsFactory,
+                           AccessModeService accessModeService
+    ) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
+        this.accessModeService = accessModeService;
     }
 
-    public File export(Consumer<WorkbookAPI> f, Integer rowLimit, Integer timeLimit) {
+    public File export(Consumer<WorkbookAPI> f) {
         SXSSFWorkbook xlWorkbook = null;
+        long rowLimit = getRowLimit();
+        long timeLimit = getTimeLimit();
         try {
             xlWorkbook = new SXSSFWorkbook(null, 1000, false);
             xlWorkbook.setCompressTempFiles(false);
@@ -234,4 +251,60 @@ public class PseaServiceImpl implements PseaService {
         return (cellValue == null) ? null : Objects.toString(cellValue);
     }
 
+    private static long readLong(Object value, long min, long max, long defaultValue) {
+        if (value instanceof String) {
+            try {
+                long limit = Long.parseLong((String) value);
+                if (limit < min) limit = min;
+                if (limit > max) limit = max;
+                return limit;
+            } catch (NumberFormatException nfe) {
+                return defaultValue;
+            }
+        } else {
+            return defaultValue;
+        }
+    }
+
+    @Override
+    public Long getRowLimit() {
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        Object value = settings.get(SETTINGS_ROW_LIMIT);
+        return readLong(value, 1, MAX_ROWS_DEFAULT, MAX_ROWS_DEFAULT);
+    }
+
+    @Override
+    public void setRowLimit(Long limit) {
+        if (accessModeService.isReadOnlyAccessModeEnabled()) {
+            LOG.warn("PSEA settings were not saved because the instance is in read-only mode");
+            return; // Don't save, silently.
+        }
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        if (limit == null) {
+            settings.remove(SETTINGS_ROW_LIMIT);
+        } else {
+            settings.put(SETTINGS_ROW_LIMIT, String.valueOf(limit));
+        }
+    }
+
+    @Override
+    public Long getTimeLimit() {
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        Object value = settings.get(SETTINGS_TIME_LIMIT);
+        return readLong(value, 1, TIME_LIMIT_DEFAULT, TIME_LIMIT_MAX);
+    }
+
+    @Override
+    public void setTimeLimit(Long limit) {
+        if (accessModeService.isReadOnlyAccessModeEnabled()) {
+            LOG.warn("PSEA settings were not saved because the instance is in read-only mode");
+            return; // Don't save, silently.
+        }
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        if (limit == null) {
+            settings.remove(SETTINGS_TIME_LIMIT);
+        } else {
+            settings.put(SETTINGS_TIME_LIMIT, String.valueOf(limit));
+        }
+    }
 }

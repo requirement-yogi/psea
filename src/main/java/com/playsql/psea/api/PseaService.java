@@ -36,22 +36,43 @@ public interface PseaService {
     File export(Consumer<WorkbookAPI> f);
 
     /**
-     * Export excel file with constraints
-     *
-     * @param f         the consumer
-     * @param rowLimit  the max number of rows allowed for this export. If null, the default is used.
-     * @param timeLimit the max amount of time allowed to generated the excel file. If null, a default value is used
-     * @return File where the file is stored
-     */
-    File export(Consumer<WorkbookAPI> f, @Nullable Integer rowLimit, @Nullable Integer timeLimit);
-
-    /**
      * Offers the possibility to delete a file before the JVM stops.
      * The implementation ensures the validity of the file before deleting it.
      *
      * @return true if the file is successfully deleted
+     * @since 1.7
      */
     boolean deleteFile(File file);
+
+    /**
+     * Returns the limit of rows configured by the system administrator.
+     *
+     * The default is 1m, but null can be returned.
+     *
+     * @since 1.7
+     */
+    Long getRowLimit();
+
+    /**
+     * Sets the row limit of all exports.
+     * @since 1.7
+     */
+    void setRowLimit(Long limit);
+
+    /**
+     * Get the time limit in milliseconds of all exports.
+     *
+     * The default is 1m, but null can be returned.
+     *
+     * @since 1.7
+     */
+    Long getTimeLimit();
+
+    /**
+     * Sets the time limit in milliseconds for all exports
+     * @since 1.7
+     */
+    void setTimeLimit(Long timeLimit);
 
     /**
      * Read an Excel file, and feed it to the consumer

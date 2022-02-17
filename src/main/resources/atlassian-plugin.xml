@@ -44,6 +44,9 @@
         <interface>com.playsql.psea.api.PseaService</interface>
     </component>
 
+    <component-import key="plugin-settings" interface="com.atlassian.sal.api.pluginsettings.PluginSettings" />
+    <component-import key="access-mode-service" interface="com.atlassian.confluence.api.service.accessmode.AccessModeService" />
+
     <xwork name="MVC Actions" key="xwork">
         <description>MVC actions for all pages provided by the plugin</description>
         <package name="psea-general" extends="default" namespace="/plugins/${project.groupId}.${project.artifactId}">

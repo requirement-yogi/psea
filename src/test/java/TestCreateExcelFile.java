@@ -17,14 +17,15 @@
  * limitations under the License.
  * #L%
  */
+
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.Row;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
 import com.playsql.psea.api.WorkbookAPI;
 import com.playsql.psea.impl.PseaServiceImpl;
+import com.playsql.psea.impl.PseaTestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
+import static com.playsql.psea.impl.PseaTestUtils.ACCESS_MODE_SERVICE;
 import static org.junit.Assert.assertTrue;
 
 public class TestCreateExcelFile {
@@ -41,7 +43,7 @@ public class TestCreateExcelFile {
 
     @Test
     public void test() throws IOException {
-        PseaServiceImpl psea = new PseaServiceImpl();
+        PseaServiceImpl psea = new PseaServiceImpl(PseaTestUtils.PLUGIN_SETTINGS, ACCESS_MODE_SERVICE);
         File file = psea.export(workbookAPI -> {
             Row row;
             Sheet sheet = workbookAPI.newSheet("ABC");
@@ -114,7 +116,7 @@ public class TestCreateExcelFile {
             ));
 
             workbookAPI.newSheet("Helicopter");
-        }, null, null);
+        });
 
         File targetFile = writeToTarget(file);
         assertTrue(targetFile.exists());

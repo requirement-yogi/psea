@@ -1,16 +1,16 @@
 package com.playsql.psea.impl;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 
+import static com.playsql.psea.impl.PseaTestUtils.ACCESS_MODE_SERVICE;
 import static org.junit.Assert.*;
 
 public class PseaServiceImplTest {
 
-    private PseaServiceImpl service = new PseaServiceImpl();
+    private PseaServiceImpl service = new PseaServiceImpl(PseaTestUtils.PLUGIN_SETTINGS, ACCESS_MODE_SERVICE);
 
     @Test
     public void testDeleteFile() throws IOException {
