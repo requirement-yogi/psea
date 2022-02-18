@@ -30,52 +30,20 @@ public interface PseaService {
     /**
      * Export excel file with default constraints
      *
+     * The caller is responsible for deleting the file afterwards.
+     * If not, it will only be deleted when the JVM is deleted.
+     *
+     * IMPORTANT: If you want the exception to be saved, no transaction should be started before
+     * this export, AND any exception should be caught and returned to the UI as a simple error.
+     *
      * @param f the consumer
      * @return File where the file is stored
      */
     File export(Consumer<WorkbookAPI> f);
 
     /**
-     * Offers the possibility to delete a file before the JVM stops.
-     * The implementation ensures the validity of the file before deleting it.
+     * Read an Excel file, and feed it to the consumer.
      *
-     * @return true if the file is successfully deleted
-     * @since 1.7
-     */
-    boolean deleteFile(File file);
-
-    /**
-     * Returns the limit of rows configured by the system administrator.
-     *
-     * The default is 1m, but null can be returned.
-     *
-     * @since 1.7
-     */
-    Long getRowLimit();
-
-    /**
-     * Sets the row limit of all exports.
-     * @since 1.7
-     */
-    void setRowLimit(Long limit);
-
-    /**
-     * Get the time limit in milliseconds of all exports.
-     *
-     * The default is 1m, but null can be returned.
-     *
-     * @since 1.7
-     */
-    Long getTimeLimit();
-
-    /**
-     * Sets the time limit in milliseconds for all exports
-     * @since 1.7
-     */
-    void setTimeLimit(Long timeLimit);
-
-    /**
-     * Read an Excel file, and feed it to the consumer
      * @param file the file, either a physical file or an InputStream
      * @param consumer the consumer
      * @throws OutOfMemoryError if the underlying Apache POI throws an OOME. It is recommended to catch this exception in the calling method.
@@ -92,11 +60,16 @@ public interface PseaService {
 
     class PseaFileInput implements PseaInput {
         private final File file;
-        private final String fileName;
 
         public PseaFileInput(File file, String fileName) {
             this.file = file;
-            this.fileName = fileName;
+        }
+
+        /**
+         * @since PSEA 1.7
+         */
+        public PseaFileInput(File file) {
+            this.file = file;
         }
 
         public File getFile() {

@@ -20,6 +20,7 @@ package com.playsql.psea.impl;
  * #L%
  */
 
+import com.atlassian.confluence.api.model.accessmode.AccessMode;
 import com.atlassian.confluence.api.service.accessmode.AccessModeService;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
@@ -28,6 +29,10 @@ import com.playsql.psea.api.ExcelImportConsumer;
 import com.playsql.psea.api.PSEAImportException;
 import com.playsql.psea.api.PseaService;
 import com.playsql.psea.api.WorkbookAPI;
+import com.playsql.psea.db.dao.PseaTaskDAO;
+import com.playsql.psea.db.entities.DBPseaTask;
+import com.playsql.psea.dto.DTOPseaTask;
+import com.playsql.psea.dto.PseaLimitException;
 import com.playsql.psea.utils.Utils.Clock;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -44,6 +49,9 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import static com.playsql.psea.db.entities.DBPseaTask.STATUS_DONE;
+import static com.playsql.psea.db.entities.DBPseaTask.STATUS_ERROR;
+
 public class PseaServiceImpl implements PseaService {
 
     private final static Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
@@ -51,38 +59,76 @@ public class PseaServiceImpl implements PseaService {
     private static final String FILE_EXTENSION = ".xlsx";
     private static final String SETTINGS_ROW_LIMIT = "com.requirementyogi.psea.row-limit";
     private static final String SETTINGS_TIME_LIMIT = "com.requirementyogi.psea.time-limit";
+    private static final String SETTINGS_DATA_LIMIT = "com.requirementyogi.psea.data-limit";
     public static final long MAX_ROWS_DEFAULT = 1000000;
     public static final long TIME_LIMIT_DEFAULT = TimeUnit.MINUTES.toMillis(2);
-    public static final long TIME_LIMIT_MAX = TimeUnit.MINUTES.toHours(6);
+    public static final long TIME_LIMIT_MAX = TimeUnit.HOURS.toMillis(2);
+    public static final long DATA_LIMIT_DEFAULT = 1000000;
+    public static final long DATA_LIMIT_MAX = 100 * DATA_LIMIT_DEFAULT;
 
     private final PluginSettingsFactory pluginSettingsFactory;
     private final AccessModeService accessModeService;
+    private final PseaTaskDAO dao;
 
     public PseaServiceImpl(PluginSettingsFactory pluginSettingsFactory,
-                           AccessModeService accessModeService
+                           AccessModeService accessModeService,
+                           PseaTaskDAO dao
     ) {
         this.pluginSettingsFactory = pluginSettingsFactory;
         this.accessModeService = accessModeService;
+        this.dao = dao;
     }
 
     public File export(Consumer<WorkbookAPI> f) {
+        DBPseaTask record = accessModeService.getAccessMode() == AccessMode.READ_WRITE ? dao.create() : null;
+
+        long sizeLimit = getDataLimit();
+        Consumer<Long> saveSize = buildSaveSizeFunction(record, sizeLimit);
+
         XSSFWorkbook xlWorkbook = null;
         long rowLimit = getRowLimit();
         long timeLimit = getTimeLimit();
+        File file = null;
         try {
             xlWorkbook = new XSSFWorkbook();
-            WorkbookAPI workbook = new WorkbookAPIImpl(xlWorkbook, rowLimit, timeLimit);
+            WorkbookAPIImpl workbook = new WorkbookAPIImpl(xlWorkbook, rowLimit, timeLimit, saveSize);
             f.accept(workbook);
 
-            File file = File.createTempFile(FILE_PREFIX, FILE_EXTENSION);
+            dao.save(record, DTOPseaTask.Status.WRITING, null);
+
+            file = File.createTempFile(FILE_PREFIX, FILE_EXTENSION);
             file.deleteOnExit();
+            if (record != null) {
+                record.setFilename(file.getName());
+                dao.save(record);
+            }
+
             try (FileOutputStream fileOut = new FileOutputStream(file)) {
                 xlWorkbook.write(fileOut);
             }
+
+            dao.save(record, DTOPseaTask.Status.DONE, "Size=" + workbook.getDataSize() + " units");
             return file;
+
         } catch (IOException e) {
+            dao.save(record, DTOPseaTask.Status.ERROR, "IO Exception: " + e.getMessage());
+            if (file != null) {
+                file.delete(); // Doesn't throw an exception, just returns false if error
+            }
             throw new RuntimeException("Error while writing an Excel file to disk", e);
+
+        } catch (RuntimeException re) {
+            dao.save(record, DTOPseaTask.Status.ERROR, re.getMessage());
+            if (file != null) {
+                file.delete(); // Doesn't throw an exception, just returns false if error
+            }
+            throw re;
         } finally {
+            if (record != null) {
+                if (!Objects.equals(record.getStatus(), STATUS_ERROR) && !Objects.equals(record.getStatus(), STATUS_DONE)) {
+                    dao.save(record, DTOPseaTask.Status.ERROR, "The status was " + record.getStatus() + " despite the export being finished.");
+                }
+            }
             if (xlWorkbook != null) {
                 try {
                     xlWorkbook.close();
@@ -93,15 +139,26 @@ public class PseaServiceImpl implements PseaService {
         }
     }
 
-    @Override
-    public boolean deleteFile(@Nullable File file) {
-        if (file != null
-                && file.exists()
-                && file.getName().contains(FILE_PREFIX)
-                && file.getName().endsWith(FILE_EXTENSION)) {
-            return file.delete();
-        }
-        return false;
+    private Consumer<Long> buildSaveSizeFunction(DBPseaTask record, long sizeLimit) {
+        Consumer<Long> saveSize = new Consumer<Long>() {
+
+            private final long SIZE_RESOLUTION = 10000; // Save the size every 10KB.
+            private long nextSaveSize = 10; // We save just after a few bytes
+
+            @Override
+            public void accept(Long currentSize) {
+                if (currentSize > sizeLimit) {
+                    throw new PseaLimitException(currentSize, sizeLimit, "size", "units");
+                }
+
+                if (record != null && currentSize > nextSaveSize) {
+                    nextSaveSize = currentSize + SIZE_RESOLUTION;
+                    record.setSize(currentSize);
+                    dao.save(record);
+                }
+            }
+        };
+        return saveSize;
     }
 
     public void extract(PseaInput workbookFile, ExcelImportConsumer rowConsumer) throws OutOfMemoryError, PSEAImportException {
@@ -264,14 +321,12 @@ public class PseaServiceImpl implements PseaService {
         }
     }
 
-    @Override
     public Long getRowLimit() {
         PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
         Object value = settings.get(SETTINGS_ROW_LIMIT);
         return readLong(value, 1, MAX_ROWS_DEFAULT, MAX_ROWS_DEFAULT);
     }
 
-    @Override
     public void setRowLimit(Long limit) {
         if (accessModeService.isReadOnlyAccessModeEnabled()) {
             LOG.warn("PSEA settings were not saved because the instance is in read-only mode");
@@ -285,14 +340,12 @@ public class PseaServiceImpl implements PseaService {
         }
     }
 
-    @Override
     public Long getTimeLimit() {
         PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
         Object value = settings.get(SETTINGS_TIME_LIMIT);
-        return readLong(value, 1, TIME_LIMIT_DEFAULT, TIME_LIMIT_MAX);
+        return readLong(value, 1, TIME_LIMIT_MAX, TIME_LIMIT_DEFAULT);
     }
 
-    @Override
     public void setTimeLimit(Long limit) {
         if (accessModeService.isReadOnlyAccessModeEnabled()) {
             LOG.warn("PSEA settings were not saved because the instance is in read-only mode");
@@ -303,6 +356,25 @@ public class PseaServiceImpl implements PseaService {
             settings.remove(SETTINGS_TIME_LIMIT);
         } else {
             settings.put(SETTINGS_TIME_LIMIT, String.valueOf(limit));
+        }
+    }
+
+    public long getDataLimit() {
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        Object value = settings.get(SETTINGS_DATA_LIMIT);
+        return readLong(value, 1, DATA_LIMIT_MAX, DATA_LIMIT_DEFAULT);
+    }
+
+    public void setDataLimit(Long limit) {
+        if (accessModeService.isReadOnlyAccessModeEnabled()) {
+            LOG.warn("PSEA settings were not saved because the instance is in read-only mode");
+            return; // Don't save, silently.
+        }
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        if (limit == null) {
+            settings.remove(SETTINGS_DATA_LIMIT);
+        } else {
+            settings.put(SETTINGS_DATA_LIMIT, String.valueOf(limit));
         }
     }
 }

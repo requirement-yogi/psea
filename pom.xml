@@ -107,6 +107,19 @@
         </dependency>
 
         <dependency>
+            <groupId>net.java.dev.activeobjects</groupId>
+            <artifactId>activeobjects</artifactId>
+            <version>${ao.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.activeobjects</groupId>
+            <artifactId>activeobjects-core</artifactId>
+            <version>${ao.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
@@ -116,6 +129,12 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.17.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>3.11.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -154,6 +173,13 @@
                             com.google.common.base;version="0.0.0",
                             com.google.common.io;version="0.0.0",
                             com.atlassian.confluence.core;version="0.0.0",
+                            com.atlassian.sal.api*;version="0.0.0",
+                            com.atlassian.confluence.api*;version="0.0.0",
+                            com.atlassian.activeobjects.external;version="0.0.0",
+                            com.atlassian.activeobjects.spi;version="0.0.0",
+                            org.apache.commons.lang3;version="0.0.0",
+                            net.java.ao.schema;version="0.0.0",
+                            net.java.ao;version="0.0.0",
                             org.apache.log4j;version="0.0.0",
                             org.slf4j*;version="0.0.0",
                             org.slf4j.spi;version="0.0.0",
@@ -468,6 +494,7 @@
         <plugin.testrunner.version>1.2.3</plugin.testrunner.version>
         <junit.version>4.13.2</junit.version>
         <skipTests>false</skipTests>
+        <ao.version>3.2.10</ao.version>
 
     </properties>
 

@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
-import static com.playsql.psea.impl.PseaTestUtils.ACCESS_MODE_SERVICE;
+import static com.playsql.psea.impl.PseaTestUtils.*;
 import static org.junit.Assert.assertTrue;
 
 public class TestCreateExcelFile {
@@ -43,7 +43,7 @@ public class TestCreateExcelFile {
 
     @Test
     public void test() throws IOException {
-        PseaServiceImpl psea = new PseaServiceImpl(PseaTestUtils.PLUGIN_SETTINGS, ACCESS_MODE_SERVICE);
+        PseaServiceImpl psea = PSEA;
         File file = psea.export(workbookAPI -> {
             Row row;
             Sheet sheet = workbookAPI.newSheet("ABC");

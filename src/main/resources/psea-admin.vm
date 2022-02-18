@@ -1,0 +1,69 @@
+<html>
+<head>
+    <title>PSEA Rate-Limiting</title>
+</head>
+<body>
+    <content tag="selectedWebItem">marketplace-ry-global-admin-item</content>
+
+    <p>PSEA is the module which allows Requirement Yogi and Play SQL Spreadsheets to read/write Excel files.</p>
+    <p>This forms allows you to control the export limits, in case you are hitting memory / CPU issues.</p>
+    <form class="aui" method="POST" action="save.action" style="margin-top: 20px;">
+        #form_xsrfToken()
+        <fieldset>
+            <div class="field-group">
+                <label for="row-limit">Row limit</label>
+                <input class="text" type="text" id="row-limit" name="rowLimit" title="Row limit" value="$!{rowLimit}">
+                <div class="description">Limit the maximum number of rows for all exported Excel files. Default is $!{rowLimitDefault}.</div>
+            </div>
+            <div class="field-group">
+                <label for="row-limit">Time limit</label>
+                <input class="text" type="text" id="time-limit" name="timeLimit" title="Time limit" value="$!{timeLimit}">
+                <div class="description">Limit the duration of an export, in milliseconds, actual time may be longer. Default is $!{timeLimitDefault}.</div>
+            </div>
+            <div class="field-group">
+                <label for="data-limit">Data limit</label>
+                <input class="text" type="text" id="data-limit" name="dataLimit" title="Data limit" value="$!{dataLimit}">
+                <div class="description">Size limit for all exported Excel files, measured before writing the file.
+                    The actual size of the file will be an order of magnitude larger. Default is $!{dataLimitDefault}.</div>
+            </div>
+        </fieldset>
+        <div class="buttons-container">
+            <div class="buttons">
+                <input class="button submit" type="submit" value="Save">
+                <a class="cancel" href="admin.action">Cancel</a>
+            </div>
+        </div>
+    </form>
+
+    <p>To help you deciding what limits are correct, here is a list of the most recent exports.</p>
+
+    <table class="aui">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>File name</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Message</th>
+        </tr>
+        </thead>
+        <tbody>
+            #set ($list = $action.getLastExportList())
+            #if ($list.isEmpty())
+                <tr>
+                    <td colspan="5"><i>No export has been made recently</i></td>
+                </tr>
+            #else
+                #foreach($item in $list)
+                    <tr>
+                        <td>${item.getStartDateHuman()}</td>
+                        <td>${item.getFilename()}</td>
+                        <td>${item.getStatus()}</td>
+                        <td>${item.getDurationHuman()}</td>
+                        <td>$!{item.getMessage()}</td>
+                    </tr>
+                #end
+            #end
+        </tbody>
+    </table>
+</body>

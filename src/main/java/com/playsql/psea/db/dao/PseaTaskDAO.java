@@ -1,0 +1,91 @@
+package com.playsql.psea.db.dao;
+
+import com.atlassian.activeobjects.external.ActiveObjects;
+import com.playsql.psea.db.entities.DBPseaTask;
+import com.playsql.psea.dto.DTOPseaTask;
+import net.java.ao.Query;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class PseaTaskDAO {
+
+    private static int KEEP_ITEMS = 200;
+    private final ActiveObjects ao;
+
+    public PseaTaskDAO(ActiveObjects ao) {
+        this.ao = ao;
+    }
+    
+    public DBPseaTask create() {
+        return ao.executeInTransaction(() -> {
+            clearOldData();
+            DBPseaTask task = ao.create(DBPseaTask.class);
+            task.setFilename("File not written to disk");
+            task.setStartdate(new Date());
+            task.setStatus(DBPseaTask.STATUS_IN_PROGRESS);
+            task.save();
+            return task;
+        });
+    }
+
+    /** Saves the status of the task, after various checks:
+     * - Check there is a record (there is none during READ_ONLY mode),
+     * - Appends the message instead of setting it,
+     * - If the task is done, set the duration.
+     */
+    public void save(DBPseaTask record, DTOPseaTask.Status status, String message) {
+        if (record == null) return;
+        ao.executeInTransaction(() -> {
+            if (message != null) {
+                String existingMessage = record.getMessage();
+                if (existingMessage != null) {
+                    record.setMessage(StringUtils.abbreviate(existingMessage + " \n" + message, 600));
+                } else {
+                    record.setMessage(StringUtils.abbreviate(message, 600));
+                }
+            }
+            record.setStatus(status.name());
+            if (status == DTOPseaTask.Status.DONE || status == DTOPseaTask.Status.ERROR) {
+                Date startdate = record.getStartdate();
+                if (startdate == null) {
+                    record.setDuration(0);
+                } else {
+                    record.setDuration(new Date().getTime() - startdate.getTime());
+                }
+            }
+            record.save();
+            return null;
+        });
+    }
+
+    public void save(DBPseaTask record) {
+        ao.executeInTransaction(() -> {
+            record.save();
+            return null;
+        });
+    }
+
+    /** Delete data above 200 items */
+    public void clearOldData() {
+        int count = ao.count(DBPseaTask.class);
+        if (count > KEEP_ITEMS) {
+            int itemsToRemove = Math.min(count - KEEP_ITEMS, 2000);
+            DBPseaTask[] items = ao.find(DBPseaTask.class, Query.select().order("STARTDATE ASC").limit(itemsToRemove));
+            for (DBPseaTask dbTask : items) {
+                ao.delete(dbTask);
+            }
+        }
+    }
+
+    /**
+     * Return the last 200 saves.
+     */
+    public List<DTOPseaTask> getList() {
+        DBPseaTask[] items = ao.find(DBPseaTask.class, Query.select().order("STARTDATE DESC").limit(KEEP_ITEMS));
+        return Arrays.stream(items).map(DTOPseaTask::of).collect(Collectors.toList());
+    }
+}

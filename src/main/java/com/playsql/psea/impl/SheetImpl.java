@@ -23,7 +23,7 @@ package com.playsql.psea.impl;
 import com.playsql.psea.api.Row;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
-import org.apache.poi.ss.usermodel.CreationHelper;
+import com.playsql.psea.dto.PseaLimitException;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.SheetUtil;
 import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
@@ -56,8 +56,7 @@ public class SheetImpl implements Sheet {
     public Row addRow(int position, List<? extends Value> values) {
         workbook.checkTimer();
         if (position > workbook.getRowLimit()) {
-            throw new IllegalArgumentException(
-                    "Row number (" + position + ") is outside the configured range (0 to " + workbook.getRowLimit() + ")");
+            throw new PseaLimitException(position, workbook.getRowLimit(), "rows", "rows");
         }
 
         XSSFRow xlRow = sheet.createRow(position);
@@ -69,6 +68,15 @@ public class SheetImpl implements Sheet {
             }
         }
         return row;
+    }
+
+    /** Adds the size of this cell to the total size of the file, and throw an exception if the Excel file is too big. */
+    void addSize(Value value) {
+        int size = value == null ? 0 : 10 // We estimate that even an empty cell takes 10 bytes to save.
+                + (value.getValue() != null ? value.getValue().length() : 0)
+                + (value.getHref() != null ? value.getHref().length() : 0);
+        if (size > 0)
+            workbook.addSize(size);
     }
 
     @Override

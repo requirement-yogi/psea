@@ -12,6 +12,11 @@
     <a href="https://marketplace.atlassian.com/plugins/com.playsql.playsql-plugin">Spreadsheets for Confluence</a>.
 </p>
 
+<p>
+    Administration of PSEA:
+    <a href="${req.contextPath}/admin/plugins/com.playsql.play-sql-export-addon/admin.action">See this page</a>.
+</p>
+
 <br>
 <h2>License</h2>
 

@@ -6,11 +6,16 @@ import com.atlassian.confluence.api.service.exceptions.ServiceException;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import com.google.common.collect.Maps;
+import com.playsql.psea.db.dao.PseaTaskDAO;
+import com.playsql.psea.db.entities.DBPseaTask;
 import org.apache.commons.lang3.NotImplementedException;
+import org.mockito.Mockito;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+
+import static org.mockito.Mockito.when;
 
 public class PseaTestUtils {
 
@@ -42,6 +47,9 @@ public class PseaTestUtils {
     };
 
     public static PluginSettingsFactory PLUGIN_SETTINGS = new PluginSettingsFactory() {
+
+        private Map<String, String> storage = Maps.newHashMap();
+
         @Override
         public PluginSettings createSettingsForKey(String s) {
             throw new NotImplementedException("createSettingsForKey");
@@ -50,8 +58,6 @@ public class PseaTestUtils {
         @Override
         public PluginSettings createGlobalSettings() {
             return new PluginSettings() {
-
-                private Map<String, String> storage = Maps.newHashMap();
 
                 @Override
                 public Object get(String key) {
@@ -71,6 +77,14 @@ public class PseaTestUtils {
         }
     };
 
-    public static PseaServiceImpl PSEA = new PseaServiceImpl(PLUGIN_SETTINGS, ACCESS_MODE_SERVICE);
+    public static final PseaTaskDAO DAO = Mockito.mock(PseaTaskDAO.class);
+    public static final DBPseaTask RECORD = Mockito.mock(DBPseaTask.class);
+
+    static {
+        when(DAO.create()).thenReturn(RECORD);
+    }
+
+
+    public static PseaServiceImpl PSEA = new PseaServiceImpl(PLUGIN_SETTINGS, ACCESS_MODE_SERVICE, DAO);
 
 }

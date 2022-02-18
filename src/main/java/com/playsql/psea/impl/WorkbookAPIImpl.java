@@ -23,12 +23,15 @@ package com.playsql.psea.impl;
 import com.google.common.collect.Maps;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.WorkbookAPI;
+import com.playsql.psea.dto.PseaLimitException;
 import com.playsql.psea.utils.Utils;
 import org.apache.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class WorkbookAPIImpl implements WorkbookAPI {
 
@@ -40,17 +43,38 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
      * max authorized rows
      */
     private final long rowLimit;
+
     /**
      * max time to achieve export, in milliseconds
      */
     private final long timeLimit;
+
+    /**
+     * the current size of the export. The unit is kinda unknown, basically characters.
+     */
+    private long currentSize;
+
+    /**
+     * A function to save the current size of the export.
+     *
+     * It throws a RuntimeException if the size goes overboard,
+     * It will allow some post-mortem by the admins in case of memory error.
+     * */
+    @Nonnull
+    private final Consumer<Long> saveSize;
+
     private final Utils.Clock timer;
     private final Map<Style, CellStyle> styles = Maps.newHashMap();
 
-    public WorkbookAPIImpl(XSSFWorkbook workbook, long rowLimit, long timeLimit) {
+    public WorkbookAPIImpl(XSSFWorkbook workbook,
+                           long rowLimit,
+                           long timeLimit,
+                           @Nonnull Consumer<Long> saveSize
+    ) {
         this.workbook = workbook;
         this.rowLimit = rowLimit;
         this.timeLimit = timeLimit;
+        this.saveSize = saveSize;
         this.timer = Utils.Clock.start();
 
         // The colors
@@ -128,8 +152,17 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
     public void checkTimer() {
         long elapsedTime = timer.timeMillis();
         if (elapsedTime > timeLimit) {
-            throw new IllegalArgumentException(
-                    "Export time (" + elapsedTime + " ms) exceeded max configured time (" + timeLimit + " ms)");
+            throw new PseaLimitException(elapsedTime, timeLimit, "time", "ms");
         }
+    }
+
+    /** Adds the size of this cell to the total size of the file, and throw an exception if the Excel file is too big. */
+    public void addSize(long size) {
+        this.currentSize += size;
+        this.saveSize.accept(this.currentSize);
+    }
+
+    public long getDataSize() {
+        return this.currentSize;
     }
 }

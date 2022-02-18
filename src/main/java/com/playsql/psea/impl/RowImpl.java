@@ -39,6 +39,7 @@ public class RowImpl implements Row {
     @Override
     public void setCell(int col, Value value) {
         if (value != null) {
+            sheet.addSize(value);
             XSSFCell xlCell = xlRow.createCell(col);
 
             xlCell.setCellValue(value.getValue());

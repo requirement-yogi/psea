@@ -25,17 +25,14 @@ import com.google.common.collect.Lists;
 import com.playsql.psea.api.PseaService;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
-import com.playsql.psea.api.WorkbookAPI;
-
-import java.util.function.Consumer;
 
 public class AboutAction extends ConfluenceActionSupport {
     public PseaService pseaService;
 
     public String doTest() {
         pseaService.export(workbookAPI -> {
-            Sheet sh = workbookAPI.newSheet("Blanket");
-            sh.addRow(Lists.newArrayList(new Value("Jail")));
+            Sheet sh = workbookAPI.newSheet("Test");
+            sh.addRow(Lists.newArrayList(new Value("Test")));
         });
         return SUCCESS;
     }
