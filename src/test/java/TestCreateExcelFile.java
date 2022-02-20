@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 
 public class TestCreateExcelFile {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(TestCreateExcelFile.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestCreateExcelFile.class);
     private static int fileNumber = 1;
 
     @Test

@@ -1,10 +1,32 @@
 package com.playsql.psea.impl;
 
+/*-
+ * #%L
+ * PSEA
+ * %%
+ * Copyright (C) 2016 - 2022 Requirement Yogi S.A.S.U.
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.confluence.api.model.accessmode.AccessMode;
 import com.atlassian.confluence.api.service.accessmode.AccessModeService;
 import com.atlassian.confluence.api.service.exceptions.ServiceException;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import com.atlassian.sal.api.transaction.TransactionCallback;
 import com.google.common.collect.Maps;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.db.entities.DBPseaTask;
@@ -15,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class PseaTestUtils {
@@ -77,13 +100,19 @@ public class PseaTestUtils {
         }
     };
 
-    public static final PseaTaskDAO DAO = Mockito.mock(PseaTaskDAO.class);
+    public static final ActiveObjects AO = Mockito.mock(ActiveObjects.class);
+    public static final PseaTaskDAO DAO = new PseaTaskDAO(AO);
     public static final DBPseaTask RECORD = Mockito.mock(DBPseaTask.class);
 
     static {
+        when(AO.executeInTransaction(any())).thenAnswer(invocation -> {
+            TransactionCallback callback = invocation.getArgument(0);
+            Object result = callback.doInTransaction();
+            return result;
+        });
+        when(AO.create(any())).thenAnswer(invocation -> RECORD);
         when(DAO.create()).thenReturn(RECORD);
     }
-
 
     public static PseaServiceImpl PSEA = new PseaServiceImpl(PLUGIN_SETTINGS, ACCESS_MODE_SERVICE, DAO);
 
