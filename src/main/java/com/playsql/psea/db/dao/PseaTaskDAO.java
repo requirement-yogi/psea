@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class PseaTaskDAO {
@@ -68,13 +69,17 @@ public class PseaTaskDAO {
                     record.setMessage(StringUtils.abbreviate(message, 600));
                 }
             }
-            record.setStatus(status.name());
-            if (status == DTOPseaTask.Status.DONE || status == DTOPseaTask.Status.ERROR) {
-                Date startdate = record.getStartdate();
-                if (startdate == null) {
-                    record.setDuration(0);
-                } else {
-                    record.setDuration(new Date().getTime() - startdate.getTime());
+            // We only save the status if it isn't 'ERROR' yet (so no ERROR -> DONE),
+            // and we set the duration.
+            if (!Objects.equals(record.getStatus(), DTOPseaTask.Status.ERROR.name())) {
+                record.setStatus(status.name());
+                if (status == DTOPseaTask.Status.DONE || status == DTOPseaTask.Status.ERROR) {
+                    Date startdate = record.getStartdate();
+                    if (startdate == null) {
+                        record.setDuration(0);
+                    } else {
+                        record.setDuration(new Date().getTime() - startdate.getTime());
+                    }
                 }
             }
             record.save();

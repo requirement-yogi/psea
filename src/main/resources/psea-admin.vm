@@ -14,14 +14,14 @@
         #form_xsrfToken()
         <fieldset>
             <div class="field-group">
+                <label for="row-limit">Time limit</label>
+                <input class="text" type="text" id="time-limit" name="timeLimit" title="Time limit" value="$!{timeLimit}">
+                <div class="description">Limit the duration of an export, in seconds, actual time may be longer. Default is $!{timeLimitDefault}.</div>
+            </div>
+            <div class="field-group">
                 <label for="row-limit">Row limit</label>
                 <input class="text" type="text" id="row-limit" name="rowLimit" title="Row limit" value="$!{rowLimit}">
                 <div class="description">Limit the maximum number of rows for all exported Excel files. Default is $!{rowLimitDefault}.</div>
-            </div>
-            <div class="field-group">
-                <label for="row-limit">Time limit</label>
-                <input class="text" type="text" id="time-limit" name="timeLimit" title="Time limit" value="$!{timeLimit}">
-                <div class="description">Limit the duration of an export, in milliseconds, actual time may be longer. Default is $!{timeLimitDefault}.</div>
             </div>
             <div class="field-group">
                 <label for="data-limit">Data limit</label>

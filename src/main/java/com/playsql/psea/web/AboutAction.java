@@ -1,4 +1,4 @@
-package com.playsql.psea;
+package com.playsql.psea.web;
 
 /*
  * #%L

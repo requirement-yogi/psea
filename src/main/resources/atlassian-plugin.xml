@@ -64,17 +64,17 @@
     <xwork name="MVC Actions" key="xwork">
         <description>MVC actions for all pages provided by the plugin</description>
         <package name="psea-general" extends="default" namespace="/plugins/${project.groupId}.${project.artifactId}">
-            <action name="about" class="com.playsql.psea.AboutAction" method="doDefault">
+            <action name="about" class="com.playsql.psea.web.AboutAction" method="doDefault">
                 <interceptor-ref name="defaultStack" />
                 <result name="input" type="velocity">/about.vm</result>
             </action>
         </package>
         <package name="psea-admin" extends="default" namespace="/admin/plugins/${project.groupId}.${project.artifactId}">
-            <action name="admin" class="com.playsql.psea.PseaAdminAction" method="doAdmin">
+            <action name="admin" class="com.playsql.psea.web.PseaAdminAction" method="doAdmin">
                 <interceptor-ref name="defaultStack" />
                 <result name="input" type="velocity">/psea-admin.vm</result>
             </action>
-            <action name="save" class="com.playsql.psea.PseaAdminAction" method="doSave">
+            <action name="save" class="com.playsql.psea.web.PseaAdminAction" method="doSave">
                 <interceptor-ref name="validatingStack" />
                 <result name="input" type="velocity">/psea-admin.vm</result>
                 <result name="success" type="velocity">/psea-admin.vm</result>

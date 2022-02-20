@@ -120,7 +120,7 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
         STYLE_MIRROR_CELL.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         styles.put(Style.MIRROR_CELL, STYLE_MIRROR_CELL);
 
-        CellStyle STYLE_ERROR_CELL = workbook.createCellStyle();
+        XSSFCellStyle STYLE_ERROR_CELL = workbook.createCellStyle();
         STYLE_ERROR_CELL.setFont(BOLD_RED_FONT);
         styles.put(Style.ERROR_CELL, STYLE_ERROR_CELL);
     }
@@ -164,5 +164,18 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
 
     public long getDataSize() {
         return this.currentSize;
+    }
+
+    /**
+     * Write an error message on the first sheet, first cell.
+     * This method bypasses all the limits, because error messages are necessary.
+     */
+    public void writeErrorMessageOnFirstSheet(String message) {
+        XSSFSheet firstSheet = workbook.getSheetAt(0);
+        XSSFRow xlRow = firstSheet.createRow(0);
+        xlRow.setHeight((short) Math.max(xlRow.getHeight() * 4, 30));
+        XSSFCell cell = xlRow.createCell(0);
+        cell.setCellValue("ERROR, the export was interrupted and aborted: " + message);
+        cell.setCellStyle(styles.get(Style.ERROR_CELL));
     }
 }

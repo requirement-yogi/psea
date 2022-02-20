@@ -28,6 +28,8 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import static com.playsql.psea.impl.PseaServiceImpl.TIME_LIMIT_MAX;
+
 public class DTOPseaTask {
 
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT_HOUR_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -91,7 +93,7 @@ public class DTOPseaTask {
             return duration1 + "ms";
         if (duration1 < 60000)
             return TimeUnit.MILLISECONDS.toSeconds(duration1) + " s";
-        if (duration1 < TimeUnit.HOURS.toMillis(1)) {
+        if (duration1 < TIME_LIMIT_MAX) {
             long minutes = TimeUnit.MILLISECONDS.toMinutes(duration1);
             long seconds = TimeUnit.MILLISECONDS.toSeconds(duration1 - TimeUnit.MINUTES.toMillis(minutes));
             return minutes + " min " + seconds + " s";

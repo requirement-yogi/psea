@@ -35,6 +35,7 @@ import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.dto.PseaLimitException;
 import com.playsql.psea.utils.Utils.Clock;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,11 +61,11 @@ public class PseaServiceImpl implements PseaService {
     private static final String SETTINGS_ROW_LIMIT = "com.requirementyogi.psea.row-limit";
     private static final String SETTINGS_TIME_LIMIT = "com.requirementyogi.psea.time-limit";
     private static final String SETTINGS_DATA_LIMIT = "com.requirementyogi.psea.data-limit";
-    public static final long MAX_ROWS_DEFAULT = 1000000;
-    public static final long TIME_LIMIT_DEFAULT = TimeUnit.MINUTES.toMillis(2);
-    public static final long TIME_LIMIT_MAX = TimeUnit.HOURS.toMillis(2);
-    public static final long DATA_LIMIT_DEFAULT = 1000000;
-    public static final long DATA_LIMIT_MAX = 100 * DATA_LIMIT_DEFAULT;
+    public static final long MAX_ROWS_DEFAULT = 1000000; // Straight out of Excel 2007's limits
+    public static final long TIME_LIMIT_DEFAULT = TimeUnit.MINUTES.toMillis(2); // The default in RY
+    public static final long TIME_LIMIT_MAX = TimeUnit.HOURS.toMillis(2); // 2 hours shall be enough...
+    public static final long DATA_LIMIT_DEFAULT = 100000000; // 100 MB of data ?
+    public static final long DATA_LIMIT_MAX = 100 * DATA_LIMIT_DEFAULT; // 10GB of data...
 
     private final PluginSettingsFactory pluginSettingsFactory;
     private final AccessModeService accessModeService;
@@ -92,9 +93,15 @@ public class PseaServiceImpl implements PseaService {
         try {
             xlWorkbook = new XSSFWorkbook();
             WorkbookAPIImpl workbook = new WorkbookAPIImpl(xlWorkbook, rowLimit, timeLimit, saveSize);
-            f.accept(workbook);
-
-            dao.save(record, DTOPseaTask.Status.WRITING, null);
+            try {
+                f.accept(workbook);
+                dao.save(record, DTOPseaTask.Status.WRITING, null);
+            } catch (PseaLimitException re) {
+                dao.save(record, DTOPseaTask.Status.ERROR, re.getMessage());
+                workbook.writeErrorMessageOnFirstSheet(re.getMessage());
+                // We don't rethrow the error, because we want to save and return this spreadsheet to the user,
+                // with the error inside.
+            }
 
             file = File.createTempFile(FILE_PREFIX, FILE_EXTENSION);
             file.deleteOnExit();
