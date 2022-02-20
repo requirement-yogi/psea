@@ -1,4 +1,4 @@
-/*-
+package com.playsql.psea.impl;/*-
  * #%L
  * PSEA
  * %%
@@ -23,8 +23,6 @@ import com.playsql.psea.api.Row;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
 import com.playsql.psea.api.WorkbookAPI;
-import com.playsql.psea.impl.PseaServiceImpl;
-import com.playsql.psea.impl.PseaTestUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -33,17 +31,18 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
-import static com.playsql.psea.impl.PseaTestUtils.*;
 import static org.junit.Assert.assertTrue;
 
-public class TestCreateExcelFile {
+public class CreateExcelFileTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestCreateExcelFile.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreateExcelFileTest.class);
     private static int fileNumber = 1;
+
+    private final PseaTestUtils utils = new PseaTestUtils();
 
     @Test
     public void test() throws IOException {
-        PseaServiceImpl psea = PSEA;
+        PseaServiceImpl psea = utils.psea;
         File file = psea.export(workbookAPI -> {
             Row row;
             Sheet sheet = workbookAPI.newSheet("ABC");

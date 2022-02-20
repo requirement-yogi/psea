@@ -28,7 +28,6 @@ import com.playsql.psea.dto.PseaLimitException;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
-import org.mockito.verification.VerificationMode;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertThrows;
@@ -37,12 +36,13 @@ import static org.mockito.Mockito.verify;
 
 public class PseaServiceImplTest {
 
+    private final PseaTestUtils utils = new PseaTestUtils();
+
     @Test
     public void testSizeLimit() {
-        PseaServiceImpl psea = PseaTestUtils.PSEA;
-        psea.setDataLimit(300L);
+        utils.psea.setDataLimit(300L);
         try {
-            psea.export(workbook -> {
+            utils.psea.export(workbook -> {
                 Sheet sheet = workbook.newSheet("foo");
                 sheet.addRow(Lists.newArrayList(new Value("v1"))); // Takes 10 for the row, 10 for the cell, 2 for the contents
                 sheet.addRow(Lists.newArrayList(new Value(StringUtils.repeat("a", 250)))); // Still under 300
@@ -55,7 +55,7 @@ public class PseaServiceImplTest {
             assertThat(e.getMessage(), CoreMatchers.containsString("The Excel export reached a hard limit for 'size'"));
         }
 
-        verify(PseaTestUtils.RECORD, atLeastOnce()).setStatus(DBPseaTask.STATUS_ERROR);
+        verify(utils.record, atLeastOnce()).setStatus(DBPseaTask.STATUS_ERROR);
 
     }
 }

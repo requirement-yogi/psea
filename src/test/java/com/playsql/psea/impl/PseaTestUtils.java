@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
 
 public class PseaTestUtils {
 
-    public static AccessModeService ACCESS_MODE_SERVICE = new AccessModeService() {
+    public AccessModeService accessModeService = new AccessModeService() {
         @Override
         public AccessMode getAccessMode() {
             return AccessMode.READ_WRITE;
@@ -69,7 +69,7 @@ public class PseaTestUtils {
         }
     };
 
-    public static PluginSettingsFactory PLUGIN_SETTINGS = new PluginSettingsFactory() {
+    public PluginSettingsFactory pluginSettingsFactory = new PluginSettingsFactory() {
 
         private Map<String, String> storage = Maps.newHashMap();
 
@@ -100,20 +100,20 @@ public class PseaTestUtils {
         }
     };
 
-    public static final ActiveObjects AO = Mockito.mock(ActiveObjects.class);
-    public static final PseaTaskDAO DAO = new PseaTaskDAO(AO);
-    public static final DBPseaTask RECORD = Mockito.mock(DBPseaTask.class);
+    public final ActiveObjects ao = Mockito.mock(ActiveObjects.class);
+    public final PseaTaskDAO dao = new PseaTaskDAO(ao);
+    public final DBPseaTask record = Mockito.mock(DBPseaTask.class);
 
-    static {
-        when(AO.executeInTransaction(any())).thenAnswer(invocation -> {
+    {
+        when(ao.executeInTransaction(any())).thenAnswer(invocation -> {
             TransactionCallback callback = invocation.getArgument(0);
             Object result = callback.doInTransaction();
             return result;
         });
-        when(AO.create(any())).thenAnswer(invocation -> RECORD);
-        when(DAO.create()).thenReturn(RECORD);
+        when(ao.create(any())).thenAnswer(invocation -> record);
+        when(dao.create()).thenReturn(record);
     }
 
-    public static PseaServiceImpl PSEA = new PseaServiceImpl(PLUGIN_SETTINGS, ACCESS_MODE_SERVICE, DAO);
+    public PseaServiceImpl psea = new PseaServiceImpl(pluginSettingsFactory, accessModeService, dao);
 
 }
