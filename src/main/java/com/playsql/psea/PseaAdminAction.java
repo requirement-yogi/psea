@@ -23,16 +23,22 @@ package com.playsql.psea;
 import com.atlassian.confluence.core.ConfluenceActionSupport;
 import com.atlassian.confluence.security.PermissionManager;
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
+import com.atlassian.xwork.XsrfTokenGenerator;
+import com.opensymphony.webwork.ServletActionContext;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.impl.PseaServiceImpl;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public class PseaAdminAction extends ConfluenceActionSupport {
-    private  PseaServiceImpl pseaService;
+    private PseaServiceImpl pseaService;
     private PseaTaskDAO pseaTaskDAO;
     private PermissionManager permissionManager;
+    private XsrfTokenGenerator xsrfTokenGenerator;
+
+
     private Long timeLimit;
     private Long dataLimit;
     private Long rowLimit;
@@ -51,11 +57,34 @@ public class PseaAdminAction extends ConfluenceActionSupport {
     }
 
     public String doSave() {
+        if (!validateToken()) {
+            return INPUT;
+        }
         if (!isPermitted()) throw new IllegalStateException("Permissions haven't been checked properly.");
         pseaService.setDataLimit(dataLimit);
         pseaService.setRowLimit(rowLimit);
         pseaService.setTimeLimit(timeLimit);
-        return INPUT;
+        addActionMessage("Saved");
+        return doAdmin();
+    }
+
+    /** Validates the XSRF Token, because this dumbass Confluence accepts anything even though we are in a 'validatingStack'.
+     * @return*/
+    private boolean validateToken() {
+        HttpServletRequest request = ServletActionContext.getRequest();
+        if (request == null) {
+            addActionError("The HTTP request is missing. Please report your problem to the authors of Requirement Yogi.");
+            return false;
+        }
+        String token = request.getParameter("atl_token");
+        if (!xsrfTokenGenerator.validateToken(request, token)) {
+            addActionError("The XSRF token is missing or invalid. Most often, you can reload the previous" +
+                    " page and perform the action again. If you were redirected here from a website or an email," +
+                    " then it is possible that this website/email wanted to trick Confluence into performing a" +
+                    " change in your name.");
+            return false;
+        }
+        return true;
     }
 
     public List<DTOPseaTask> getLastExportList() {
@@ -68,6 +97,10 @@ public class PseaAdminAction extends ConfluenceActionSupport {
 
     public void setPseaService(PseaServiceImpl pseaService) {
         this.pseaService = pseaService;
+    }
+
+    public void setXsrfTokenGenerator(XsrfTokenGenerator xsrfTokenGenerator) {
+        this.xsrfTokenGenerator = xsrfTokenGenerator;
     }
 
     public Long getRowLimitDefault() {

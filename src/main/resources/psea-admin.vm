@@ -7,6 +7,9 @@
 
     <p>PSEA is the module which allows Requirement Yogi and Play SQL Spreadsheets to read/write Excel files.</p>
     <p>This forms allows you to control the export limits, in case you are hitting memory / CPU issues.</p>
+
+    #parse ( "/template/includes/actionerrors.vm" )
+
     <form class="aui" method="POST" action="save.action" style="margin-top: 20px;">
         #form_xsrfToken()
         <fieldset>
@@ -35,7 +38,7 @@
         </div>
     </form>
 
-    <p>To help you deciding what limits are correct, here is a list of the most recent exports.</p>
+    <p>To help you with deciding what limits are correct, here is a list of the most recent exports.</p>
 
     <table class="aui">
         <thead>
