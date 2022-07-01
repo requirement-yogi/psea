@@ -30,8 +30,8 @@
         <param name="plugin-type">both</param>
 
         <!--<param name="plugin-banner">img/Banner.png</param>-->
-        <param name="vendor-icon">img/playsql-16px.png</param>
-        <param name="vendor-logo">img/playsql-72px.png</param>
+        <param name="vendor-icon">img/ry-v3-16px-simple.png</param>
+        <param name="vendor-logo">img/ry-v3-72px-simple.png</param>
 
         <param name="atlassian-data-center-compatible">true</param>
         <param name="atlassian-data-center-status">compatible</param>

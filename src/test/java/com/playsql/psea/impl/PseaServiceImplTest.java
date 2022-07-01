@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
 import com.playsql.psea.db.entities.DBPseaTask;
+import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.dto.PseaLimitException;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.CoreMatchers;
@@ -55,7 +56,6 @@ public class PseaServiceImplTest {
             assertThat(e.getMessage(), CoreMatchers.containsString("The Excel export reached a hard limit for 'size'"));
         }
 
-        verify(utils.record, atLeastOnce()).setStatus(DBPseaTask.STATUS_ERROR);
-
+        verify(utils.record, atLeastOnce()).setStatus(DTOPseaTask.Status.ERROR.getDbValue());
     }
 }

@@ -29,29 +29,29 @@ import com.playsql.psea.api.ExcelImportConsumer;
 import com.playsql.psea.api.PSEAImportException;
 import com.playsql.psea.api.PseaService;
 import com.playsql.psea.api.WorkbookAPI;
+import com.playsql.psea.api.exceptions.PseaCancellationException;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.db.entities.DBPseaTask;
 import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.dto.PseaLimitException;
 import com.playsql.psea.utils.Utils.Clock;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static com.playsql.psea.db.entities.DBPseaTask.STATUS_DONE;
-import static com.playsql.psea.db.entities.DBPseaTask.STATUS_ERROR;
+import static com.playsql.psea.dto.DTOPseaTask.Status.*;
 
 public class PseaServiceImpl implements PseaService {
 
@@ -71,6 +71,12 @@ public class PseaServiceImpl implements PseaService {
     private final AccessModeService accessModeService;
     private final PseaTaskDAO dao;
 
+    /**
+     * The monitoring task. Removing items from the ThreadLocal is guaranteed by the fact that it's managed in a
+     * lambda.
+     */
+    private final ThreadLocal<Long> threadLocalTaskId = new ThreadLocal<>();
+
     public PseaServiceImpl(PluginSettingsFactory pluginSettingsFactory,
                            AccessModeService accessModeService,
                            PseaTaskDAO dao
@@ -80,8 +86,86 @@ public class PseaServiceImpl implements PseaService {
         this.dao = dao;
     }
 
-    public File export(Consumer<WorkbookAPI> f) {
-        DBPseaTask record = accessModeService.getAccessMode() == AccessMode.READ_WRITE ? dao.create() : null;
+    @Override
+    public <T> T startMonitoredTask(Callable<T> callable, long waitingTimeMillis) throws PseaCancellationException {
+        DBPseaTask record = createTask(DTOPseaTask.Status.PREPARING, waitingTimeMillis);
+        if (record != null) {
+            threadLocalTaskId.set(record.getID());
+        }
+        try {
+            return callable.call();
+        } catch (Exception ex) {
+            throw new RuntimeException("Exception while running the export", ex);
+        } finally {
+            Long taskId = threadLocalTaskId.get();
+            threadLocalTaskId.remove();
+            DBPseaTask task = dao.get(taskId);
+            if (task != null) {
+                DTOPseaTask.Status status = DTOPseaTask.Status.of(task.getStatus());
+                if (status != null && status.isRunning()) {
+                    if (status == DTOPseaTask.Status.CANCELLING) {
+                        dao.save(task, DTOPseaTask.Status.CANCELLED, "Shut down by cancellation");
+                    } else {
+                        dao.save(task, ERROR, "Status is " + status + " at the end of the task");
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Creates a task in the database, to monitor exports.
+     *
+     * @param waitingTimeMillis if the task needs to be created, and if the number of jobs is above the limit,
+     *                          it will retry for maximum waitingTimeMillis before throwing a PseaCancellationException.
+     *                          If 0L is passed, then it will either pass or reject straight away, but not wait.
+     */
+    private DBPseaTask createTask(DTOPseaTask.Status status, long waitingTimeMillis) throws PseaCancellationException {
+        if (accessModeService.getAccessMode() != AccessMode.READ_WRITE) {
+            return null;
+        }
+        Long taskId = threadLocalTaskId.get();
+        DBPseaTask record = null;
+        if (taskId != null) {
+            record = dao.get(taskId);
+        }
+        if (record == null) {
+            record = dao.create(NOT_STARTED);
+
+            waitUntilASlotIsAvailable(waitingTimeMillis, record);
+
+            dao.save(record, status, null);
+        }
+        return record;
+    }
+
+    private void waitUntilASlotIsAvailable(long waitingTimeMillis, DBPseaTask record) throws PseaCancellationException {
+        // NO_RELEASE Put 10 in the settings
+        int maxConcurrentJobs = 10;
+
+        long timeout = System.currentTimeMillis() + waitingTimeMillis;
+        int runningJobs;
+        // Retry 10 times during the duration, but at least every 3s and at most every 10s.
+        long sleepTime = Math.max(3000L, Math.min(timeout - System.currentTimeMillis() / 10L, 10000L));
+        while ((runningJobs = dao.countRunningJobs()) > maxConcurrentJobs) {
+            if (System.currentTimeMillis() > timeout) {
+                String message = "Cancelled because too many concurrent jobs are running (" + runningJobs + "/" + maxConcurrentJobs + ")";
+                dao.save(record, CANCELLED, message);
+                throw new PseaCancellationException(message);
+            }
+            try {
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore the interruption bit
+                throw new PseaCancellationException("Interrupted while waiting to start");
+            }
+        }
+    }
+
+    public File export(Consumer<WorkbookAPI> f) throws PseaCancellationException {
+        // We don't wait, in this step, because callers who want to wait should do it in the startMonitoredTask,
+        // assuming they have the correct version of PSEA.
+        DBPseaTask record = createTask(DTOPseaTask.Status.IN_PROGRESS, 0L);
 
         long sizeLimit = getDataLimit();
         Consumer<Long> saveSize = buildSaveSizeFunction(record, sizeLimit);
@@ -95,9 +179,9 @@ public class PseaServiceImpl implements PseaService {
             WorkbookAPIImpl workbook = new WorkbookAPIImpl(xlWorkbook, rowLimit, timeLimit, saveSize);
             try {
                 f.accept(workbook);
-                dao.save(record, DTOPseaTask.Status.WRITING, null);
+                dao.save(record, WRITING, null);
             } catch (PseaLimitException re) {
-                dao.save(record, DTOPseaTask.Status.ERROR, re.getMessage());
+                dao.save(record, ERROR, re.getMessage());
                 workbook.writeErrorMessageOnFirstSheet(re.getMessage());
                 // We don't rethrow the error, because we want to save and return this spreadsheet to the user,
                 // with the error inside.
@@ -114,26 +198,26 @@ public class PseaServiceImpl implements PseaService {
                 xlWorkbook.write(fileOut);
             }
 
-            dao.save(record, DTOPseaTask.Status.DONE, "Size=" + workbook.getDataSize() + " units");
+            dao.save(record, DONE, "Size=" + workbook.getDataSize() + " units");
             return file;
 
         } catch (IOException e) {
-            dao.save(record, DTOPseaTask.Status.ERROR, "IO Exception: " + e.getMessage());
+            dao.save(record, ERROR, "IO Exception: " + e.getMessage());
             if (file != null) {
                 file.delete(); // Doesn't throw an exception, just returns false if error
             }
             throw new RuntimeException("Error while writing an Excel file to disk", e);
 
         } catch (RuntimeException re) {
-            dao.save(record, DTOPseaTask.Status.ERROR, re.getMessage());
+            dao.save(record, ERROR, re.getMessage());
             if (file != null) {
                 file.delete(); // Doesn't throw an exception, just returns false if error
             }
             throw re;
         } finally {
             if (record != null) {
-                if (!Objects.equals(record.getStatus(), STATUS_ERROR) && !Objects.equals(record.getStatus(), STATUS_DONE)) {
-                    dao.save(record, DTOPseaTask.Status.ERROR, "The status was " + record.getStatus() + " despite the export being finished.");
+                if (!Objects.equals(record.getStatus(), ERROR.getDbValue()) && !Objects.equals(record.getStatus(), DONE.getDbValue())) {
+                    dao.save(record, ERROR, "The status was " + record.getStatus() + " despite the export being finished.");
                 }
             }
             if (xlWorkbook != null) {

@@ -111,7 +111,6 @@ public class PseaTestUtils {
             return result;
         });
         when(ao.create(any())).thenAnswer(invocation -> record);
-        when(dao.create()).thenReturn(record);
     }
 
     public PseaServiceImpl psea = new PseaServiceImpl(pluginSettingsFactory, accessModeService, dao);

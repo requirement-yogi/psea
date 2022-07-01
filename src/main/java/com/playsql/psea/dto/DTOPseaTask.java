@@ -25,8 +25,10 @@ import com.playsql.psea.db.entities.DBPseaTask;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.playsql.psea.impl.PseaServiceImpl.TIME_LIMIT_MAX;
 
@@ -36,13 +38,50 @@ public class DTOPseaTask {
     
     public enum Status {
 
-        IN_PROGRESS,
-        WRITING,
-        DONE,
-        ERROR;
+        NOT_STARTED       (false, "NOT_STARTED"),
+        PREPARING       (true, "PREPARING"),
+        IN_PROGRESS     (true, "IN_PROGRESS"),
+        WRITING         (true, "WRITING"),
+
+        DONE            (false, "DONE"),
+        ERROR           (false, "ERROR"),
+
+        CANCELLING      (true, "CANCELLING"),
+        CANCELLED       (false, "CANCELLED");
+
+        /**
+         * True if a thread is currently running for this task,
+         * False if the process is finished or almost finished.
+         */
+        private final boolean running;
+
+        /** String for the value in the database */
+        private final String dbValue;
+
+        Status(boolean running, String dbValue) {
+            this.running = running;
+            this.dbValue = dbValue;
+        }
 
         public static Status of(DBPseaTask dbTask) {
-            return Arrays.stream(Status.values()).filter(status -> Objects.equals(status.name(), dbTask.getStatus())).findFirst().orElse(null);
+            return of(dbTask.getStatus());
+        }
+
+        public static Status of(String status) {
+            return Arrays.stream(Status.values()).filter(value -> Objects.equals(value.getDbValue(), status)).findFirst().orElse(null);
+        }
+
+        /** Returns the list of 'running' statuses */
+        public static List<Status> listOfRunningStatuses() {
+            return Arrays.stream(values()).filter(Status::isRunning).collect(Collectors.toList());
+        }
+
+        public boolean isRunning() {
+            return running;
+        }
+
+        public String getDbValue() {
+            return dbValue;
         }
     };
     

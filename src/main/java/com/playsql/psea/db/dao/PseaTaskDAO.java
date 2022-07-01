@@ -23,9 +23,11 @@ package com.playsql.psea.db.dao;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.playsql.psea.db.entities.DBPseaTask;
 import com.playsql.psea.dto.DTOPseaTask;
+import com.playsql.psea.dto.DTOPseaTask.Status;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -34,22 +36,30 @@ import java.util.stream.Collectors;
 
 public class PseaTaskDAO {
 
-    private static int KEEP_ITEMS = 200;
+    /** Maximum size of the logs */
+    private static int KEEP_ITEMS = 5000;
     private final ActiveObjects ao;
 
     public PseaTaskDAO(ActiveObjects ao) {
         this.ao = ao;
     }
     
-    public DBPseaTask create() {
+    public DBPseaTask create(@Nonnull Status status) {
         return ao.executeInTransaction(() -> {
             clearOldData();
             DBPseaTask task = ao.create(DBPseaTask.class);
             task.setFilename("File not written to disk");
             task.setStartdate(new Date());
-            task.setStatus(DBPseaTask.STATUS_IN_PROGRESS);
+            task.setStatus(status.getDbValue());
             task.save();
             return task;
+        });
+    }
+
+    public DBPseaTask get(Long id) {
+        if (id == null) return null;
+        return ao.executeInTransaction(() -> {
+            return ao.get(DBPseaTask.class, id);
         });
     }
 
@@ -58,7 +68,7 @@ public class PseaTaskDAO {
      * - Appends the message instead of setting it,
      * - If the task is done, set the duration.
      */
-    public void save(DBPseaTask record, DTOPseaTask.Status status, String message) {
+    public void save(DBPseaTask record, @Nonnull Status status, String message) {
         if (record == null) return;
         ao.executeInTransaction(() -> {
             if (message != null) {
@@ -69,11 +79,11 @@ public class PseaTaskDAO {
                     record.setMessage(StringUtils.abbreviate(message, 600));
                 }
             }
-            // We only save the status if it isn't 'ERROR' yet (so no ERROR -> DONE),
+            // We only save the status if it isn't 'ERROR' yet (so no transition from ERROR -> DONE),
             // and we set the duration.
-            if (!Objects.equals(record.getStatus(), DTOPseaTask.Status.ERROR.name())) {
-                record.setStatus(status.name());
-                if (status == DTOPseaTask.Status.DONE || status == DTOPseaTask.Status.ERROR) {
+            if (!Objects.equals(record.getStatus(), Status.ERROR.getDbValue())) {
+                record.setStatus(status.getDbValue());
+                if (status == Status.DONE || status == Status.ERROR) {
                     Date startdate = record.getStartdate();
                     if (startdate == null) {
                         record.setDuration(0);
@@ -83,6 +93,16 @@ public class PseaTaskDAO {
                 }
             }
             record.save();
+            return null;
+        });
+    }
+
+    public void save(long id, @Nonnull Status status, String message) {
+        ao.executeInTransaction(() -> {
+            DBPseaTask task = ao.get(DBPseaTask.class, id);
+            if (task != null) {
+                save(task, status, message);
+            }
             return null;
         });
     }
@@ -112,5 +132,15 @@ public class PseaTaskDAO {
     public List<DTOPseaTask> getList() {
         DBPseaTask[] items = ao.find(DBPseaTask.class, Query.select().order("STARTDATE DESC").limit(KEEP_ITEMS));
         return Arrays.stream(items).map(DTOPseaTask::of).collect(Collectors.toList());
+    }
+
+    /** Returns the number of jobs that have a status where {@link Status#isRunning()} is true */
+    public int countRunningJobs() {
+        return ao.executeInTransaction(() -> {
+            List<Status> statuses = Status.listOfRunningStatuses();
+            return ao.count(DBPseaTask.class,
+                    "STATUS IN (" + StringUtils.repeat("?", ", ", statuses.size()) + ")",
+                    statuses.stream().map(Status::getDbValue).toArray());
+        });
     }
 }

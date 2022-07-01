@@ -34,11 +34,6 @@ import java.util.Date;
 @Table("PSEATASK")
 public interface DBPseaTask extends LongEntity {
 
-    String STATUS_IN_PROGRESS = "IN_PROGRESS";
-    String STATUS_WRITING = "WRITING";
-    String STATUS_DONE = "DONE";
-    String STATUS_ERROR = "ERROR";
-
     String getFilename();
     void setFilename(String filename);
 
