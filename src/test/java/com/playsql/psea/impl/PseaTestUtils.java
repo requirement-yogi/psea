@@ -9,9 +9,9 @@ package com.playsql.psea.impl;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,6 +39,7 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class PseaTestUtils {
@@ -107,11 +108,14 @@ public class PseaTestUtils {
     public final DBPseaTask record = Mockito.mock(DBPseaTask.class);
 
     {
+        long recordId = 1L;
+        when(record.getID()).thenReturn(recordId);
         when(ao.executeInTransaction(any())).thenAnswer(invocation -> {
             TransactionCallback callback = invocation.getArgument(0);
             Object result = callback.doInTransaction();
             return result;
         });
+        when(ao.get(eq(DBPseaTask.class), eq(recordId))).thenReturn(record);
         when(ao.create(any())).thenAnswer(invocation -> record);
     }
 
