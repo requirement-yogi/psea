@@ -21,6 +21,7 @@ package com.playsql.psea.db.dao;
  */
 
 import com.atlassian.activeobjects.external.ActiveObjects;
+import com.google.common.collect.Lists;
 import com.playsql.psea.db.entities.DBPseaTask;
 import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.dto.DTOPseaTask.Status;
@@ -28,15 +29,14 @@ import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class PseaTaskDAO {
 
     /** Maximum size of the logs */
+    public static int ITEMS_IN_UI = 300;
     private static int KEEP_ITEMS = 5000;
     private final ActiveObjects ao;
 
@@ -129,9 +129,28 @@ public class PseaTaskDAO {
     /**
      * Return the last 200 saves.
      */
-    public List<DTOPseaTask> getList() {
-        DBPseaTask[] items = ao.find(DBPseaTask.class, Query.select().order("STARTDATE DESC").limit(KEEP_ITEMS));
-        return Arrays.stream(items).map(DTOPseaTask::of).collect(Collectors.toList());
+    public List<DTOPseaTask> getList(int limit) {
+        List<DBPseaTask> list = Lists.newArrayList();
+        fetchItems(list, Status.NOT_STARTED, limit);
+        fetchItems(list, Status.PREPARING, limit);
+        fetchItems(list, Status.IN_PROGRESS, limit);
+        fetchItems(list, Status.CANCELLING, limit);
+        fetchItemsNotIn(list, limit, Status.NOT_STARTED, Status.PREPARING, Status.IN_PROGRESS, Status.CANCELLING);
+        return list.stream().map(DTOPseaTask::of).collect(Collectors.toList());
+    }
+
+    private void fetchItems(List<DBPseaTask> list, Status status, int limit) {
+        if (limit < list.size()) return;
+        DBPseaTask[] items = ao.find(DBPseaTask.class, Query.select().where("STATUS = ?", status.getDbValue()).order("STARTDATE DESC").limit(limit - list.size()));
+        Collections.addAll(list, items);
+    }
+
+    private void fetchItemsNotIn(List<DBPseaTask> list, int limit, Status... status) {
+        if (limit < list.size()) return;
+        DBPseaTask[] items = ao.find(DBPseaTask.class, Query.select().where(
+                "STATUS NOT IN (" + StringUtils.repeat("?", ", ", status.length) + ")", status
+        ).order("STARTDATE DESC").limit(limit - list.size()));
+        Collections.addAll(list, items);
     }
 
     /** Returns the number of jobs that have a status where {@link Status#isRunning()} is true */
@@ -141,6 +160,13 @@ public class PseaTaskDAO {
             return ao.count(DBPseaTask.class,
                     "STATUS IN (" + StringUtils.repeat("?", ", ", statuses.size()) + ")",
                     statuses.stream().map(Status::getDbValue).toArray());
+        });
+    }
+
+    public void delete(DBPseaTask job) {
+        ao.executeInTransaction(() -> {
+            ao.delete(job);
+            return null;
         });
     }
 }

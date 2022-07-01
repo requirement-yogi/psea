@@ -39,6 +39,18 @@
 
     <resource type="i18n" name="Internationalization" location="com/playsql/psea/i18n" />
 
+    <web-resource name="JS / CSS for the administration" key="psea-admin-web">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <transformation extension="soy">
+            <transformer key="soyTransformer">
+                <functions>com.atlassian.confluence.plugins.soy:soy-core-functions</functions>
+            </transformer>
+        </transformation>
+        <resource type="download" name="psea-admin.js" location="js/psea-admin.js" />
+    </web-resource>
+
     <!--
     I am not showing it here, because it is not very relevant for admins and doesn't deserve prime space.
     It is still accessible through the "Configure" button.
@@ -82,6 +94,12 @@
         </package>
     </xwork>
 
+    <web-item key="marketplace-psea-global-admin-item" name="Menu - Global admin" section="system.admin/marketplace_confluence" weight="140">
+        <description>Entry in the Global Admin left-hand menu.</description>
+        <label key="global.admin.psea.item" />
+        <link linkId="global-admin-ry-item-link">/admin/plugins/${project.groupId}.${project.artifactId}/admin.action</link>
+    </web-item>
+
     <web-item key="about" name="About link in the Help menu" section="system.help/pages" weight="60">
         <label key="com.playsql.psea.about-link" />
         <link linkId="psea-about-link">/plugins/${project.groupId}.${project.artifactId}/about.action</link>
@@ -91,5 +109,10 @@
         <description>The module configuring the Active Objects service used by this plugin</description>
         <entity>com.playsql.psea.db.entities.DBPseaTask</entity>
     </ao>
+
+    <rest key="rest" path="/psea" version="1" name="REST resources">
+        <description>REST API for PSEA</description>
+        <package>com.playsql.psea.rest</package>
+    </rest>
 
 </atlassian-plugin>

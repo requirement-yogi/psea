@@ -61,11 +61,14 @@ public class PseaServiceImpl implements PseaService {
     private static final String SETTINGS_ROW_LIMIT = "com.requirementyogi.psea.row-limit";
     private static final String SETTINGS_TIME_LIMIT = "com.requirementyogi.psea.time-limit";
     private static final String SETTINGS_DATA_LIMIT = "com.requirementyogi.psea.data-limit";
+    private static final String SETTINGS_CONCURRENT_JOBS_LIMIT = "com.requirementyogi.psea.jobs-limit";
     public static final long MAX_ROWS_DEFAULT = 1000000; // Straight out of Excel 2007's limits
     public static final long TIME_LIMIT_DEFAULT = TimeUnit.MINUTES.toMillis(2); // The default in RY
     public static final long TIME_LIMIT_MAX = TimeUnit.HOURS.toMillis(2); // 2 hours shall be enough...
     public static final long DATA_LIMIT_DEFAULT = 100000000; // 100 MB of data ?
     public static final long DATA_LIMIT_MAX = 100 * DATA_LIMIT_DEFAULT; // 10GB of data...
+    public static final long CONCURRENT_JOBS_DEFAULT = 10;
+    public static final long CONCURRENT_JOBS_MAX = 10000 * CONCURRENT_JOBS_DEFAULT; // Doesn't really matter, they can be small
 
     private final PluginSettingsFactory pluginSettingsFactory;
     private final AccessModeService accessModeService;
@@ -454,6 +457,25 @@ public class PseaServiceImpl implements PseaService {
         PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
         Object value = settings.get(SETTINGS_DATA_LIMIT);
         return readLong(value, 1, DATA_LIMIT_MAX, DATA_LIMIT_DEFAULT);
+    }
+
+    public void setConcurrentJobsLimit(Long limit) {
+        if (accessModeService.isReadOnlyAccessModeEnabled()) {
+            LOG.warn("PSEA settings were not saved because the instance is in read-only mode");
+            return; // Don't save, silently.
+        }
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        if (limit == null) {
+            settings.remove(SETTINGS_CONCURRENT_JOBS_LIMIT);
+        } else {
+            settings.put(SETTINGS_CONCURRENT_JOBS_LIMIT, String.valueOf(limit));
+        }
+    }
+
+    public long getConcurrentJobsLimit() {
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        Object value = settings.get(SETTINGS_CONCURRENT_JOBS_LIMIT);
+        return readLong(value, -1, CONCURRENT_JOBS_MAX, CONCURRENT_JOBS_DEFAULT);
     }
 
     public void setDataLimit(Long limit) {

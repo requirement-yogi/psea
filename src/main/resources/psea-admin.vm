@@ -1,6 +1,7 @@
 <html>
 <head>
     <title>PSEA Rate-Limiting</title>
+    #requireResource("com.playsql.play-sql-export-addon:psea-admin-web")
 </head>
 <body>
     <content tag="selectedWebItem">marketplace-ry-global-admin-item</content>
@@ -29,6 +30,12 @@
                 <div class="description">Size limit for all exported Excel files, measured before writing the file.
                     The actual size of the file will be an order of magnitude larger. Default is $!{dataLimitDefault}.</div>
             </div>
+            <div class="field-group">
+                <label for="concurrent-jobs">Concurrent exports</label>
+                <input class="text" type="text" id="concurrent-jobs" name="concurrentJobs" title="Concurrent jobs" value="$!{concurrentJobs}">
+                <div class="description">Maximum number of concurrent jobs allowed for the export. -1 means unlimited.
+                    Default is ${concurrentJobsDefault}.</div>
+            </div>
         </fieldset>
         <div class="buttons-container">
             <div class="buttons">
@@ -40,7 +47,7 @@
 
     <p>To help you with deciding what limits are correct, here is a list of the most recent exports.</p>
 
-    <table class="aui">
+    <table class="aui aui-table-sortable">
         <thead>
         <tr>
             <th>Date</th>
@@ -58,12 +65,15 @@
                 </tr>
             #else
                 #foreach($item in $list)
-                    <tr>
-                        <td>${item.getStartDateHuman()}</td>
-                        <td>${item.getFilename()}</td>
-                        <td>${item.getStatus()}</td>
-                        <td>${item.getDurationHuman()}</td>
+                    <tr data-job-id="${item.getId()}">
+                        <td>$!{item.getStartDateHuman()}</td>
+                        <td>$!{item.getFilename()}</td>
+                        <td>$!{item.getStatus()}</td>
+                        <td>$!{item.getDurationHuman()}</td>
                         <td>$!{item.getMessage()}</td>
+                        <td class="actions">
+                            <a href="#" class="delete-job"><span class="aui-icon aui-icon-small aui-iconfont-remove">Remove</span></a>
+                        </td>
                     </tr>
                 #end
             #end

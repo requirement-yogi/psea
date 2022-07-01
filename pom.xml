@@ -120,6 +120,19 @@
         </dependency>
 
         <dependency>
+            <groupId>com.atlassian.plugins.rest</groupId>
+            <artifactId>atlassian-rest-common</artifactId>
+            <version>6.1.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>jsr311-api</artifactId>
+            <version>1.1.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
@@ -166,7 +179,8 @@
                     </products>
                     <instructions>
                         <Export-Package>
-                            com.playsql.psea.api
+                            com.playsql.psea.api,
+                            com.playsql.psea.api.exceptions,
                         </Export-Package>
                         <Import-Package>
                             com.google.common.collect;version="0.0.0",
@@ -177,6 +191,7 @@
                             com.atlassian.confluence.api*;version="0.0.0",
                             com.atlassian.activeobjects.external;version="0.0.0",
                             com.atlassian.activeobjects.spi;version="0.0.0",
+                            com.atlassian.plugins.rest.common.security;version="0.0.0",
                             com.opensymphony.webwork.interceptor;version="0.0.0",
                             com.opensymphony.webwork;version="0.0.0",
                             com.atlassian.xwork;version="0.0.0",
@@ -189,7 +204,12 @@
                             org.xml.sax*;version="0.0.0",
                             org.w3c.dom*;version="0.0.0",
                             com.ctc.wstx*;version="0.0.0",
-                            javax.xml*;version="0.0.0"
+                            javax.xml*;version="0.0.0",
+                            javax.servlet.http;version="0.0.0",
+                            javax.servlet;version="0.0.0",
+                            javax.tools;version="0.0.0",
+                            javax.ws.rs.core;version="0.0.0",
+                            javax.ws.rs;version="0.0.0"
                         </Import-Package>
                     </instructions>
                     <banningExcludes>

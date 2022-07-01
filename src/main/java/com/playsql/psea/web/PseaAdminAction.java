@@ -36,6 +36,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.playsql.psea.db.dao.PseaTaskDAO.ITEMS_IN_UI;
+
 public class PseaAdminAction extends ConfluenceActionSupport {
 
     private final long SIZE_K = 1000L; // Don't set 1024, it's not bytes
@@ -48,10 +50,13 @@ public class PseaAdminAction extends ConfluenceActionSupport {
     private PermissionManager permissionManager;
     private XsrfTokenGenerator xsrfTokenGenerator;
 
+    /** The limit for the pagination */
+    private Integer limit;
 
     private String timeLimit;
     private String dataLimit;
     private String rowLimit;
+    private Long concurrentJobs;
 
     @Override
     public boolean isPermitted() {
@@ -63,6 +68,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
         rowLimit = convertSizeToHuman(pseaService.getRowLimit());
         timeLimit = convertTimeToHuman(pseaService.getTimeLimit());
         dataLimit = convertSizeToHuman(pseaService.getDataLimit());
+        concurrentJobs = pseaService.getConcurrentJobsLimit();
         return INPUT;
     }
 
@@ -74,6 +80,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
         pseaService.setDataLimit(convertSizeToMachine(dataLimit));
         pseaService.setRowLimit(convertSizeToMachine(rowLimit));
         pseaService.setTimeLimit(convertTimeToMachine(timeLimit));
+        pseaService.setConcurrentJobsLimit(concurrentJobs);
         addActionMessage("Saved");
         return doAdmin();
     }
@@ -160,7 +167,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
     }
 
     public List<DTOPseaTask> getLastExportList() {
-        return pseaTaskDAO.getList();
+        return pseaTaskDAO.getList(limit == null ? ITEMS_IN_UI : limit);
     }
 
     public void setPseaTaskDAO(PseaTaskDAO pseaTaskDAO) {
@@ -201,6 +208,18 @@ public class PseaAdminAction extends ConfluenceActionSupport {
 
     public String getDataLimitDefault() {
         return convertSizeToHuman(PseaServiceImpl.DATA_LIMIT_DEFAULT);
+    }
+
+    public Long getConcurrentJobs() {
+        return concurrentJobs;
+    }
+
+    public Long getConcurrentJobsDefault() {
+        return PseaServiceImpl.CONCURRENT_JOBS_DEFAULT;
+    }
+
+    public void setConcurrentJobs(Long concurrentJobs) {
+        this.concurrentJobs = concurrentJobs;
     }
 
     public void setTimeLimit(String timeLimit) {

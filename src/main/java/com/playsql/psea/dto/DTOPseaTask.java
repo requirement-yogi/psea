@@ -85,13 +85,15 @@ public class DTOPseaTask {
         }
     };
     
+    private final Long id;
     private final String filename;
     private final Date startDate;
     private final Long duration;
     private final Status status;
     private final String message;
 
-    public DTOPseaTask(String filename, Date startDate, Long duration, Status status, String message) {
+    public DTOPseaTask(Long id, String filename, Date startDate, Long duration, Status status, String message) {
+        this.id = id;
         this.filename = filename;
         this.startDate = startDate;
         this.duration = duration;
@@ -101,6 +103,7 @@ public class DTOPseaTask {
     
     public static DTOPseaTask of(DBPseaTask dbTask) {
         return new DTOPseaTask(
+                dbTask.getID(),
                 dbTask.getFilename(),
                 dbTask.getStartdate(),
                 dbTask.getDuration(),
@@ -129,7 +132,7 @@ public class DTOPseaTask {
     public String getDurationHuman() {
         long duration1 = duration != null ? duration : new Date().getTime() - startDate.getTime();
         if (duration1 < 1000)
-            return duration1 + "ms";
+            return duration1 + " ms";
         if (duration1 < 60000)
             return TimeUnit.MILLISECONDS.toSeconds(duration1) + " s";
         if (duration1 < TIME_LIMIT_MAX) {
@@ -146,5 +149,9 @@ public class DTOPseaTask {
 
     public String getMessage() {
         return message;
+    }
+
+    public Long getId() {
+        return id;
     }
 }
