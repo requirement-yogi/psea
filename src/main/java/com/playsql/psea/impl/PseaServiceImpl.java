@@ -22,6 +22,8 @@ package com.playsql.psea.impl;
 
 import com.atlassian.confluence.api.model.accessmode.AccessMode;
 import com.atlassian.confluence.api.service.accessmode.AccessModeService;
+import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
+import com.atlassian.confluence.user.ConfluenceUser;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import com.google.common.collect.Lists;
@@ -39,21 +41,21 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 import static com.playsql.psea.dto.DTOPseaTask.Status.*;
 
-public class PseaServiceImpl implements PseaService {
+public class PseaServiceImpl implements PseaService, DisposableBean {
 
     private final static Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
     private static final String FILE_PREFIX = "excel-export-";
@@ -73,6 +75,7 @@ public class PseaServiceImpl implements PseaService {
     private final PluginSettingsFactory pluginSettingsFactory;
     private final AccessModeService accessModeService;
     private final PseaTaskDAO dao;
+    private final ExecutorService executorService;
 
     /**
      * The monitoring task. Removing items from the ThreadLocal is guaranteed by the fact that it's managed in a
@@ -87,32 +90,88 @@ public class PseaServiceImpl implements PseaService {
         this.pluginSettingsFactory = pluginSettingsFactory;
         this.accessModeService = accessModeService;
         this.dao = dao;
+        this.executorService = Executors.newCachedThreadPool();
     }
 
+    /**
+     * Creates a record in the PSEA database to monitor (and be able to cancel) the task executed by 'callable'.
+     * It is expected that 'callable' will call pseaService.export().
+     *
+     * We couldn't have done is inside of pseaService.export() because backward-compatibility is required.
+     *
+     * @param taskDetails a map of String -> anything, containing the details of the task.
+     *                    For PSEA 1.8.0, the only recognized key is 'details'.
+     * @param callable the job to execute when the export is ready/possible
+     * @param transactionHasAlreadyStarted if true, that means AO (and probably the XWork action itself) has already
+     *                                     started the transaction, making it impossible to save-and-flush the status
+     *                                     of the task to the DB. If so, this method will start a thread, where the
+     *                                     transaction is clean, and execute the 'callable' inside.
+     * @throws PseaCancellationException
+     */
     @Override
-    public <T> T startMonitoredTask(Callable<T> callable, long waitingTimeMillis) throws PseaCancellationException {
-        DBPseaTask record = createTask(DTOPseaTask.Status.PREPARING, waitingTimeMillis);
-        if (record != null) {
-            threadLocalTaskId.set(record.getID());
-        }
+    public <T> T startMonitoredTask(
+            Map<String, Object> taskDetails,
+            Callable<T> callable,
+            long waitingTimeMillis,
+            boolean transactionHasAlreadyStarted
+    ) throws PseaCancellationException {
         try {
-            return callable.call();
-        } catch (Exception ex) {
-            throw new RuntimeException("Exception while running the export", ex);
-        } finally {
-            Long taskId = threadLocalTaskId.get();
-            threadLocalTaskId.remove();
-            DBPseaTask task = dao.get(taskId);
-            if (task != null) {
-                DTOPseaTask.Status status = DTOPseaTask.Status.of(task.getStatus());
-                if (status != null && status.isRunning()) {
-                    if (status == DTOPseaTask.Status.CANCELLING) {
-                        dao.save(task, DTOPseaTask.Status.CANCELLED, "Shut down by cancellation");
-                    } else {
-                        dao.save(task, ERROR, "Status is " + status + " at the end of the task");
+            return ensureTransactionIsClean(transactionHasAlreadyStarted, () -> {
+                try {
+                    DBPseaTask record = createTask(DTOPseaTask.Status.PREPARING, waitingTimeMillis, taskDetails);
+                    if (record != null) {
+                        threadLocalTaskId.set(record.getID());
+                    }
+                    return callable.call();
+                } finally {
+                    AuthenticatedUserThreadLocal.reset();
+                    Long taskId = threadLocalTaskId.get();
+                    threadLocalTaskId.remove();
+                    DBPseaTask task = dao.get(taskId);
+                    if (task != null) {
+                        DTOPseaTask.Status status = DTOPseaTask.Status.of(task.getStatus());
+                        if (status != null && status.isRunning()) {
+                            if (status == DTOPseaTask.Status.CANCELLING) {
+                                dao.save(task, DTOPseaTask.Status.CANCELLED, "Shut down by cancellation");
+                            } else {
+                                dao.save(task, ERROR, "Status is " + status + " at the end of the task");
+                            }
+                        }
                     }
                 }
+            });
+        } catch (Exception ex) {
+            throw new RuntimeException("Exception while running the export", ex);
+        }
+    }
+
+    private <T> T ensureTransactionIsClean(boolean transactionHasAlreadyStarted, Callable<T> callable) throws Exception {
+        // We're executing in a separate thread, just because of transactions. Yes, XWork wraps Actions into
+        // transactions, so if we don't execute in a separate thread, our .executeInTransaction() have no effect.
+        // But we still have to carry the current user to that thread.
+        if (transactionHasAlreadyStarted) {
+            ConfluenceUser user = AuthenticatedUserThreadLocal.get();
+            try {
+                return executorService.submit(() -> {
+                    try {
+                        AuthenticatedUserThreadLocal.set(user);
+                        return callable.call();
+                    } finally {
+                        AuthenticatedUserThreadLocal.reset();
+                    }
+                }).get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interruption while executing a PSEA task", e);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof RuntimeException) {
+                    throw (RuntimeException) e.getCause();
+                } else {
+                    throw new RuntimeException("Exception while waiting for a PSEA-monitored task to finish", e);
+                }
             }
+        } else {
+            return callable.call();
         }
     }
 
@@ -123,7 +182,7 @@ public class PseaServiceImpl implements PseaService {
      *                          it will retry for maximum waitingTimeMillis before throwing a PseaCancellationException.
      *                          If 0L is passed, then it will either pass or reject straight away, but not wait.
      */
-    private DBPseaTask createTask(DTOPseaTask.Status status, long waitingTimeMillis) throws PseaCancellationException {
+    private DBPseaTask createTask(DTOPseaTask.Status status, long waitingTimeMillis, Map<String, Object> taskDetails) throws PseaCancellationException {
         if (accessModeService.getAccessMode() != AccessMode.READ_WRITE) {
             return null;
         }
@@ -133,7 +192,11 @@ public class PseaServiceImpl implements PseaService {
             record = dao.get(taskId);
         }
         if (record == null) {
-            record = dao.create(NOT_STARTED);
+            record = dao.create(
+                    NOT_STARTED,
+                    AuthenticatedUserThreadLocal.get(),
+                    taskDetails != null ? (String) taskDetails.get("details") : null
+            );
 
             waitUntilASlotIsAvailable(waitingTimeMillis, record);
 
@@ -143,8 +206,7 @@ public class PseaServiceImpl implements PseaService {
     }
 
     private void waitUntilASlotIsAvailable(long waitingTimeMillis, DBPseaTask record) throws PseaCancellationException {
-        // NO_RELEASE Put 10 in the settings
-        int maxConcurrentJobs = 10;
+        long maxConcurrentJobs = getConcurrentJobsLimit();
 
         long timeout = System.currentTimeMillis() + waitingTimeMillis;
         int runningJobs;
@@ -168,7 +230,7 @@ public class PseaServiceImpl implements PseaService {
     public File export(Consumer<WorkbookAPI> f) throws PseaCancellationException {
         // We don't wait, in this step, because callers who want to wait should do it in the startMonitoredTask,
         // assuming they have the correct version of PSEA.
-        DBPseaTask record = createTask(DTOPseaTask.Status.IN_PROGRESS, 0L);
+        DBPseaTask record = createTask(DTOPseaTask.Status.IN_PROGRESS, 0L, null);
 
         long sizeLimit = getDataLimit();
         Consumer<Long> saveSize = buildSaveSizeFunction(record, sizeLimit);
@@ -489,5 +551,10 @@ public class PseaServiceImpl implements PseaService {
         } else {
             settings.put(SETTINGS_DATA_LIMIT, String.valueOf(limit));
         }
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        executorService.shutdownNow();
     }
 }

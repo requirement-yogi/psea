@@ -20,7 +20,11 @@ package com.playsql.psea.dto;
  * #L%
  */
 
+import com.atlassian.confluence.user.ConfluenceUser;
+import com.atlassian.confluence.user.UserAccessor;
+import com.atlassian.sal.api.user.UserKey;
 import com.playsql.psea.db.entities.DBPseaTask;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -91,24 +95,56 @@ public class DTOPseaTask {
     private final Long duration;
     private final Status status;
     private final String message;
+    private final String userKey;
+    private final String username;
+    private final String userFullName;
 
-    public DTOPseaTask(Long id, String filename, Date startDate, Long duration, Status status, String message) {
+    public DTOPseaTask(Long id,
+                       String filename,
+                       Date startDate,
+                       Long duration,
+                       Status status,
+                       String message,
+                       String userKey,
+                       String username,
+                       String userFullName
+    ) {
         this.id = id;
         this.filename = filename;
         this.startDate = startDate;
         this.duration = duration;
         this.status = status;
         this.message = message;
+        this.userKey = userKey;
+        this.username = username;
+        this.userFullName = userFullName;
     }
     
-    public static DTOPseaTask of(DBPseaTask dbTask) {
+    public static DTOPseaTask of(DBPseaTask dbTask, UserAccessor userAccessor) {
+        String userKey = dbTask.getUserkey();
+        String userFullName = null;
+        String username = null;
+        if (userKey != null) {
+            @Nullable ConfluenceUser user = userAccessor.getExistingUserByKey(new UserKey(userKey));
+            if (user != null) {
+                username = user.getName();
+                userFullName = user.getFullName();
+            } else {
+                username = userKey;
+                userFullName = "Not found (" + userKey + ")";
+            }
+        }
         return new DTOPseaTask(
                 dbTask.getID(),
                 dbTask.getFilename(),
                 dbTask.getStartdate(),
                 dbTask.getDuration(),
                 Status.of(dbTask),
-                dbTask.getMessage());
+                dbTask.getMessage(),
+                userKey,
+                username,
+                userFullName
+        );
     }
 
 
@@ -153,5 +189,17 @@ public class DTOPseaTask {
 
     public Long getId() {
         return id;
+    }
+
+    public String getUserKey() {
+        return userKey;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getUserFullName() {
+        return userFullName;
     }
 }

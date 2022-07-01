@@ -24,6 +24,7 @@ import com.playsql.psea.api.exceptions.PseaCancellationException;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
@@ -55,18 +56,33 @@ public interface PseaService {
     void extract(PseaInput file, ExcelImportConsumer consumer) throws OutOfMemoryError, PSEAImportException;
 
     /**
-     * Starts a task in the database, where we monitor exports and are able to cancel them.
+     * Monitors the 'callable' using a task in the PSEA database, so admins can check and cancel tasks.
+     *
+     * Beware, it will start a clean transaction, so any transactional content should have its own transaction.
      *
      * If there are already concurrent jobs (as verified in the database), and we reach the timeout,
      * it will refuse to start or continue, and throw a CancellationException. There is no need to
      * log or manage this CancellationException since it is already logged by PSEA.
      *
+     * We couldn't have done is inside of pseaService.export() because backward-compatibility is required.
+     *
+     * @param taskDetails a map of String -> anything, containing the details of the task.
+     *                    For PSEA 1.8.0, the only recognized key is 'details'.
      * @param callable the job to execute when the export is ready/possible
      * @param waitingTime if we are in a background task which can wait
+     * @param transactionHasAlreadyStarted if true, that means AO (and probably the XWork action itself) has already
+     *                                     started the transaction, making it impossible to save-and-flush the status
+     *                                     of the task to the DB. If so, this method will start a thread, where the
+     *                                     transaction is clean, and execute the 'callable' inside.
      * @throws com.playsql.psea.api.exceptions.PseaCancellationException if the task is cancelled,
-     * @since PSEA 1.7.1
+     * @since PSEA 1.8.0
      */
-    <T> T startMonitoredTask(Callable<T> callable, long waitingTime) throws PseaCancellationException;
+    <T> T startMonitoredTask(
+            Map<String, Object> taskDetails,
+            Callable<T> callable,
+            long waitingTime,
+            boolean transactionHasAlreadyStarted
+    ) throws PseaCancellationException;
 
     /**
      * A file or an inputstream that is used as an input for the Excel import

@@ -34,6 +34,10 @@ import java.util.Date;
 @Table("PSEATASK")
 public interface DBPseaTask extends LongEntity {
 
+    /** User who performed the export */
+    String getUserkey();
+    void setUserkey(String userkey);
+
     String getFilename();
     void setFilename(String filename);
 
@@ -60,4 +64,10 @@ public interface DBPseaTask extends LongEntity {
     /** The (error) message, especially when the status is ERROR */
     String getMessage();
     void setMessage(String status);
+
+    /**
+     * The details of the export, i.e. the parameters, or even the URL if possible.
+     */
+    String getDetails();
+    void setDetails(String details);
 }

@@ -24,6 +24,7 @@ import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.confluence.api.model.accessmode.AccessMode;
 import com.atlassian.confluence.api.service.accessmode.AccessModeService;
 import com.atlassian.confluence.api.service.exceptions.ServiceException;
+import com.atlassian.confluence.user.UserAccessor;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import com.atlassian.sal.api.transaction.TransactionCallback;
@@ -101,7 +102,8 @@ public class PseaTestUtils {
     };
 
     public final ActiveObjects ao = Mockito.mock(ActiveObjects.class);
-    public final PseaTaskDAO dao = new PseaTaskDAO(ao);
+    public final UserAccessor userAccessor = Mockito.mock(UserAccessor.class);
+    public final PseaTaskDAO dao = new PseaTaskDAO(ao, userAccessor);
     public final DBPseaTask record = Mockito.mock(DBPseaTask.class);
 
     {

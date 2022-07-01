@@ -21,6 +21,8 @@ package com.playsql.psea.db.dao;
  */
 
 import com.atlassian.activeobjects.external.ActiveObjects;
+import com.atlassian.confluence.user.ConfluenceUser;
+import com.atlassian.confluence.user.UserAccessor;
 import com.google.common.collect.Lists;
 import com.playsql.psea.db.entities.DBPseaTask;
 import com.playsql.psea.dto.DTOPseaTask;
@@ -29,9 +31,9 @@ import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class PseaTaskDAO {
 
@@ -39,16 +41,23 @@ public class PseaTaskDAO {
     public static int ITEMS_IN_UI = 300;
     private static int KEEP_ITEMS = 5000;
     private final ActiveObjects ao;
+    private final UserAccessor userAccessor;
 
-    public PseaTaskDAO(ActiveObjects ao) {
+    public PseaTaskDAO(ActiveObjects ao, UserAccessor userAccessor) {
         this.ao = ao;
+        this.userAccessor = userAccessor;
     }
     
-    public DBPseaTask create(@Nonnull Status status) {
+    public DBPseaTask create(@Nonnull Status status,
+                             @Nullable ConfluenceUser confluenceUser,
+                             @Nullable String details
+    ) {
         return ao.executeInTransaction(() -> {
             clearOldData();
             DBPseaTask task = ao.create(DBPseaTask.class);
             task.setFilename("File not written to disk");
+            task.setUserkey(confluenceUser != null ? confluenceUser.getKey().getStringValue() : null);
+            task.setDetails(details);
             task.setStartdate(new Date());
             task.setStatus(status.getDbValue());
             task.save();
@@ -136,7 +145,7 @@ public class PseaTaskDAO {
         fetchItems(list, Status.IN_PROGRESS, limit);
         fetchItems(list, Status.CANCELLING, limit);
         fetchItemsNotIn(list, limit, Status.NOT_STARTED, Status.PREPARING, Status.IN_PROGRESS, Status.CANCELLING);
-        return list.stream().map(DTOPseaTask::of).collect(Collectors.toList());
+        return list.stream().map((DBPseaTask dbTask) -> DTOPseaTask.of(dbTask, userAccessor)).collect(Collectors.toList());
     }
 
     private void fetchItems(List<DBPseaTask> list, Status status, int limit) {
@@ -148,7 +157,7 @@ public class PseaTaskDAO {
     private void fetchItemsNotIn(List<DBPseaTask> list, int limit, Status... status) {
         if (limit < list.size()) return;
         DBPseaTask[] items = ao.find(DBPseaTask.class, Query.select().where(
-                "STATUS NOT IN (" + StringUtils.repeat("?", ", ", status.length) + ")", status
+                "STATUS NOT IN (" + StringUtils.repeat("?", ", ", status.length) + ")", (Object[]) status
         ).order("STARTDATE DESC").limit(limit - list.size()));
         Collections.addAll(list, items);
     }

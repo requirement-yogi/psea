@@ -51,6 +51,7 @@
         <thead>
         <tr>
             <th>Date</th>
+            <th>User</th>
             <th>File name</th>
             <th>Status</th>
             <th>Duration</th>
@@ -61,12 +62,17 @@
             #set ($list = $action.getLastExportList())
             #if ($list.isEmpty())
                 <tr>
-                    <td colspan="5"><i>No export has been made recently</i></td>
+                    <td colspan="5"><i>No export has been made recently.</i></td>
                 </tr>
             #else
                 #foreach($item in $list)
                     <tr data-job-id="${item.getId()}">
                         <td>$!{item.getStartDateHuman()}</td>
+                        <td>
+                            #if ($item.getUserKey())
+                                <a href="${req.contextPath}/admin/users/viewuser.action?username=$!{htmlUtil.urlEncode($item.getUsername())}">$!{item.getUserFullName()}</a>
+                            #end
+                        </td>
                         <td>$!{item.getFilename()}</td>
                         <td>$!{item.getStatus()}</td>
                         <td>$!{item.getDurationHuman()}</td>
