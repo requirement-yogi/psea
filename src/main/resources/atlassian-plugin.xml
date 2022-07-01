@@ -94,7 +94,7 @@
         </package>
     </xwork>
 
-    <web-item key="marketplace-psea-global-admin-item" name="Menu - Global admin" section="system.admin/marketplace_confluence" weight="140">
+    <web-item key="marketplace-psea-global-admin-item" name="Menu - Global admin" section="system.admin/marketplace_confluence" weight="145">
         <description>Entry in the Global Admin left-hand menu.</description>
         <label key="global.admin.psea.item" />
         <link linkId="global-admin-ry-item-link">/admin/plugins/${project.groupId}.${project.artifactId}/admin.action</link>

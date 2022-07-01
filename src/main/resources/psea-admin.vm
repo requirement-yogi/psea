@@ -4,7 +4,7 @@
     #requireResource("com.playsql.play-sql-export-addon:psea-admin-web")
 </head>
 <body>
-    <content tag="selectedWebItem">marketplace-ry-global-admin-item</content>
+    <content tag="selectedWebItem">marketplace-psea-global-admin-item</content>
 
     <p>PSEA is the module which allows Requirement Yogi and Play SQL Spreadsheets to read/write Excel files.</p>
     <p>This forms allows you to control the export limits, in case you are hitting memory / CPU issues.</p>

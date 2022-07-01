@@ -35,6 +35,7 @@ import com.playsql.psea.api.exceptions.PseaCancellationException;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.db.entities.DBPseaTask;
 import com.playsql.psea.dto.DTOPseaTask;
+import com.playsql.psea.dto.DTOPseaTask.Status;
 import com.playsql.psea.dto.PseaLimitException;
 import com.playsql.psea.utils.Utils.Clock;
 import org.apache.poi.ss.usermodel.*;
@@ -118,7 +119,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
         try {
             return ensureTransactionIsClean(transactionHasAlreadyStarted, () -> {
                 try {
-                    DBPseaTask record = createTask(DTOPseaTask.Status.PREPARING, waitingTimeMillis, taskDetails);
+                    DBPseaTask record = createTask(Status.PREPARING, waitingTimeMillis, taskDetails);
                     if (record != null) {
                         threadLocalTaskId.set(record.getID());
                     }
@@ -129,10 +130,10 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                     threadLocalTaskId.remove();
                     DBPseaTask task = dao.get(taskId);
                     if (task != null) {
-                        DTOPseaTask.Status status = DTOPseaTask.Status.of(task.getStatus());
+                        Status status = Status.of(task.getStatus());
                         if (status != null && status.isRunning()) {
-                            if (status == DTOPseaTask.Status.CANCELLING) {
-                                dao.save(task, DTOPseaTask.Status.CANCELLED, "Shut down by cancellation");
+                            if (status == Status.CANCELLING) {
+                                dao.save(task, Status.CANCELLED, "Shut down by cancellation");
                             } else {
                                 dao.save(task, ERROR, "Status is " + status + " at the end of the task");
                             }
@@ -182,7 +183,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
      *                          it will retry for maximum waitingTimeMillis before throwing a PseaCancellationException.
      *                          If 0L is passed, then it will either pass or reject straight away, but not wait.
      */
-    private DBPseaTask createTask(DTOPseaTask.Status status, long waitingTimeMillis, Map<String, Object> taskDetails) throws PseaCancellationException {
+    private DBPseaTask createTask(Status status, long waitingTimeMillis, Map<String, Object> taskDetails) throws PseaCancellationException {
         if (accessModeService.getAccessMode() != AccessMode.READ_WRITE) {
             return null;
         }
@@ -230,7 +231,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
     public File export(Consumer<WorkbookAPI> f) throws PseaCancellationException {
         // We don't wait, in this step, because callers who want to wait should do it in the startMonitoredTask,
         // assuming they have the correct version of PSEA.
-        DBPseaTask record = createTask(DTOPseaTask.Status.IN_PROGRESS, 0L, null);
+        DBPseaTask record = createTask(Status.IN_PROGRESS, 0L, null);
 
         long sizeLimit = getDataLimit();
         Consumer<Long> saveSize = buildSaveSizeFunction(record, sizeLimit);
@@ -256,7 +257,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
             file.deleteOnExit();
             if (record != null) {
                 record.setFilename(file.getName());
-                dao.save(record);
+                dao.saveAndCheckCancellation(record);
             }
 
             try (FileOutputStream fileOut = new FileOutputStream(file)) {
@@ -281,7 +282,8 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
             throw re;
         } finally {
             if (record != null) {
-                if (!Objects.equals(record.getStatus(), ERROR.getDbValue()) && !Objects.equals(record.getStatus(), DONE.getDbValue())) {
+                Status status = Status.of(record);
+                if (status == null || !status.isFinalState()) {
                     dao.save(record, ERROR, "The status was " + record.getStatus() + " despite the export being finished.");
                 }
             }
@@ -310,7 +312,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                 if (record != null && currentSize > nextSaveSize) {
                     nextSaveSize = currentSize + SIZE_RESOLUTION;
                     record.setSize(currentSize);
-                    dao.save(record);
+                    dao.saveAndCheckCancellation(record);
                 }
             }
         };

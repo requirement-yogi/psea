@@ -42,28 +42,35 @@ public class DTOPseaTask {
     
     public enum Status {
 
-        NOT_STARTED       (false, "NOT_STARTED"),
-        PREPARING       (true, "PREPARING"),
-        IN_PROGRESS     (true, "IN_PROGRESS"),
-        WRITING         (true, "WRITING"),
+        NOT_STARTED       (false, false, "NOT_STARTED"),
+        PREPARING       (true, false, "PREPARING"),
+        IN_PROGRESS     (true, false, "IN_PROGRESS"),
+        WRITING         (true, false, "WRITING"),
 
-        DONE            (false, "DONE"),
-        ERROR           (false, "ERROR"),
+        DONE            (false, true, "DONE"),
+        ERROR           (false, true, "ERROR"),
 
-        CANCELLING      (true, "CANCELLING"),
-        CANCELLED       (false, "CANCELLED");
+        CANCELLING      (true, false, "CANCELLING"),
+        CANCELLED       (false, true, "CANCELLED");
 
         /**
          * True if a thread is currently running for this task,
-         * False if the process is finished or almost finished.
+         * False if the process is not started, finished or almost finished.
          */
         private final boolean running;
+
+        /**
+         * True if a status is a final state, i.e. if the thread
+         * is finished or almost finished.
+         */
+        private final boolean finalState;
 
         /** String for the value in the database */
         private final String dbValue;
 
-        Status(boolean running, String dbValue) {
+        Status(boolean running, boolean finalState, String dbValue) {
             this.running = running;
+            this.finalState = finalState;
             this.dbValue = dbValue;
         }
 
@@ -82,6 +89,10 @@ public class DTOPseaTask {
 
         public boolean isRunning() {
             return running;
+        }
+
+        public boolean isFinalState() {
+            return finalState;
         }
 
         public String getDbValue() {
