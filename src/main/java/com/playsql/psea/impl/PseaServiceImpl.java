@@ -47,6 +47,8 @@ import org.springframework.beans.factory.DisposableBean;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -142,7 +144,14 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                 }
             });
         } catch (Exception ex) {
-            throw new RuntimeException("Exception while running the export", ex);
+            // Unwrap the exception
+            while ((ex instanceof UndeclaredThrowableException || ex instanceof InvocationTargetException)
+                && ex.getCause() instanceof Exception
+                && ex != ex.getCause()) {
+                ex = (Exception) ex.getCause();
+            }
+            // We don't write any message, so the default message is the exception's message, and it looks better for the UI.
+            throw new RuntimeException(ex);
         }
     }
 

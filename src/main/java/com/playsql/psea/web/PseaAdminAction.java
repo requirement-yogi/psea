@@ -234,6 +234,14 @@ public class PseaAdminAction extends ConfluenceActionSupport {
         this.rowLimit = rowLimit;
     }
 
+    public Integer getLimit() {
+        return limit;
+    }
+
+    public void setLimit(Integer limit) {
+        this.limit = limit;
+    }
+
     @Override
     public void setPermissionManager(PermissionManager permissionManager) {
         this.permissionManager = permissionManager;

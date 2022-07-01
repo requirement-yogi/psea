@@ -27,8 +27,9 @@
             <div class="field-group">
                 <label for="data-limit">Data limit</label>
                 <input class="text" type="text" id="data-limit" name="dataLimit" title="Data limit" value="$!{dataLimit}">
-                <div class="description">Size limit for all exported Excel files, measured before writing the file.
-                    The actual size of the file will be an order of magnitude larger. Default is $!{dataLimitDefault}.</div>
+                <div class="description">Size limit (in arbitrary unit) for all exported Excel files, measured before writing the file.
+                    See "Size" in the table below for comparison. The actual size of the file in bytes will be an order of magnitude larger.
+                    Default is $!{dataLimitDefault}.</div>
             </div>
             <div class="field-group">
                 <label for="concurrent-jobs">Concurrent exports</label>

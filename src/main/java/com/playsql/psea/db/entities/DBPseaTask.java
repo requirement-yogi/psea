@@ -21,9 +21,12 @@ package com.playsql.psea.db.entities;
  */
 
 import net.java.ao.Preload;
+import net.java.ao.schema.StringLength;
 import net.java.ao.schema.Table;
 
 import java.util.Date;
+
+import static net.java.ao.schema.StringLength.UNLIMITED;
 
 /**
  * List of recently exported files.
@@ -69,5 +72,6 @@ public interface DBPseaTask extends LongEntity {
      * The details of the export, i.e. the parameters, or even the URL if possible.
      */
     String getDetails();
+    @StringLength(UNLIMITED)
     void setDetails(String details);
 }
