@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.playsql</groupId>
     <artifactId>play-sql-export-addon</artifactId>
-    <version>1.8.0</version>
+    <version>1.8-SNAPSHOT</version>
 
     <organization>
         <name>Requirement Yogi</name>
@@ -242,7 +242,7 @@
                         <configuration>
                             <rules>
                                 <requireMavenVersion>
-                                  <version>3.6.0</version>
+                                  <version>3.8.6</version>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
                                     <version>[1.8.0, 1.8.1]</version>
