@@ -352,33 +352,10 @@
                         <executions>
                             <execution>
                                 <phase>validate</phase>
-                                <configuration>
-                                    <outputDirectory>./target</outputDirectory>
-                                    <formats>
-                                        <!-- Bamboo does not analyze xml-->
-                                        <!-- <format>xml</format>-->
-                                        <format>html</format>
-                                    </formats>
-                                    <processDependencyManagement>
-                                        <!-- Whether to process the dependencyManagement in pom or not.-->
-                                        false
-                                    </processDependencyManagement>
-                                    <processDependencyManagementTransitive>
-                                        <!-- Whether to process the depdendencyManagement part transitive or not.
-                                        In case of <type>pom</type>and <scope>import</scope> this means by default
-                                        to report also the imported dependencies.
-                                        If processTransitive is set to false the report will only show updates of
-                                        the imported pom it self.-->
-                                        false
-                                    </processDependencyManagementTransitive>
-                                </configuration>
                                 <goals>
                                     <goal>display-dependency-updates</goal>
                                     <goal>display-plugin-updates</goal>
                                     <goal>display-property-updates</goal>
-                                    <goal>dependency-updates-report</goal>
-                                    <goal>plugin-updates-report</goal>
-                                    <goal>property-updates-report</goal>
                                 </goals>
                             </execution>
                         </executions>
