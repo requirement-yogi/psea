@@ -242,7 +242,7 @@
                         <configuration>
                             <rules>
                                 <requireMavenVersion>
-                                  <version>3.8.6</version>
+                                  <version>3.8.4</version>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
                                     <version>[1.8.0, 1.8.1]</version>
