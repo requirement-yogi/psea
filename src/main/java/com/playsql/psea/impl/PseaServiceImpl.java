@@ -34,7 +34,6 @@ import com.playsql.psea.api.WorkbookAPI;
 import com.playsql.psea.api.exceptions.PseaCancellationException;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.db.entities.DBPseaTask;
-import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.dto.DTOPseaTask.Status;
 import com.playsql.psea.dto.PseaLimitException;
 import com.playsql.psea.utils.Utils.Clock;
@@ -425,11 +424,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
             List<String> values = Lists.newArrayList();
             for (int i = firstCellNum ; i < lastCellNum ; i++) {
                 Cell cell = row.getCell(i);
-                if (cell == null) {
-                    values.add(null);
-                } else {
-                    values.add(computeCellValue(cell, evaluator));
-                }
+                values.add(computeCellValue(cell, evaluator));
             }
             return values;
         } else {
@@ -438,6 +433,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
     }
 
     private String computeCellValue(Cell cell, FormulaEvaluator evaluator){
+        if (cell == null) return null;
         Object cellValue;
         try {
             CellValue computedFormulaValue = evaluator.evaluate(cell) ;

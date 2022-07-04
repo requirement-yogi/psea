@@ -71,6 +71,7 @@
     <component-import key="plugin-settings" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory" />
     <component-import key="access-mode-service" interface="com.atlassian.confluence.api.service.accessmode.AccessModeService" />
     <component-import key="ao" name="Active Objects service" interface="com.atlassian.activeobjects.external.ActiveObjects"/>
+    <component-import key="license-service" name="Host application license service" interface="com.atlassian.confluence.license.LicenseService"/>
 
 
     <xwork name="MVC Actions" key="xwork">
