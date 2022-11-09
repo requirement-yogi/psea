@@ -1,8 +1,8 @@
 package com.playsql.psea.utils;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -87,7 +87,7 @@ public class XSSFFormatter {
             String textToWrite = nextIndex != null
                     ? initialString.substring(start, nextIndex)
                     : initialString.substring(start);
-            result.append(StringEscapeUtils.escapeHtml(textToWrite));
+            result.append(StringEscapeUtils.escapeHtml4(textToWrite));
 
             // Then we close tags in reverse orders
             Collections.reverse(styles);
@@ -114,7 +114,7 @@ public class XSSFFormatter {
 
         public void write(StringBuilder sb) {
             if (css) {
-                sb.append("<span style=\"").append(StringEscapeUtils.escapeHtml(this.tag)).append("\">");
+                sb.append("<span style=\"").append(StringEscapeUtils.escapeHtml4(this.tag)).append("\">");
             } else {
                 sb.append("<").append(this.tag).append(">");
             }

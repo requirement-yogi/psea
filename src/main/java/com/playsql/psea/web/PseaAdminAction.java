@@ -20,11 +20,11 @@ package com.playsql.psea.web;
  * #L%
  */
 
+import com.atlassian.confluence.compat.struts2.servletactioncontext.ServletActionContextCompatManager;
 import com.atlassian.confluence.core.ConfluenceActionSupport;
 import com.atlassian.confluence.security.PermissionManager;
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
 import com.atlassian.xwork.XsrfTokenGenerator;
-import com.opensymphony.webwork.ServletActionContext;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.impl.PseaServiceImpl;
@@ -49,6 +49,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
     private PseaTaskDAO pseaTaskDAO;
     private PermissionManager permissionManager;
     private XsrfTokenGenerator xsrfTokenGenerator;
+    private ServletActionContextCompatManager servletActionContextCompatManager;
 
     /** The limit for the pagination */
     private Integer limit;
@@ -88,7 +89,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
     /** Validates the XSRF Token, because this dumbass Confluence accepts anything even though we are in a 'validatingStack'.
      * @return*/
     private boolean validateToken() {
-        HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletRequest request = servletActionContextCompatManager.getRequest();
         if (request == null) {
             addActionError("The HTTP request is missing. Please report your problem to the authors of Requirement Yogi.");
             return false;
@@ -240,6 +241,10 @@ public class PseaAdminAction extends ConfluenceActionSupport {
 
     public void setLimit(Integer limit) {
         this.limit = limit;
+    }
+
+    public void setServletActionContextCompatManager(ServletActionContextCompatManager servletActionContextCompatManager) {
+        this.servletActionContextCompatManager = servletActionContextCompatManager;
     }
 
     @Override

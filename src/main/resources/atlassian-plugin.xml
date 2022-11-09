@@ -67,6 +67,7 @@
     </component>
 
     <component key="pseaTaskDAO" class="com.playsql.psea.db.dao.PseaTaskDAO" />
+    <component key="servlet-adaptor" class="com.atlassian.confluence.compat.struts2.servletactioncontext.ServletActionContextCompatManager" name="Compatibility manager for servlets" />
 
     <component-import key="plugin-settings" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory" />
     <component-import key="access-mode-service" interface="com.atlassian.confluence.api.service.accessmode.AccessModeService" />
