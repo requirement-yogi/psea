@@ -66,12 +66,10 @@ public abstract class ExcelImportConsumer {
      * @since 1.9
      */
     public void consumeNewSheet(ImportableSheet sheet) {
+        ImportableRow headerRow = sheet.getHeaderRow();
         consumeNewSheet(sheet.getName(),
-                        sheet.getHeaderRow()
-                             .getCells()
-                             .stream()
-                             .map(ImportableCell::getValue)
-                             .collect(Collectors.toList()));
+                        headerRow != null ? headerRow.getCellsAsString(true) : null
+        );
     };
 
     /**

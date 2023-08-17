@@ -12,6 +12,7 @@ import com.playsql.psea.impl.beans.ImportableSheetImpl;
 import com.playsql.psea.utils.Utils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +101,7 @@ public class ExcelExtractionTask {
                     // We push the sheet without providing the cells, because we want the 'excel tab' to display, but only
                     // the focused one to display with cells
                     ao.executeInTransaction(() -> {
-                        rowConsumer.consumeNewSheet(sheetName, null);
+                        rowConsumer.consumeNewSheet(new ImportableSheetImpl(sheetName, null));
                         return null;
                     });
                     continue;
@@ -147,7 +148,7 @@ public class ExcelExtractionTask {
         if (row != null) {
             short firstCellNum = row.getFirstCellNum();
             short lastCellNum = row.getLastCellNum();
-            List<ImportableCell> headers = readRow(row, firstCellNum, lastCellNum, evaluator);
+            List<ImportableCell> headers = readRow(sheet, row, firstCellNum, lastCellNum, evaluator);
             if (headers == null) {
                 throw new RuntimeException("The header row is empty for sheet '" + sheet.getSheetName() + "'");
             }
@@ -181,7 +182,7 @@ public class ExcelExtractionTask {
                                 new ImportableRowImpl(
                                         rowNum,
                                         isFocused,
-                                        readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator)
+                                        readRow(sheet, sheet.getRow(i), firstCellNum, lastCellNum, evaluator)
                                 )
                         );
                     }
@@ -251,12 +252,16 @@ public class ExcelExtractionTask {
         }
     }
 
-    private static List<ImportableCell> readRow(Row row, short firstCellNum, short lastCellNum, FormulaEvaluator evaluator) {
+    private static List<ImportableCell> readRow(Sheet sheet, Row row, short firstCellNum, short lastCellNum, FormulaEvaluator evaluator) {
         if (row != null) {
             List<ImportableCell> values = Lists.newArrayList();
             for (int i = firstCellNum ; i < lastCellNum ; i++) {
                 Cell cell = row.getCell(i);
-                values.add(computeCellValue(i, cell, evaluator));
+                Cell topLeftCell = resolveMergedRegion(sheet, cell);
+                String value = computeCellValue(cell, evaluator);
+                String mergedValue = topLeftCell != null ? computeCellValue(topLeftCell, evaluator) : null;
+
+                values.add(new ImportableCellImpl(i, topLeftCell != null, value, mergedValue));
             }
             return values;
         } else {
@@ -264,7 +269,23 @@ public class ExcelExtractionTask {
         }
     }
 
-    private static ImportableCell computeCellValue(int index, Cell cell, FormulaEvaluator evaluator){
+    /**
+     * If there is a merged region related to rowNum/colNum, then return the top-left cell of that region,
+     * which contains the value and formattin
+     */
+    private static Cell resolveMergedRegion(Sheet sheet, Cell cell) {
+        if (cell == null) return null;
+        for (CellRangeAddress region : sheet.getMergedRegions()) {
+            if (region.isInRange(cell)) {
+                Row firstRow = sheet.getRow(region.getFirstRow());
+                Cell firstCell = firstRow.getCell(region.getFirstColumn());
+                return firstCell;
+            }
+        }
+        return null;
+    }
+
+    private static String computeCellValue(Cell cell, FormulaEvaluator evaluator){
         if (cell == null) return null;
         Object cellValue;
         try {
@@ -298,7 +319,7 @@ public class ExcelExtractionTask {
         } catch (RuntimeException ex) {
             cellValue = cell.getCellFormula();
         }
-        return new ImportableCellImpl(index, (cellValue == null) ? null : Objects.toString(cellValue));
+        return cellValue == null ? null : Objects.toString(cellValue);
     }
 
 }
