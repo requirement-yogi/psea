@@ -119,6 +119,6 @@ public class PseaTestUtils {
         when(ao.create(any())).thenAnswer(invocation -> record);
     }
 
-    public PseaServiceImpl psea = new PseaServiceImpl(pluginSettingsFactory, accessModeService, dao);
+    public PseaServiceImpl psea = new PseaServiceImpl(pluginSettingsFactory, accessModeService, dao, ao);
 
 }

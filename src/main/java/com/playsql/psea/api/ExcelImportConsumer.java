@@ -28,17 +28,36 @@ public abstract class ExcelImportConsumer {
     private String focusedSheet;
     private Integer focusedRow;
     private List<String> inactiveSheets;
+    private final int maxRecordsPerTransaction;
 
+    /**
+     * @deprecated Use {@link #ExcelImportConsumer(Integer, Integer, String, Integer, List)}
+     */
     public ExcelImportConsumer(Integer maxRows, String focusedSheet, Integer focusedRow, List<String> inactiveSheets) {
         this.maxRows = maxRows;
+        this.focusedSheet = focusedSheet;
+        this.focusedRow = focusedRow;
+        this.inactiveSheets = inactiveSheets;
+        this.maxRecordsPerTransaction = 1000;
+    }
+
+    public ExcelImportConsumer(Integer maxRows, Integer maxRecordsPerTransaction, String focusedSheet, Integer focusedRow, List<String> inactiveSheets) {
+        this.maxRows = maxRows;
+        this.maxRecordsPerTransaction = maxRecordsPerTransaction;
         this.focusedSheet = focusedSheet;
         this.focusedRow = focusedRow;
         this.inactiveSheets = inactiveSheets;
     }
 
     public abstract void consumeNewSheet(String name, List<String> headerRow);
-    //public abstract void consumeNewSheet(ImportableSheet sheet);
-    //public abstract void consumeRow(ImportableRow row);
+
+    /**
+     * Whenever PSEA starts a new transaction, this method is called so that the plugin can refresh
+     * the "Stashes" or re-read data from the database.
+     */
+    public void onNewTransaction() {
+        // Plugins will refresh the stashes and AO references in this function
+    }
 
     /**
      * Push a row to the consumer.
@@ -75,6 +94,10 @@ public abstract class ExcelImportConsumer {
 
     public Integer getFocusedRow() {
         return focusedRow;
+    }
+
+    public int getMaxRecordsPerTransaction() {
+        return maxRecordsPerTransaction;
     }
 
     public boolean isSheetActive(String sheetName) {

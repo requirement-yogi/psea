@@ -20,6 +20,7 @@ package com.playsql.psea.impl;
  * #L%
  */
 
+import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.confluence.api.model.accessmode.AccessMode;
 import com.atlassian.confluence.api.service.accessmode.AccessModeService;
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
@@ -78,6 +79,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
     private final AccessModeService accessModeService;
     private final PseaTaskDAO dao;
     private final ExecutorService executorService;
+    private final ActiveObjects ao;
 
     /**
      * The monitoring task. Removing items from the ThreadLocal is guaranteed by the fact that it's managed in a
@@ -87,11 +89,13 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
 
     public PseaServiceImpl(PluginSettingsFactory pluginSettingsFactory,
                            AccessModeService accessModeService,
-                           PseaTaskDAO dao
+                           PseaTaskDAO dao,
+                           ActiveObjects ao
     ) {
         this.pluginSettingsFactory = pluginSettingsFactory;
         this.accessModeService = accessModeService;
         this.dao = dao;
+        this.ao = ao;
         this.executorService = Executors.newCachedThreadPool();
     }
 
@@ -187,6 +191,8 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
     /**
      * Creates a task in the database, to monitor exports.
      *
+     * This method will Thread.sleep() until it is available.
+     *
      * @param waitingTimeMillis if the task needs to be created, and if the number of jobs is above the limit,
      *                          it will retry for maximum waitingTimeMillis before throwing a PseaCancellationException.
      *                          If 0L is passed, then it will either pass or reject straight away, but not wait.
@@ -236,7 +242,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
         }
     }
 
-    public File export(Consumer<WorkbookAPI> f) throws PseaCancellationException {
+    public File export(Consumer<WorkbookAPI> pluginCallback) throws PseaCancellationException {
         // We don't wait, in this step, because callers who want to wait should do it in the startMonitoredTask,
         // assuming they have the correct version of PSEA.
         DBPseaTask record = createTask(Status.IN_PROGRESS, 0L, null);
@@ -252,7 +258,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
             xlWorkbook = new XSSFWorkbook();
             WorkbookAPIImpl workbook = new WorkbookAPIImpl(xlWorkbook, rowLimit, timeLimit, saveSize);
             try {
-                f.accept(workbook);
+                pluginCallback.accept(workbook);
                 dao.save(record, WRITING, null);
             } catch (PseaLimitException re) {
                 dao.save(record, ERROR, re.getMessage());
@@ -334,6 +340,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
         Integer maxRows = rowConsumer.getMaxRows();
         String focusedSheet = rowConsumer.getFocusedSheet();
         Integer focusedRow = rowConsumer.getFocusedRow();
+        int maxRecordsPerTransaction = rowConsumer.getMaxRecordsPerTransaction();
 
         // try reading inputstream
         Workbook workbook = null;
@@ -369,7 +376,10 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                 if (focusedSheet != null && !sheetName.equals(focusedSheet)) {
                     // We push the sheet without providing the cells, because we want the 'excel tab' to display, but only
                     // the focused one to display with cells
-                    rowConsumer.consumeNewSheet(sheetName, null);
+                    ao.executeInTransaction(() -> {
+                        rowConsumer.consumeNewSheet(sheetName, null);
+                        return null;
+                    });
                     continue;
                 }
 
@@ -383,7 +393,10 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                     if (headers == null) {
                         throw new RuntimeException("The header row is empty for sheet '" + sheetName + "'");
                     }
-                    rowConsumer.consumeNewSheet(sheetName, headers);
+                    ao.executeInTransaction(() -> {
+                        rowConsumer.consumeNewSheet(sheetName, headers);
+                        return null;
+                    });
 
                     // here we need to process many rows
                     int start = headerRowNum + 1;
@@ -396,12 +409,35 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                     if (maxRows != null) {
                         end = Math.min(start + maxRows - 1, end);
                     }
-                    for (int i = start ; i <= end ; i++) {
-                        int rowNum = i + 1;
-                        boolean isFocused = focusedRow != null && focusedRow == rowNum;
-                        rowConsumer.consumeRow(isFocused, rowNum, readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator));
+
+                    // It's a double loop, because we start transactions
+                    int index = start;
+                    int endFinal = end;
+                    while (index <= endFinal) {
+                        int restartAt = index;
+                        index = ao.executeInTransaction(() -> {
+                            rowConsumer.onNewTransaction();
+                            int i = restartAt;
+                            int rowsInTransaction = 0;
+                            while (i <= endFinal && rowsInTransaction < maxRecordsPerTransaction) {
+                                int rowNum = i + 1;
+                                boolean isFocused = focusedRow != null && focusedRow == rowNum;
+                                rowConsumer.consumeRow(
+                                        isFocused,
+                                        rowNum,
+                                        readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator)
+                                );
+                                i++;
+                                rowsInTransaction++;
+                            }
+                            return i;
+                        });
                     }
-                    rowConsumer.endOfSheet(sheetName);
+
+                    ao.executeInTransaction(() -> {
+                        rowConsumer.endOfSheet(sheetName);
+                        return null;
+                    });
                     LOG.debug(clock.time("Done reading one sheet"));
                 }
             }
