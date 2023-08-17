@@ -22,6 +22,7 @@ package com.playsql.psea.api;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class ExcelImportConsumer {
 
@@ -50,7 +51,28 @@ public abstract class ExcelImportConsumer {
         this.inactiveSheets = inactiveSheets;
     }
 
-    public abstract void consumeNewSheet(String name, List<String> headerRow);
+    /**
+     * @deprecated since 1.9, call {@link #consumeNewSheet(ImportableSheet)}
+     */
+    public void consumeNewSheet(String name, List<String> headerRow) {
+        // Consumers can implement this method
+    }
+
+    /**
+     * Called when a new sheet starts
+     *
+     * @param sheet the details of the sheet
+     *
+     * @since 1.9
+     */
+    public void consumeNewSheet(ImportableSheet sheet) {
+        consumeNewSheet(sheet.getName(),
+                        sheet.getHeaderRow()
+                             .getCells()
+                             .stream()
+                             .map(ImportableCell::getValue)
+                             .collect(Collectors.toList()));
+    };
 
     /**
      * Whenever PSEA starts a new transaction, this method is called so that the plugin can refresh
@@ -63,12 +85,20 @@ public abstract class ExcelImportConsumer {
     /**
      * Push a row to the consumer.
      *
-     * @param isFocused whether the row matches `focusedElements`
-     * @param rowNum the row number, counted as in the original file, 1-based. It means rowNum is never 1, because
-     *               even if title are stacked at the top of the sheet, the first row is still the titles
-     * @param cells the list of cell values, or null if the row is empty
+     * @deprecated since 1.9, see {@link #consumeImportableRow}
      */
-    public abstract void consumeRow(boolean isFocused, int rowNum, @Nullable List<String> cells);
+    public void consumeRow(boolean isFocused, int rowNum, @Nullable List<String> cells) {
+        // Consumers should implement this method
+    }
+
+    /**
+     * Push a row to the consumer. Same as {@link #consumeRow}, but with ImportableCells.
+     *
+     * @since 1.9
+     */
+    public void consumeImportableRow(ImportableRow row) {
+        consumeRow(row.isFocused(), row.getRowNum(), row.getCellsAsString(true));
+    }
 
     /**
      * This method is called when a sheet is done processing. If it is the last sheet,

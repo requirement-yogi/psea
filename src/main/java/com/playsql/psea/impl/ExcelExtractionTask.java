@@ -3,8 +3,12 @@ package com.playsql.psea.impl;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.ExcelImportConsumer;
+import com.playsql.psea.api.ImportableCell;
 import com.playsql.psea.api.PSEAImportException;
 import com.playsql.psea.api.PseaService;
+import com.playsql.psea.impl.beans.ImportableCellImpl;
+import com.playsql.psea.impl.beans.ImportableRowImpl;
+import com.playsql.psea.impl.beans.ImportableSheetImpl;
 import com.playsql.psea.utils.Utils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.poi.ss.usermodel.*;
@@ -143,12 +147,14 @@ public class ExcelExtractionTask {
         if (row != null) {
             short firstCellNum = row.getFirstCellNum();
             short lastCellNum = row.getLastCellNum();
-            List<String> headers = readRow(row, firstCellNum, lastCellNum, evaluator);
+            List<ImportableCell> headers = readRow(row, firstCellNum, lastCellNum, evaluator);
             if (headers == null) {
                 throw new RuntimeException("The header row is empty for sheet '" + sheet.getSheetName() + "'");
             }
             ao.executeInTransaction(() -> {
-                rowConsumer.consumeNewSheet(sheet.getSheetName(), headers);
+                rowConsumer.consumeNewSheet(new ImportableSheetImpl(sheet.getSheetName(), new ImportableRowImpl(
+                        headerRowNum, false, headers
+                )));
                 return null;
             });
 
@@ -171,10 +177,12 @@ public class ExcelExtractionTask {
                     i -> {
                         int rowNum = i + 1;
                         boolean isFocused = focusedRow != null && focusedRow == rowNum;
-                        rowConsumer.consumeRow(
-                                isFocused,
-                                rowNum,
-                                readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator)
+                        rowConsumer.consumeImportableRow(
+                                new ImportableRowImpl(
+                                        rowNum,
+                                        isFocused,
+                                        readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator)
+                                )
                         );
                     }
             );
@@ -243,12 +251,12 @@ public class ExcelExtractionTask {
         }
     }
 
-    private static List<String> readRow(Row row, short firstCellNum, short lastCellNum, FormulaEvaluator evaluator) {
+    private static List<ImportableCell> readRow(Row row, short firstCellNum, short lastCellNum, FormulaEvaluator evaluator) {
         if (row != null) {
-            List<String> values = Lists.newArrayList();
+            List<ImportableCell> values = Lists.newArrayList();
             for (int i = firstCellNum ; i < lastCellNum ; i++) {
                 Cell cell = row.getCell(i);
-                values.add(computeCellValue(cell, evaluator));
+                values.add(computeCellValue(i, cell, evaluator));
             }
             return values;
         } else {
@@ -256,7 +264,7 @@ public class ExcelExtractionTask {
         }
     }
 
-    private static String computeCellValue(Cell cell, FormulaEvaluator evaluator){
+    private static ImportableCell computeCellValue(int index, Cell cell, FormulaEvaluator evaluator){
         if (cell == null) return null;
         Object cellValue;
         try {
@@ -290,7 +298,7 @@ public class ExcelExtractionTask {
         } catch (RuntimeException ex) {
             cellValue = cell.getCellFormula();
         }
-        return (cellValue == null) ? null : Objects.toString(cellValue);
+        return new ImportableCellImpl(index, (cellValue == null) ? null : Objects.toString(cellValue));
     }
 
 }
