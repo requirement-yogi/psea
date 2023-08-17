@@ -4,7 +4,7 @@ package com.playsql.psea.web;
  * #%L
  * Play SQL Exports
  * %%
- * Copyright (C) 2016 - 2022 Requirement Yogi S.A.S.U.
+ * Copyright (C) 2016 - 2023 Requirement Yogi S.A.S.U.
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ package com.playsql.psea.web;
  * #L%
  */
 
+import com.atlassian.confluence.api.service.exceptions.ServiceException;
 import com.atlassian.confluence.compat.struts2.servletactioncontext.ServletActionContextCompatManager;
 import com.atlassian.confluence.core.ConfluenceActionSupport;
 import com.atlassian.confluence.security.PermissionManager;
@@ -29,6 +30,7 @@ import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.impl.PseaServiceImpl;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -39,6 +41,8 @@ import java.util.regex.Pattern;
 import static com.playsql.psea.db.dao.PseaTaskDAO.ITEMS_IN_UI;
 
 public class PseaAdminAction extends ConfluenceActionSupport {
+
+    private static final Logger log = Logger.getLogger(PseaAdminAction.class);
 
     private final long SIZE_K = 1000L; // Don't set 1024, it's not bytes
     private final long SIZE_M = 1000000L;
@@ -89,7 +93,12 @@ public class PseaAdminAction extends ConfluenceActionSupport {
     /** Validates the XSRF Token, because this dumbass Confluence accepts anything even though we are in a 'validatingStack'.
      * @return*/
     private boolean validateToken() {
-        HttpServletRequest request = servletActionContextCompatManager.getRequest();
+        HttpServletRequest request = null;
+        try {
+            request = servletActionContextCompatManager.getRequest();
+        } catch (ServiceException se) {
+            log.info("HTTP request unavailable", se);
+        }
         if (request == null) {
             addActionError("The HTTP request is missing. Please report your problem to the authors of Requirement Yogi.");
             return false;
