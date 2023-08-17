@@ -27,7 +27,6 @@ import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
 import com.atlassian.confluence.user.ConfluenceUser;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-import com.google.common.collect.Lists;
 import com.playsql.psea.api.ExcelImportConsumer;
 import com.playsql.psea.api.PSEAImportException;
 import com.playsql.psea.api.PseaService;
@@ -37,8 +36,6 @@ import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.db.entities.DBPseaTask;
 import com.playsql.psea.dto.DTOPseaTask.Status;
 import com.playsql.psea.dto.PseaLimitException;
-import com.playsql.psea.utils.Utils.Clock;
-import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,21 +46,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static com.playsql.psea.dto.DTOPseaTask.Status.*;
 
 public class PseaServiceImpl implements PseaService, DisposableBean {
 
     private final static Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
-    private static final String FILE_PREFIX = "excel-export-";
-    private static final String FILE_EXTENSION = ".xlsx";
+    static final String FILE_PREFIX = "excel-export-";
+    static final String FILE_EXTENSION = ".xlsx";
     private static final String SETTINGS_ROW_LIMIT = "com.requirementyogi.psea.row-limit";
     private static final String SETTINGS_TIME_LIMIT = "com.requirementyogi.psea.time-limit";
     private static final String SETTINGS_DATA_LIMIT = "com.requirementyogi.psea.data-limit";
@@ -198,7 +191,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
      *                          it will retry for maximum waitingTimeMillis before throwing a PseaCancellationException.
      *                          If 0L is passed, then it will either pass or reject straight away, but not wait.
      */
-    private DBPseaTask createTask(Status status, long waitingTimeMillis, Map<String, Object> taskDetails) throws PseaCancellationException {
+    DBPseaTask createTask(Status status, long waitingTimeMillis, Map<String, Object> taskDetails) throws PseaCancellationException {
         if (accessModeService.getAccessMode() != AccessMode.READ_WRITE) {
             return null;
         }
@@ -244,324 +237,15 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
     }
 
     public File export(Consumer<WorkbookAPI> pluginCallback) throws PseaCancellationException {
-        // We don't wait, in this step, because callers who want to wait should do it in the startMonitoredTask,
-        // assuming they have the correct version of PSEA.
-        DBPseaTask record = createTask(Status.IN_PROGRESS, 0L, null);
-
-        long sizeLimit = getDataLimit();
-        Consumer<Long> saveSize = buildSaveSizeFunction(record, sizeLimit);
-
-        XSSFWorkbook xlWorkbook = null;
-        long rowLimit = getRowLimit();
-        long timeLimit = getTimeLimit();
-        File file = null;
-        try {
-            xlWorkbook = new XSSFWorkbook();
-            WorkbookAPIImpl workbook = new WorkbookAPIImpl(xlWorkbook, rowLimit, timeLimit, saveSize);
-            try {
-                pluginCallback.accept(workbook);
-                dao.save(record, WRITING, null);
-            } catch (PseaLimitException re) {
-                dao.save(record, ERROR, re.getMessage());
-                workbook.writeErrorMessageOnFirstSheet(re.getMessage());
-                // We don't rethrow the error, because we want to save and return this spreadsheet to the user,
-                // with the error inside.
-            }
-
-            file = File.createTempFile(FILE_PREFIX, FILE_EXTENSION);
-            file.deleteOnExit();
-            if (record != null) {
-                record.setFilename(file.getName());
-                dao.saveAndCheckCancellation(record);
-            }
-
-            try (FileOutputStream fileOut = new FileOutputStream(file)) {
-                xlWorkbook.write(fileOut);
-            }
-
-            dao.save(record, DONE, "Size=" + workbook.getDataSize() + " units");
-            return file;
-
-        } catch (IOException e) {
-            dao.save(record, ERROR, "IO Exception: " + e.getMessage());
-            if (file != null) {
-                file.delete(); // Doesn't throw an exception, just returns false if error
-            }
-            throw new RuntimeException("Error while writing an Excel file to disk", e);
-
-        } catch (RuntimeException re) {
-            dao.save(record, ERROR, re.getMessage());
-            if (file != null) {
-                file.delete(); // Doesn't throw an exception, just returns false if error
-            }
-            throw re;
-        } finally {
-            if (record != null) {
-                Status status = Status.of(record);
-                if (status == null || !status.isFinalState()) {
-                    dao.save(record, ERROR, "The status was " + record.getStatus() + " despite the export being finished.");
-                }
-            }
-            if (xlWorkbook != null) {
-                try {
-                    xlWorkbook.close();
-                } catch (IOException e) {
-                    LOG.error("Error while closing an Excel file that we were creating", e);
-                }
-            }
-        }
-    }
-
-    private Consumer<Long> buildSaveSizeFunction(DBPseaTask record, long sizeLimit) {
-        Consumer<Long> saveSize = new Consumer<Long>() {
-
-            private final long SIZE_RESOLUTION = 10000; // Save the size every 10KB.
-            private long nextSaveSize = 10; // We save just after a few bytes
-
-            @Override
-            public void accept(Long currentSize) {
-                if (currentSize > sizeLimit) {
-                    throw new PseaLimitException(currentSize, sizeLimit, "size", "units");
-                }
-
-                if (record != null && currentSize > nextSaveSize) {
-                    nextSaveSize = currentSize + SIZE_RESOLUTION;
-                    record.setSize(currentSize);
-                    dao.saveAndCheckCancellation(record);
-                }
-            }
-        };
-        return saveSize;
+        ExcelExportTask task = new ExcelExportTask(this, dao);
+        return task.export(pluginCallback);
     }
 
     public void extract(PseaInput workbookFile, ExcelImportConsumer rowConsumer) throws OutOfMemoryError, PSEAImportException {
-        Clock clock = Clock.start("Reading Excel file " + workbookFile.getFileName() + " - ");
-
-        // 3 ways to skip parts of the spreadsheet
-        Integer maxRows = rowConsumer.getMaxRows();
-        String focusedSheet = rowConsumer.getFocusedSheet();
-        Integer focusedRow = rowConsumer.getFocusedRow();
-        int maxRecordsPerTransaction = rowConsumer.getMaxRecordsPerTransaction();
-
-        // try reading inputstream
-        Workbook workbook = null;
-        try {
-
-            if (workbookFile instanceof PseaFileInput) {
-                workbook = WorkbookFactory.create(((PseaFileInput) workbookFile).getFile());
-            } else if (workbookFile instanceof PseaInputStream) {
-                workbook = WorkbookFactory.create(((PseaInputStream) workbookFile).getInputStream());
-            } else {
-                throw new RuntimeException("Unknown PseaInput class: " + workbookFile);
-            }
-
-            // apache poi representation of a .xls excel file
-            // formula eveluator for workbook
-            FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-            // clear cached values
-            evaluator.clearAllCachedResultValues();
-            // ignore cross workbook references (formula referencing external workbook cells)
-            evaluator.setIgnoreMissingWorkbooks(true);
-
-            // Count the total number of items
-            int totalItems = maxRows != null ? maxRows : getTotalItems(rowConsumer::isSheetActive, workbook);
-
-            // iterator on sheets
-            Iterator<Sheet> sheetIterator = workbook.sheetIterator();
-
-            LOG.debug(clock.time("Done reading the file"));
-
-            int processedItems = 0;
-            while (sheetIterator.hasNext()) {
-                processedItems++;
-                int processedItemsAtStartOfSheet = processedItems;
-                Sheet sheet = sheetIterator.next();
-                String sheetName = sheet.getSheetName();
-                final int headerRowNum = sheet.getFirstRowNum();
-                if (!rowConsumer.isSheetActive(sheetName)) {
-                    continue;
-                }
-                if (focusedSheet != null && !sheetName.equals(focusedSheet)) {
-                    // We push the sheet without providing the cells, because we want the 'excel tab' to display, but only
-                    // the focused one to display with cells
-                    ao.executeInTransaction(() -> {
-                        rowConsumer.consumeNewSheet(sheetName, null);
-                        return null;
-                    });
-                    continue;
-                }
-
-                // If the focusedSheet is not specified, then we process at least the headerRow.
-                Row row = sheet.getRow(headerRowNum);
-                // If there is no first row, then there is no data on this sheet. Skip it.
-                if (row != null) {
-                    short firstCellNum = row.getFirstCellNum();
-                    short lastCellNum = row.getLastCellNum();
-                    List<String> headers = readRow(row, firstCellNum, lastCellNum, evaluator);
-                    if (headers == null) {
-                        throw new RuntimeException("The header row is empty for sheet '" + sheetName + "'");
-                    }
-                    ao.executeInTransaction(() -> {
-                        rowConsumer.consumeNewSheet(sheetName, headers);
-                        return null;
-                    });
-
-                    int start = headerRowNum + 1;
-                    if (focusedRow != null) {
-                        // focusedRow is 1-based, because it is extracted from rowNum, whereas 'start' or 'i' is 0-based
-                        // And we want the row before focusedRow
-                        start = Math.max(focusedRow - 2, start);
-                    }
-                    int end = maxRows != null ? Math.min(start + maxRows - 1, sheet.getLastRowNum()) : sheet.getLastRowNum();
-
-                    forLoop(
-                            start,
-                            end,
-                            maxRecordsPerTransaction,
-                            rowConsumer::onNewTransaction,
-                            itemsProcessedInLoop -> rowConsumer.setProgress(Math.min(
-                                    processedItemsAtStartOfSheet + itemsProcessedInLoop,
-                                    totalItems - 1
-                            ), totalItems),
-                            i -> {
-                                int rowNum = i + 1;
-                                boolean isFocused = focusedRow != null && focusedRow == rowNum;
-                                rowConsumer.consumeRow(
-                                        isFocused,
-                                        rowNum,
-                                        readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator)
-                                );
-                            }
-                    );
-
-                    processedItems += end - start;
-
-                    ao.executeInTransaction(() -> {
-                        rowConsumer.endOfSheet(sheetName);
-                        return null;
-                    });
-                    LOG.debug(clock.time("Done reading one sheet"));
-                }
-            }
-            rowConsumer.endOfWorkbook();
-            rowConsumer.setProgress(totalItems, totalItems);
-        } catch (IOException e) {
-            throw new PSEAImportException(workbookFile, e);
-        } finally {
-            if (workbook != null) {
-                try {
-                    workbook.close();
-                } catch (IOException e) {
-                    LOG.error("Error while closing the Excel file that we were reading", e);
-                }
-            }
-        }
-    }
-
-    private static int getTotalItems(Function<String, Boolean> isSheetActive, Workbook workbook) {
-        Iterator<Sheet> sheetIterator1 = workbook.sheetIterator();
-        int totalItems = 0;
-        while (sheetIterator1.hasNext()) {
-            totalItems++; // One for each sheet
-            Sheet sheet = sheetIterator1.next();
-            String sheetName = sheet.getSheetName();
-            final int headerRowNum = sheet.getFirstRowNum();
-            if (!isSheetActive.apply(sheetName)) {
-                continue;
-            }
-            totalItems += sheet.getLastRowNum() - sheet.getFirstRowNum(); // One for each row
-        }
-        totalItems++; // One for the end
-        return totalItems;
-    }
-
-    /**
-     * Perform a 'for' loop, going from 'start' (inclusive) to 'end' (INCLUSIVE TOO),
-     * but starts a transaction up to every maxRecordsPerTransaction
-     *
-     * @param start the start of the loop (inclusive)
-     * @param end the end of the loop (/!\ inclusive too)
-     * @param maxRecordsPerTransaction the maximum number of records in each transaction
-     * @param onNewTransaction a function to call each time a transaction is started
-     * @param setProgress a function to call from time to time, which takes as parameter the current number of items
-     *                    treated in the loop
-     * @param consumer the body of the loop, to which the 'i' counter of the loop is passed.
-     *                 {@code start <= i <= end}.
-     */
-    void forLoop(
-            int start,
-            int end,
-            int maxRecordsPerTransaction,
-            Runnable onNewTransaction,
-            Consumer<Integer> setProgress,
-            Consumer<Integer> consumer
-    ) {
-        int i1 = start; // i1 == 1, the loop counter, except it's the one outside the transaction
-        while (i1 <= end) {
-            int i1AtStartOfLoop = i1;
-            i1 = ao.executeInTransaction(() -> {
-                onNewTransaction.run();
-                int i2 = i1AtStartOfLoop; // i2 == i, inside the transaction
-                int rowsInTransaction = 0;
-                while (i2 <= end && rowsInTransaction < maxRecordsPerTransaction) {
-                    consumer.accept(i2);
-                    i2++;
-                    rowsInTransaction++;
-                }
-                return i2;
-            });
-            setProgress.accept(i1 - start);
-        }
-    }
-
-    private List<String> readRow(Row row, short firstCellNum, short lastCellNum, FormulaEvaluator evaluator) {
-        if (row != null) {
-            List<String> values = Lists.newArrayList();
-            for (int i = firstCellNum ; i < lastCellNum ; i++) {
-                Cell cell = row.getCell(i);
-                values.add(computeCellValue(cell, evaluator));
-            }
-            return values;
-        } else {
-            return null;
-        }
-    }
-
-    private String computeCellValue(Cell cell, FormulaEvaluator evaluator){
-        if (cell == null) return null;
-        Object cellValue;
-        try {
-            CellValue computedFormulaValue = evaluator.evaluate(cell) ;
-            if(computedFormulaValue != null){
-                switch (computedFormulaValue.getCellType()) {
-                    case NUMERIC:
-                        cellValue = computedFormulaValue.getNumberValue();
-                        break;
-                    case STRING:
-                        // TODO We could get the RTF to get bolds and similar, but it throws an exception if it's not text
-                        // RichTextString richValue = cell.getRichStringCellValue();
-                        cellValue = computedFormulaValue.getStringValue();
-                        break;
-                    case BOOLEAN:
-                        cellValue = computedFormulaValue.getBooleanValue();
-                        break;
-                    case BLANK:
-                        cellValue = "";
-                        break;
-                    case ERROR:
-                        cellValue = computedFormulaValue.formatAsString();
-                        break;
-                    default:
-                        cellValue = null;
-                        break;
-                }
-            } else {
-                cellValue = null;
-            }
-        } catch (RuntimeException ex) {
-            cellValue = cell.getCellFormula();
-        }
-        return (cellValue == null) ? null : Objects.toString(cellValue);
+        ExcelExtractionTask extraction = new ExcelExtractionTask(
+                ao, rowConsumer
+        );
+        extraction.extract(workbookFile);
     }
 
     private static long readLong(Object value, long min, long max, long defaultValue) {

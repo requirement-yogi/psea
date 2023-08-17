@@ -20,6 +20,7 @@ package com.playsql.psea.api;
  * #L%
  */
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public abstract class ExcelImportConsumer {
@@ -65,9 +66,9 @@ public abstract class ExcelImportConsumer {
      * @param isFocused whether the row matches `focusedElements`
      * @param rowNum the row number, counted as in the original file, 1-based. It means rowNum is never 1, because
      *               even if title are stacked at the top of the sheet, the first row is still the titles
-     * @param cells the list of cell values
+     * @param cells the list of cell values, or null if the row is empty
      */
-    public abstract void consumeRow(boolean isFocused, int rowNum, List<String> cells);
+    public abstract void consumeRow(boolean isFocused, int rowNum, @Nullable List<String> cells);
 
     /**
      * This method is called when a sheet is done processing. If it is the last sheet,
