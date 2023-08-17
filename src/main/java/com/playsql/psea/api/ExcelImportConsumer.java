@@ -106,4 +106,21 @@ public abstract class ExcelImportConsumer {
         }
         return true;
     }
+
+    /**
+     * Callback method, so that the caller can know what is the progress with regards
+     * to the total size of the spreadsheet.
+     *
+     * There is no contractual guarantee that it is called regularly, or at all; For example
+     * it will not be called at all if there is a focused row; It will not be called
+     * for non-active sheets.
+     *
+     * There is a guarantee that current == total is only true at the end of the workbook.
+     *
+     * @param current the current number of items processed
+     * @param total the total number of items to process, so that current==total at the end.
+     */
+    public void setProgress(int current, int total) {
+        // Plugins can implement this method
+    }
 }

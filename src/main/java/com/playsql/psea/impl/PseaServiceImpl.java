@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static com.playsql.psea.dto.DTOPseaTask.Status.*;
 
@@ -361,12 +362,19 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
             evaluator.clearAllCachedResultValues();
             // ignore cross workbook references (formula referencing external workbook cells)
             evaluator.setIgnoreMissingWorkbooks(true);
+
+            // Count the total number of items
+            int totalItems = maxRows != null ? maxRows : getTotalItems(rowConsumer::isSheetActive, workbook);
+
             // iterator on sheets
             Iterator<Sheet> sheetIterator = workbook.sheetIterator();
 
             LOG.debug(clock.time("Done reading the file"));
 
+            int processedItems = 0;
             while (sheetIterator.hasNext()) {
+                processedItems++;
+                int processedItemsAtStartOfSheet = processedItems;
                 Sheet sheet = sheetIterator.next();
                 String sheetName = sheet.getSheetName();
                 final int headerRowNum = sheet.getFirstRowNum();
@@ -398,28 +406,24 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                         return null;
                     });
 
-                    // here we need to process many rows
                     int start = headerRowNum + 1;
                     if (focusedRow != null) {
                         // focusedRow is 1-based, because it is extracted from rowNum, whereas 'start' or 'i' is 0-based
                         // And we want the row before focusedRow
                         start = Math.max(focusedRow - 2, start);
                     }
-                    int end = sheet.getLastRowNum();
-                    if (maxRows != null) {
-                        end = Math.min(start + maxRows - 1, end);
-                    }
+                    int end = maxRows != null ? Math.min(start + maxRows - 1, sheet.getLastRowNum()) : sheet.getLastRowNum();
 
-                    // It's a double loop, because we start transactions
-                    int index = start;
-                    int endFinal = end;
-                    while (index <= endFinal) {
-                        int restartAt = index;
-                        index = ao.executeInTransaction(() -> {
-                            rowConsumer.onNewTransaction();
-                            int i = restartAt;
-                            int rowsInTransaction = 0;
-                            while (i <= endFinal && rowsInTransaction < maxRecordsPerTransaction) {
+                    forLoop(
+                            start,
+                            end,
+                            maxRecordsPerTransaction,
+                            rowConsumer::onNewTransaction,
+                            itemsProcessedInLoop -> rowConsumer.setProgress(Math.min(
+                                    processedItemsAtStartOfSheet + itemsProcessedInLoop,
+                                    totalItems - 1
+                            ), totalItems),
+                            i -> {
                                 int rowNum = i + 1;
                                 boolean isFocused = focusedRow != null && focusedRow == rowNum;
                                 rowConsumer.consumeRow(
@@ -427,12 +431,10 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                                         rowNum,
                                         readRow(sheet.getRow(i), firstCellNum, lastCellNum, evaluator)
                                 );
-                                i++;
-                                rowsInTransaction++;
                             }
-                            return i;
-                        });
-                    }
+                    );
+
+                    processedItems += end - start;
 
                     ao.executeInTransaction(() -> {
                         rowConsumer.endOfSheet(sheetName);
@@ -442,6 +444,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                 }
             }
             rowConsumer.endOfWorkbook();
+            rowConsumer.setProgress(totalItems, totalItems);
         } catch (IOException e) {
             throw new PSEAImportException(workbookFile, e);
         } finally {
@@ -452,6 +455,62 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                     LOG.error("Error while closing the Excel file that we were reading", e);
                 }
             }
+        }
+    }
+
+    private static int getTotalItems(Function<String, Boolean> isSheetActive, Workbook workbook) {
+        Iterator<Sheet> sheetIterator1 = workbook.sheetIterator();
+        int totalItems = 0;
+        while (sheetIterator1.hasNext()) {
+            totalItems++; // One for each sheet
+            Sheet sheet = sheetIterator1.next();
+            String sheetName = sheet.getSheetName();
+            final int headerRowNum = sheet.getFirstRowNum();
+            if (!isSheetActive.apply(sheetName)) {
+                continue;
+            }
+            totalItems += sheet.getLastRowNum() - sheet.getFirstRowNum(); // One for each row
+        }
+        totalItems++; // One for the end
+        return totalItems;
+    }
+
+    /**
+     * Perform a 'for' loop, going from 'start' (inclusive) to 'end' (INCLUSIVE TOO),
+     * but starts a transaction up to every maxRecordsPerTransaction
+     *
+     * @param start the start of the loop (inclusive)
+     * @param end the end of the loop (/!\ inclusive too)
+     * @param maxRecordsPerTransaction the maximum number of records in each transaction
+     * @param onNewTransaction a function to call each time a transaction is started
+     * @param setProgress a function to call from time to time, which takes as parameter the current number of items
+     *                    treated in the loop
+     * @param consumer the body of the loop, to which the 'i' counter of the loop is passed.
+     *                 {@code start <= i <= end}.
+     */
+    void forLoop(
+            int start,
+            int end,
+            int maxRecordsPerTransaction,
+            Runnable onNewTransaction,
+            Consumer<Integer> setProgress,
+            Consumer<Integer> consumer
+    ) {
+        int i1 = start; // i1 == 1, the loop counter, except it's the one outside the transaction
+        while (i1 <= end) {
+            int i1AtStartOfLoop = i1;
+            i1 = ao.executeInTransaction(() -> {
+                onNewTransaction.run();
+                int i2 = i1AtStartOfLoop; // i2 == i, inside the transaction
+                int rowsInTransaction = 0;
+                while (i2 <= end && rowsInTransaction < maxRecordsPerTransaction) {
+                    consumer.accept(i2);
+                    i2++;
+                    rowsInTransaction++;
+                }
+                return i2;
+            });
+            setProgress.accept(i1 - start);
         }
     }
 
