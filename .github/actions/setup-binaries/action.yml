@@ -1,0 +1,79 @@
+name: Setup binaries
+description: Adds firewall port, Java, Npm, Maven and caches
+inputs:
+  DIGITALOCEAN_TOKEN:
+    description: 'Digital Ocean token'
+    required: true
+  MAVEN_PASSWORD:
+    description: 'Password for Maven repo'
+    required: true
+  cache_suffix:
+    # Since Maven will not download all dependencies (like npm does) every time, every time you change
+    # the projects which are built using -pl or -P (profile), please update the cache suffix, so it
+    # doesn't assume all changes are already downloaded
+    description: 'Suffix of the cache, to distinguish Maven profiles'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+
+
+    - name: "Open port in firewall"
+      id: poke-port
+      uses: ./.github/actions/poke-digitalocean-firewall
+      with:
+        DIGITALOCEAN_TOKEN: ${{ inputs.DIGITALOCEAN_TOKEN }}
+
+    - name: "Set up JDK 11"
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        # cache: maven
+
+    - name: "Setup Node 18.6"
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.6
+        # cache: 'npm' # Replaced with the actions/cache below
+
+    - name: "Setup corporate Maven repository"
+      id: setup-corporate-repo
+      uses: ./.github/actions/setup-corporate-repo
+      with:
+        MAVEN_PASSWORD: ${{ inputs.MAVEN_PASSWORD }}
+
+    - name: "Caches: Get a random number"
+      id: get-random-number
+      shell: bash
+      run: |
+        echo "random_number=$(date "+%Y%m%d-%H%M%S")" >> "$GITHUB_OUTPUT"
+
+    - name: "Maven cache (${{ steps.get-random-number.outputs.random_number }})" # https://github.com/actions/cache/blob/master/examples.md#java---maven
+      uses: actions/cache@v3
+      id: maven-cache
+      with:
+        path: /home/runner/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ inputs.cache_suffix }}
+        # key: ${{ runner.os }}-maven-${{ steps.get-random-number.outputs.random_number }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: "NPM Cache: Get directory" # https://github.com/actions/cache/blob/master/examples.md#node---npm
+      id: npm-cache-dir
+      shell: bash
+      run: |
+        echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
+
+    - name: "NPM Cache: Configure npm with ${{ steps.npm-cache-dir.outputs.dir }}"
+      uses: actions/cache@v3
+      id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+      with:
+        path: ${{ steps.npm-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ inputs.cache_suffix }}
+        # key: ${{ runner.os }}-node-${{ steps.get-random-number.outputs.random_number }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+

@@ -1,0 +1,44 @@
+name: Vulnerabilities
+
+on:
+  workflow_run:
+    workflows: [ "Initial compilation" ]
+    types: [ "completed" ]
+    branches: [ "master" ]
+  schedule:
+    - cron:  '47 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: "Setup binaries"
+        id: setup-binaries
+        uses: ./.github/actions/setup-binaries
+        with:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          cache_suffix: "-vulnerabilities"
+
+      - name: Build with Maven
+        # If you update this command, please also update the cache suffix above
+        run: mvn clean install --batch-mode -Pvulnerabilities
+
+      # - name: Display repo (after)
+      #   shell: bash
+      #   run: |
+      #     cd ~/.m2
+      #     pwd
+      #     find .
+      #     du -sh .
+
+      - name: Publish the vulnerability report
+        uses: actions/upload-artifact@v3
+        with:
+          path: "${{ github.workspace }}/**/target/dependency-check-report.html"
+          if-no-files-found: error

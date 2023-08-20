@@ -1,0 +1,41 @@
+name: Poke DO firewall
+description: Pokes a port into the DigitalOcean firewall
+inputs:
+  DIGITALOCEAN_TOKEN:
+    description: 'Digital Ocean token'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    #- uses: actions/checkout@v3
+    - name: Open the port in the firewall
+      shell: bash
+      env:
+        DIGITALOCEAN_TOKEN: ${{ inputs.DIGITALOCEAN_TOKEN }}
+      run: |
+        echo "Open the port in the firewall"
+        set -u
+        set -e
+        IP=$(dig +short myip.opendns.com @resolver1.opendns.com)
+        echo "Current IP is $IP"
+        
+        EXISTING_FIREWALL=$(curl -X GET \
+                            -H "Content-Type: application/json" \
+                            -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+                            "https://api.digitalocean.com/v2/firewalls/9ac7c932-dcdb-440e-8afb-5318eda45a78" \
+                            | jq '.firewall'
+        )
+        echo "Existing firewall is $EXISTING_FIREWALL"
+        
+        MODIFICATION_HTTP=".inbound_rules[0].sources.addresses |= .+ [\"$IP\"]"
+        MODIFICATION_HTTPS=".inbound_rules[1].sources.addresses |= .+ [\"$IP\"]"
+        NEW_FIREWALL=$(echo "$EXISTING_FIREWALL" | jq "$MODIFICATION_HTTP" | jq "$MODIFICATION_HTTPS" )
+        echo "New firewall is $NEW_FIREWALL"
+        
+        curl -X PUT \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+          -d "$NEW_FIREWALL" \
+          "https://api.digitalocean.com/v2/firewalls/9ac7c932-dcdb-440e-8afb-5318eda45a78"
+        echo "Done"

@@ -1,0 +1,61 @@
+name: Setup the corporate Maven repository
+description: Adds Java, Npm, Maven and pokes a port into the DigitalOcean firewall
+inputs:
+  MAVEN_PASSWORD:
+    description: 'Password for Maven repo'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - name: maven-settings-xml-action
+      uses: whelk-io/maven-settings-xml-action@v20
+      with:
+        repositories: >
+          [
+            {
+              "id": "playsql.general",
+              "url": "https://maven.dev.requirementyogi.com/repository/general",
+              "releases": {
+                "enabled": "true",
+                "updatePolicy": "daily",
+                "checksumPolicy": "warn"
+              },
+              "snapshots": {
+                "enabled": "true",
+                "updatePolicy": "never",
+                "checksumPolicy": "warn"
+              }
+            }
+          ]
+        plugin_repositories: >
+          [
+            {
+              "id": "playsql.general",
+              "url": "https://maven.dev.requirementyogi.com/repository/general",
+              "releases": {
+                "enabled": "true",
+                "updatePolicy": "daily",
+                "checksumPolicy": "warn"
+              },
+              "snapshots": {
+                "enabled": "true",
+                "updatePolicy": "never",
+                "checksumPolicy": "warn"
+              }
+            }
+          ]
+        servers: >
+          [
+            {
+              "id": "playsql.general",
+              "username": "external1",
+              "password": "${{ inputs.MAVEN_PASSWORD }}"
+            }
+          ]
+        plugin_groups: >
+          [
+            "com.atlassian.maven.plugins"
+          ]
+        output_file: /home/runner/.m2/settings.xml

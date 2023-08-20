@@ -1,0 +1,31 @@
+name: Initial compilation
+
+on: [ push, workflow_dispatch ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30 # 5 minutes in general, 45 minutes for the first download
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: "Setup binaries"
+        id: setup-binaries
+        uses: ./.github/actions/setup-binaries
+        with:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          cache_suffix: "-base"
+
+      - name: Build with Maven
+        # If you update this command, please also update the cache suffix above
+        run: mvn clean install --batch-mode
+
+      # - name: Display repo (after)
+      #   shell: bash
+      #   run: |
+      #     cd ~/.m2
+      #     pwd
+      #     find .
+      #     du -sh .
