@@ -33,7 +33,7 @@ public abstract class ExcelImportConsumer {
     private final int maxRecordsPerTransaction;
 
     /**
-     * @deprecated Use {@link #ExcelImportConsumer(Integer, Integer, String, Integer, List)}
+     * @deprecated Use {@link #ExcelImportConsumer(Integer, int, String, Integer, List)}
      */
     public ExcelImportConsumer(Integer maxRows, String focusedSheet, Integer focusedRow, List<String> inactiveSheets) {
         this.maxRows = maxRows;
@@ -43,7 +43,7 @@ public abstract class ExcelImportConsumer {
         this.maxRecordsPerTransaction = 1000;
     }
 
-    public ExcelImportConsumer(Integer maxRows, Integer maxRecordsPerTransaction, String focusedSheet, Integer focusedRow, List<String> inactiveSheets) {
+    public ExcelImportConsumer(Integer maxRows, int maxRecordsPerTransaction, String focusedSheet, Integer focusedRow, List<String> inactiveSheets) {
         this.maxRows = maxRows;
         this.maxRecordsPerTransaction = maxRecordsPerTransaction;
         this.focusedSheet = focusedSheet;
