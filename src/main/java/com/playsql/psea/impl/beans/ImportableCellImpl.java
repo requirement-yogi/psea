@@ -26,6 +26,10 @@ public class ImportableCellImpl implements ImportableCell {
     private final int index;
     private final String value;
     private boolean isMerged;
+
+    /**
+     * The value if this cell belongs to a merged area, otherwise null
+     */
     private final String mergedValue;
 
     public ImportableCellImpl(int index, boolean isMerged, String value, String mergedValue) {

@@ -35,15 +35,11 @@ import com.playsql.psea.api.exceptions.PseaCancellationException;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.db.entities.DBPseaTask;
 import com.playsql.psea.dto.DTOPseaTask.Status;
-import com.playsql.psea.dto.PseaLimitException;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Map;
@@ -241,10 +237,14 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
         return task.export(pluginCallback);
     }
 
-    public void extract(PseaInput workbookFile, ExcelImportConsumer rowConsumer) throws OutOfMemoryError, PSEAImportException {
-        ExcelExtractionTask extraction = new ExcelExtractionTask(
-                ao, rowConsumer
-        );
+    public void extract(PseaInput workbookFile, ExcelImportConsumer consumer) throws OutOfMemoryError, PSEAImportException {
+        String fileName = workbookFile.getFileName();
+        ExtractionTask extraction;
+        if (fileName != null && fileName.endsWith(".csv")) {
+            extraction = new CSVExtractionTask(ao, consumer);
+        } else {
+            extraction = new ExcelExtractionTask(ao, consumer);
+        }
         extraction.extract(workbookFile);
     }
 

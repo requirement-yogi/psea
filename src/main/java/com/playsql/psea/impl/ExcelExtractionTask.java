@@ -31,8 +31,10 @@ import com.playsql.psea.impl.beans.ImportableRowImpl;
 import com.playsql.psea.impl.beans.ImportableSheetImpl;
 import com.playsql.psea.utils.Utils;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.poi.hssf.usermodel.HSSFWorkbookFactory;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,45 +50,48 @@ import java.util.function.Function;
  * Implementation of the reading of an Excel file, for imports
  */
 @NotThreadSafe
-public class ExcelExtractionTask {
+public class ExcelExtractionTask extends ExtractionTask {
     private final static Logger LOG = LoggerFactory.getLogger(ExcelExtractionTask.class);
 
-    private final ExcelImportConsumer rowConsumer;
-    private final ActiveObjects ao;
-
-    // 3 ways to skip parts of the spreadsheet
-    private final Integer maxRows;
-    private final String focusedSheet;
-    private final Integer focusedRow;
-
-
     // Stateful fields
-    private final int maxRecordsPerTransaction;
-    private Utils.Clock clock;
     private Workbook workbook;
     private FormulaEvaluator evaluator;
     private int totalItems;
 
     public ExcelExtractionTask(ActiveObjects ao, ExcelImportConsumer rowConsumer) {
-        this.ao = ao;
-        this.maxRows = rowConsumer.getMaxRows();
-        this.focusedSheet = rowConsumer.getFocusedSheet();
-        this.focusedRow = rowConsumer.getFocusedRow();
-        this.maxRecordsPerTransaction = rowConsumer.getMaxRecordsPerTransaction();
-        this.rowConsumer = rowConsumer;
+        super(ao, rowConsumer);
     }
 
     private void initialize(PseaService.PseaInput workbookFile) throws OutOfMemoryError, PSEAImportException, IOException {
 
         clock = Utils.Clock.start("Reading Excel file " + workbookFile.getFileName() + " - ");
 
-        if (workbookFile instanceof PseaService.PseaFileInput) {
-            workbook = WorkbookFactory.create(((PseaService.PseaFileInput) workbookFile).getFile());
-        } else if (workbookFile instanceof PseaService.PseaInputStream) {
-            workbook = WorkbookFactory.create(((PseaService.PseaInputStream) workbookFile).getInputStream());
-        } else {
-            throw new RuntimeException("Unknown PseaInput class: " + workbookFile);
-        }
+        boolean retry = false;
+        int foolProof = 2;
+        do {
+            try {
+                if (workbookFile instanceof PseaService.PseaFileInput) {
+                    workbook = WorkbookFactory.create(((PseaService.PseaFileInput) workbookFile).getFile());
+                } else if (workbookFile instanceof PseaService.PseaInputStream) {
+                    workbook = WorkbookFactory.create(((PseaService.PseaInputStream) workbookFile).getInputStream());
+                } else {
+                    throw new RuntimeException("Unknown PseaInput class: " + workbookFile);
+                }
+            } catch (IOException ioe) {
+                if (foolProof--==0) throw ioe;
+                String message = ioe.getMessage();
+                if (message.contains("Your InputStream was neither an OLE2 stream, nor an OOXML stream or you haven't provide the poi-ooxml")) {
+                    // The classloader makes that sometimes, not all providers are detected, and we can't open .xls files
+                    if (!message.contains("XSSFWorkbookFactory")) {
+                        WorkbookFactory.addProvider(new XSSFWorkbookFactory());
+                        retry = true;
+                    } else if (!message.contains("HSSFWorkbookFactory")) {
+                        WorkbookFactory.addProvider(new HSSFWorkbookFactory());
+                        retry = true;
+                    }
+                }
+            }
+        } while (retry);
 
         // apache poi representation of a .xls excel file
         // formula evaluator for workbook
@@ -100,6 +105,7 @@ public class ExcelExtractionTask {
         totalItems = maxRows != null ? maxRows : getTotalItems(rowConsumer::isSheetActive, workbook);
     }
 
+    @Override
     public void extract(PseaService.PseaInput workbookFile) throws OutOfMemoryError, PSEAImportException {
 
         try {
@@ -107,7 +113,7 @@ public class ExcelExtractionTask {
             // iterator on sheets
             Iterator<Sheet> sheetIterator = workbook.sheetIterator();
 
-            LOG.debug(clock.time("Done reading the file"));
+            LOG.debug(clock.time("Done opening the file"));
 
             MutableInt processedItems = new MutableInt(0);
             while (sheetIterator.hasNext()) {
