@@ -38,4 +38,20 @@ runs:
           -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
           -d "$NEW_FIREWALL" \
           "https://api.digitalocean.com/v2/firewalls/9ac7c932-dcdb-440e-8afb-5318eda45a78"
+        
+        echo "Port is open. Checking..."
+        sleep 10
+        
+        UPDATED_ADDRESSES=$(curl -X GET \
+                            -H "Content-Type: application/json" \
+                            -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+                            "https://api.digitalocean.com/v2/firewalls/9ac7c932-dcdb-440e-8afb-5318eda45a78" \
+                            | jq '.firewall.inbound_rules[0].sources.addresses'
+        )
+        if [[ "$UPDATED_ADDRESSES" != *"$IP"* ]] ; then
+          echo "The port is not open for $IP."
+          echo "Current addresses: $UPDATED_ADDRESSES"
+          exit 1
+        fi
+        
         echo "Done"

@@ -71,7 +71,7 @@ public class ExcelExtractionTask extends ExtractionTask {
         do {
             try {
                 if (workbookFile instanceof PseaService.PseaFileInput) {
-                    workbook = WorkbookFactory.create(((PseaService.PseaFileInput) workbookFile).getFile());
+                    workbook = WorkbookFactory.create(((PseaService.PseaFileInput) workbookFile).getFile(), null, true);
                 } else if (workbookFile instanceof PseaService.PseaInputStream) {
                     workbook = WorkbookFactory.create(((PseaService.PseaInputStream) workbookFile).getInputStream());
                 } else {
@@ -89,6 +89,9 @@ public class ExcelExtractionTask extends ExtractionTask {
                         WorkbookFactory.addProvider(new HSSFWorkbookFactory());
                         retry = true;
                     }
+                }
+                if (!retry) {
+                    throw ioe;
                 }
             }
         } while (retry);

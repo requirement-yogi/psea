@@ -94,6 +94,9 @@ public interface PseaService {
     class PseaFileInput implements PseaInput {
         private final File file;
 
+        /**
+         * @deprecated since 1.9.2
+         */
         public PseaFileInput(File file, String fileName) {
             this.file = file;
         }
