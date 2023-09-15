@@ -14,7 +14,7 @@
 
 <p>
     Administration of PSEA:
-    <a href="${req.contextPath}/admin/plugins/com.playsql.play-sql-export-addon/admin.action">See this page</a>.
+    <a href="${req.contextPath}/admin/plugins/psea-admin/admin.action">See this page</a>.
 </p>
 
 <br>

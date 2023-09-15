@@ -23,7 +23,7 @@
         <version>${project.version}</version>
         <param name="atlassian-licensing-enabled">false</param>
         <vendor name="${project.organization.name}" url="${project.organization.url}" />
-        <param name="configure.url">/admin/plugins/${project.groupId}.${project.artifactId}/admin.action</param>
+        <param name="configure.url">/admin/plugins/psea-admin/admin.action</param>
 
         <param name="plugin-icon">img/psea-ry-16px.png</param>
         <param name="plugin-logo">img/psea-ry-72px.png</param>
@@ -51,16 +51,6 @@
         <resource type="download" name="psea-admin.js" location="js/psea-admin.js" />
     </web-resource>
 
-    <!--
-    I am not showing it here, because it is not very relevant for admins and doesn't deserve prime space.
-    It is still accessible through the "Configure" button.
-
-    <web-item key="marketplace-psea-global-admin-item" name="Menu - Global admin" section="system.admin/marketplace_confluence" weight="200">
-        <description>Entry in the Global Admin left-hand menu.</description>
-        <label key="com.playsql.psea.admin-link" />
-        <link linkId="global-admin-psea-item-link">/admin/plugins/${project.groupId}.${project.artifactId}/admin.action</link>
-    </web-item>-->
-
     <!-- Don't change this key - it's used by add-ons -->
     <component key="provider" class="com.playsql.psea.impl.PseaServiceImpl" public="true">
         <interface>com.playsql.psea.api.PseaService</interface>
@@ -77,13 +67,13 @@
 
     <xwork name="MVC Actions" key="xwork">
         <description>MVC actions for all pages provided by the plugin</description>
-        <package name="psea-general" extends="default" namespace="/plugins/${project.groupId}.${project.artifactId}">
+        <package name="psea-general" extends="default" namespace="/plugins/psea">
             <action name="about" class="com.playsql.psea.web.AboutAction" method="doDefault">
                 <interceptor-ref name="defaultStack" />
                 <result name="input" type="velocity">/about.vm</result>
             </action>
         </package>
-        <package name="psea-admin" extends="default" namespace="/admin/plugins/${project.groupId}.${project.artifactId}">
+        <package name="psea-admin" extends="default" namespace="/admin/plugins/psea-admin">
             <action name="admin" class="com.playsql.psea.web.PseaAdminAction" method="doAdmin">
                 <interceptor-ref name="defaultStack" />
                 <result name="input" type="velocity">/psea-admin.vm</result>
@@ -99,12 +89,12 @@
     <web-item key="marketplace-psea-global-admin-item" name="Menu - Global admin" section="system.admin/marketplace_confluence" weight="145">
         <description>Entry in the Global Admin left-hand menu.</description>
         <label key="global.admin.psea.item" />
-        <link linkId="global-admin-ry-item-link">/admin/plugins/${project.groupId}.${project.artifactId}/admin.action</link>
+        <link linkId="global-admin-ry-item-link">/admin/plugins/psea-admin/admin.action</link>
     </web-item>
 
     <web-item key="about" name="About link in the Help menu" section="system.help/pages" weight="60">
         <label key="com.playsql.psea.about-link" />
-        <link linkId="psea-about-link">/plugins/${project.groupId}.${project.artifactId}/about.action</link>
+        <link linkId="psea-about-link">/plugins/psea/about.action</link>
     </web-item>
 
     <ao key="ao-module">

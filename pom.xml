@@ -226,6 +226,7 @@
                             com.opensymphony.webwork;resolution:=optional,
                             com.opensymphony.webwork.inerceptor;resolution:=optional,
                             org.apache.struts2;resolution:=optional,
+                            org.apache.struts2.dispatcher;resolution:=optional,
                             com.opensymphony.xwork2;resolution:=optional,
 
                             com.google.common.collect;version="0.0.0",
