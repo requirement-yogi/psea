@@ -208,7 +208,7 @@
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
                 <artifactId>amps-maven-plugin</artifactId>
-                <version>8.4.0</version>
+                <version>8.11.4</version>
                 <extensions>true</extensions>
                 <configuration>
                     <systemPropertyVariables>
@@ -353,12 +353,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.3.1</version>
+                    <version>3.3.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.5.0</version>
+                    <version>3.6.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -474,7 +474,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>license-maven-plugin</artifactId>
-                        <version>2.2.0</version>
+                        <version>2.3.0</version>
                         <configuration>
                             <!--
                                 You don't need to run the license plugin manually, it is part of the build (see executions).
@@ -577,10 +577,10 @@
         <confluence.version>7.13.0</confluence.version>
         <confluence.data.version>7.13.0</confluence.data.version>
         <plugin.testrunner.version>1.2.3</plugin.testrunner.version>
-        <junit.version>5.8.1</junit.version>
+        <junit.version>5.10.0</junit.version>
         <skipTests>false</skipTests>
         <ao.version>3.2.10</ao.version>
-        <poi.version>5.2.3</poi.version>
+        <poi.version>5.2.4</poi.version>
     </properties>
 
 </project>
