@@ -23,15 +23,14 @@ package com.playsql.psea.impl;
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
-import com.playsql.psea.db.entities.DBPseaTask;
 import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.dto.PseaLimitException;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.CoreMatchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 

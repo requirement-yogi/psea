@@ -24,14 +24,15 @@ import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.Value;
 import com.playsql.psea.api.WorkbookAPI;
 import org.apache.commons.io.FileUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class CreateExcelFileTest {
 

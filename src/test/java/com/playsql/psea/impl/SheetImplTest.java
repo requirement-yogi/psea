@@ -23,29 +23,28 @@ package com.playsql.psea.impl;
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.Value;
 import com.playsql.psea.dto.PseaLimitException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.hamcrest.CoreMatchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SheetImplTest {
 
     private XSSFWorkbook workbook;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         workbook = new XSSFWorkbook();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         workbook.close();
     }
