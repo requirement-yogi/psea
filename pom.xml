@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.playsql</groupId>
     <artifactId>play-sql-export-addon</artifactId>
-    <version>1.9.3</version>
+    <version>1.9-SNAPSHOT</version>
 
     <organization>
         <name>Requirement Yogi</name>
