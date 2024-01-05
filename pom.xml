@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.playsql</groupId>
     <artifactId>play-sql-export-addon</artifactId>
-    <version>1.9-SNAPSHOT</version>
+    <version>1.9.3</version>
 
     <organization>
         <name>Requirement Yogi</name>
@@ -596,11 +596,11 @@
              - You have a section <extensions> with wagon-http 2.10, to fix a bug of maven-deploy-plugin.
          -->
         <repository>
-            <id>playsql.public.releases</id>
+            <id>yogi.public.releases</id>
             <url>https://maven.dev.requirementyogi.com/repository/public-release</url>
         </repository>
         <snapshotRepository>
-            <id>playsql.public.snapshots</id>
+            <id>yogi.public.snapshots</id>
             <url>https://maven.dev.requirementyogi.com/repository/public-snapshots</url>
         </snapshotRepository>
     </distributionManagement>

@@ -4,7 +4,7 @@ package com.playsql.psea.web;
  * #%L
  * PSEA
  * %%
- * Copyright (C) 2016 - 2023 Requirement Yogi S.A.S.U.
+ * Copyright (C) 2016 - 2024 Requirement Yogi S.A.S.U.
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
