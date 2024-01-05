@@ -25,9 +25,10 @@ import com.playsql.psea.api.Sheet;
 import com.playsql.psea.api.WorkbookAPI;
 import com.playsql.psea.dto.PseaLimitException;
 import com.playsql.psea.utils.Utils;
-import org.apache.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -35,7 +36,7 @@ import java.util.function.Consumer;
 
 public final class WorkbookAPIImpl implements WorkbookAPI {
 
-    private final static org.apache.log4j.Logger LOG = Logger.getLogger(WorkbookAPIImpl.class);
+    private final static Logger LOG = LoggerFactory.getLogger(WorkbookAPIImpl.class);
 
     private final XSSFWorkbook workbook;
 

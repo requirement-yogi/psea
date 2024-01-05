@@ -30,7 +30,8 @@ import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.impl.PseaServiceImpl;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -42,7 +43,7 @@ import static com.playsql.psea.db.dao.PseaTaskDAO.ITEMS_IN_UI;
 
 public class PseaAdminAction extends ConfluenceActionSupport {
 
-    private static final Logger log = Logger.getLogger(PseaAdminAction.class);
+    private static final Logger log = LoggerFactory.getLogger(PseaAdminAction.class);
 
     private final long SIZE_K = 1000L; // Don't set 1024, it's not bytes
     private final long SIZE_M = 1000000L;
