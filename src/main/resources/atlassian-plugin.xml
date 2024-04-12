@@ -51,20 +51,6 @@
         <resource type="download" name="psea-admin.js" location="js/psea-admin.js" />
     </web-resource>
 
-    <!-- Don't change this key - it's used by add-ons -->
-    <component key="provider" class="com.playsql.psea.impl.PseaServiceImpl" public="true">
-        <interface>com.playsql.psea.api.PseaService</interface>
-    </component>
-
-    <component key="pseaTaskDAO" class="com.playsql.psea.db.dao.PseaTaskDAO" />
-    <component key="servlet-adaptor" class="com.atlassian.confluence.compat.struts2.servletactioncontext.ServletActionContextCompatManager" name="Compatibility manager for servlets" />
-
-    <component-import key="plugin-settings" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory" />
-    <component-import key="access-mode-service" interface="com.atlassian.confluence.api.service.accessmode.AccessModeService" />
-    <component-import key="ao" name="Active Objects service" interface="com.atlassian.activeobjects.external.ActiveObjects"/>
-    <component-import key="license-service" name="Host application license service" interface="com.atlassian.confluence.license.LicenseService"/>
-
-
     <xwork name="MVC Actions" key="xwork">
         <description>MVC actions for all pages provided by the plugin</description>
         <package name="psea-general" extends="default" namespace="/plugins/psea">

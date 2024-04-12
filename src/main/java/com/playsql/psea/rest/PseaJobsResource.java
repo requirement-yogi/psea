@@ -23,10 +23,12 @@ package com.playsql.psea.rest;
 import com.atlassian.confluence.security.PermissionManager;
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
 import com.atlassian.confluence.user.ConfluenceUser;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.db.entities.DBPseaTask;
 import com.playsql.psea.dto.DTOPseaTask;
 
+import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
@@ -39,7 +41,9 @@ public class PseaJobsResource {
     private final PseaTaskDAO dao;
     private final PermissionManager permissionManager;
 
-    public PseaJobsResource(PseaTaskDAO dao, PermissionManager permissionManager) {
+    @Inject
+    public PseaJobsResource(PseaTaskDAO dao,
+                            @ComponentImport PermissionManager permissionManager) {
         this.dao = dao;
         this.permissionManager = permissionManager;
     }

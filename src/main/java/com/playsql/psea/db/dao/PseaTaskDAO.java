@@ -23,6 +23,7 @@ package com.playsql.psea.db.dao;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.confluence.user.ConfluenceUser;
 import com.atlassian.confluence.user.UserAccessor;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.google.common.collect.Lists;
 import com.playsql.psea.api.exceptions.PseaCancellationException;
 import com.playsql.psea.db.entities.DBPseaTask;
@@ -31,12 +32,14 @@ import com.playsql.psea.dto.DTOPseaTask.Status;
 import com.playsql.psea.dto.PseaLimitException;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Component
 public class PseaTaskDAO {
 
     /** Maximum size of the logs */
@@ -45,7 +48,8 @@ public class PseaTaskDAO {
     private final ActiveObjects ao;
     private final UserAccessor userAccessor;
 
-    public PseaTaskDAO(ActiveObjects ao, UserAccessor userAccessor) {
+    public PseaTaskDAO(@ComponentImport ActiveObjects ao,
+                       @ComponentImport UserAccessor userAccessor) {
         this.ao = ao;
         this.userAccessor = userAccessor;
     }

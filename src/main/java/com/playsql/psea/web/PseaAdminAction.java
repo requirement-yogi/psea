@@ -20,15 +20,15 @@ package com.playsql.psea.web;
  * #L%
  */
 
-import com.atlassian.confluence.api.service.exceptions.ServiceException;
-import com.atlassian.confluence.compat.struts2.servletactioncontext.ServletActionContextCompatManager;
 import com.atlassian.confluence.core.ConfluenceActionSupport;
 import com.atlassian.confluence.security.PermissionManager;
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.xwork.XsrfTokenGenerator;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.dto.DTOPseaTask;
 import com.playsql.psea.impl.PseaServiceImpl;
+import com.requirementyogi.server.utils.confluence.compat.CompatibilityLayer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
     private PseaTaskDAO pseaTaskDAO;
     private PermissionManager permissionManager;
     private XsrfTokenGenerator xsrfTokenGenerator;
-    private ServletActionContextCompatManager servletActionContextCompatManager;
+    private CompatibilityLayer compatibilityLayer;
 
     /** The limit for the pagination */
     private Integer limit;
@@ -94,12 +94,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
     /** Validates the XSRF Token, because this dumbass Confluence accepts anything even though we are in a 'validatingStack'.
      * @return*/
     private boolean validateToken() {
-        HttpServletRequest request = null;
-        try {
-            request = servletActionContextCompatManager.getRequest();
-        } catch (ServiceException se) {
-            log.info("HTTP request unavailable", se);
-        }
+        HttpServletRequest request = compatibilityLayer.getRequest();
         if (request == null) {
             addActionError("The HTTP request is missing. Please report your problem to the authors of Requirement Yogi.");
             return false;
@@ -189,7 +184,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
         this.pseaService = pseaService;
     }
 
-    public void setXsrfTokenGenerator(XsrfTokenGenerator xsrfTokenGenerator) {
+    public void setXsrfTokenGenerator(@ComponentImport XsrfTokenGenerator xsrfTokenGenerator) {
         this.xsrfTokenGenerator = xsrfTokenGenerator;
     }
 
@@ -253,12 +248,12 @@ public class PseaAdminAction extends ConfluenceActionSupport {
         this.limit = limit;
     }
 
-    public void setServletActionContextCompatManager(ServletActionContextCompatManager servletActionContextCompatManager) {
-        this.servletActionContextCompatManager = servletActionContextCompatManager;
+    public void setCompatibilityLayer(CompatibilityLayer compatibilityLayer) {
+        this.compatibilityLayer = compatibilityLayer;
     }
 
     @Override
-    public void setPermissionManager(PermissionManager permissionManager) {
+    public void setPermissionManager(@ComponentImport PermissionManager permissionManager) {
         this.permissionManager = permissionManager;
     }
 }

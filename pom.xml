@@ -5,14 +5,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.playsql</groupId>
+    <parent>
+        <!-- Yes, this project depends on another project
+        1. It removes it from open-source, which doesn't matter since no-one is going to fork it,
+        2. We don't have to synchronize the version numbers for the moment,
+        3. But it makes it much easier to manage the compatibility with Confluence 8.9 and 9.0.
+        -->
+        <groupId>com.playsql</groupId>
+        <artifactId>confluence-parent-pom</artifactId>
+        <version>3.8-SNAPSHOT</version>
+    </parent>
+
     <artifactId>play-sql-export-addon</artifactId>
     <version>1.9-SNAPSHOT</version>
-
-    <organization>
-        <name>Requirement Yogi</name>
-        <url>https://www.requirementyogi.com</url>
-    </organization>
 
     <name>PSEA - Export Add-on</name>
     <description>The add-on is a technical library that helps Requirement Yogi and Play SQL Spreadsheets export documents to Excel.</description>
@@ -20,31 +25,26 @@
 
     <licenses>
         <license>
-            <name>apache_v2</name>
-            <comments>Apache License, Version 2.0</comments>
-            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <name>Commercial</name>
+            <url>https://docs.requirementyogi.com/legal/eula</url>
+            <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
         </license>
     </licenses>
 
     <dependencies>
+        <!-- ################################ -->
+        <!-- ##     General libraries      ## -->
+        <!-- ################################ -->
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.10.1</version>
+            <groupId>com.playsql</groupId>
+            <artifactId>utils-confluence</artifactId>
+            <version>${project.parent.version}</version>
             <scope>compile</scope>
-        </dependency><!--
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.5.8</version>
-            <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.5.8</version>
-            <scope>provided</scope>
-        </dependency>-->
+
+        <!-- ################################ -->
+        <!-- ##       For Apache POI       ## -->
+        <!-- ################################ -->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
@@ -68,129 +68,9 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.atlassian.confluence</groupId>
-            <artifactId>confluence</artifactId>
-            <version>${confluence.version}</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>dom4j</groupId>
-                    <artifactId>dom4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.xml.bind</groupId>
-                    <artifactId>jaxb-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.xml.stream</groupId>
-                    <artifactId>stax-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.codehaus.woodstox</groupId>
-                    <artifactId>wstx-asl</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.sun</groupId>
-                    <artifactId>tools</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.atlassian.confluence.plugins</groupId>
-                    <artifactId>confluence-create-content-plugin</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-lang3</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-io</groupId>
-                    <artifactId>commons-io</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.code.gson</groupId>
-                    <artifactId>gson</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>xerces</groupId>
-                    <artifactId>xercesImpl</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.hamcrest</groupId>
-                    <artifactId>hamcrest-library</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- So that the vulnerability build doesn't yell at us -->
-                    <groupId>com.sun</groupId>
-                    <artifactId>tools</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.atlassian.fugue</groupId>
-                    <artifactId>fugue</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.atlassian.fugue</groupId>
-                    <artifactId>fugue</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <!-- As recommended for the Struts 2 upgrade on
-                 https://confluence.atlassian.com/doc/struts-2-upgrade-1155473773.html
-            -->
-            <groupId>com.atlassian.confluence.compat</groupId>
-            <artifactId>confluence-compat-lib</artifactId>
-            <version>1.5.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.java.dev.activeobjects</groupId>
-            <artifactId>activeobjects</artifactId>
-            <version>${ao.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.activeobjects</groupId>
-            <artifactId>activeobjects-core</artifactId>
-            <version>${ao.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.plugins.rest</groupId>
-            <artifactId>atlassian-rest-common</artifactId>
-            <version>6.1.2</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>jsr311-api</artifactId>
-            <version>1.1.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <version>1.11.0</version>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-lang3</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.16.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -206,63 +86,32 @@
         </dependency>
 
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.18.0</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>4.11.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest</artifactId>
-            <version>2.2</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-
 
     <build>
         <plugins>
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
                 <artifactId>amps-maven-plugin</artifactId>
-                <version>8.12.2</version>
+                <version>${atlz.libs.amps.version}</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <systemPropertyVariables>
-                        <upm.pac.disable>true</upm.pac.disable>
-                    </systemPropertyVariables>
-                    <instanceId>confluence</instanceId>
-                    <installPlugin>false</installPlugin>
-                    <httpPort>1991</httpPort>
-                    <contextPath>/confluence</contextPath>
-                    <products>
-                        <product>
-                            <id>confluence</id>
-                            <instanceId>confluence</instanceId>
-                            <version>${confluence.version}</version>
-                            <dataVersion>${confluence.data.version}</dataVersion>
-                            <containerId>tomcat7x</containerId>
-                        </product>
-                    </products>
+                    <pluginDependencies>
+                        <pluginDependency>
+                            <groupId>com.playsql</groupId>
+                            <artifactId>play-sql-export-addon</artifactId>
+                        </pluginDependency>
+                    </pluginDependencies>
                     <instructions>
+                        <!-- Ensure the plugin is Spring-powered -->
+                        <Spring-Context>*</Spring-Context>
+                        <Atlassian-Plugin-Key>${project.groupId}.${project.artifactId}</Atlassian-Plugin-Key>
+                        <Atlassian-Scan-Folders>META-INF/plugin-descriptors</Atlassian-Scan-Folders>
                         <Export-Package>
                             com.playsql.psea.api,
                             com.playsql.psea.api.exceptions,
@@ -271,68 +120,156 @@
                             <!-- According to https://confluence.atlassian.com/doc/struts-2-upgrade-1155473773.html -->
                             com.opensymphony.xwork;resolution:=optional,
                             com.opensymphony.webwork;resolution:=optional,
-                            com.opensymphony.webwork.inerceptor;resolution:=optional,
+                            com.opensymphony.webwork.interceptor;resolution:=optional,
                             org.apache.struts2;resolution:=optional,
                             org.apache.struts2.dispatcher;resolution:=optional,
+                            org.apache.struts2.interceptor.parameter;resolution:=optional,
                             com.opensymphony.xwork2;resolution:=optional,
 
-                            com.google.common.collect;version="0.0.0",
-                            com.google.common.base;version="0.0.0",
-                            com.google.common.io;version="0.0.0",
-                            com.google.gson;version="0.0.0",
-                            com.google.gson.*;version="0.0.0",
-                            com.atlassian.confluence.core;version="0.0.0",
-                            com.atlassian.sal.api*;version="0.0.0",
-                            com.atlassian.confluence.api*;version="0.0.0",
+                            <!-- Shouldn't be necessary anymore. Also, not provided by Confluence. -->
+                            org.apache.http*;version="0.0.0",
+                            com.atlassian.util.profiling;resolution:=optional;version="0.0.0",
+
+                            <!-- Necessary for CQLSearchCompat719, if used -->
+                            bucket.core.persistence.hibernate;resolution:=optional;version="0.0.0",
                             com.atlassian.activeobjects.external;version="0.0.0",
                             com.atlassian.activeobjects.spi;version="0.0.0",
-                            com.atlassian.plugins.rest.common.security;version="0.0.0",
+                            com.atlassian.applinks.api;version="0.0.0",
+                            com.atlassian.applinks.api.*;version="0.0.0",
+                            com.atlassian.bonnie;version="0.0.0",
+                            com.atlassian.cache;version="0.0.0",
+                            com.atlassian.config*;resolution:=optional;version="0.0.0",
+
+                            <!-- We must put this instruction before confluence.*, otherwise it imports
+                                 the package as mandatory
+                                 -->
+                            com.atlassian.confluence.search.v2.searchfilter;resolution:=optional;version="0.0.0",
+
+                            <!-- The real problem here is that 2 subpackages (createcontent and featurediscovery) have
+                                 versions 5.0.9 and 1.9 while the parent package com.atlassian.confluence requires 5.8.6 -->
+                            com.atlassian.confluence.*;version="0.0.0",
+                            <!--com.atlassian.confluence.pages.persistence.dao.bulk*;version="0.0.0",-->
+                            <!--com.atlassian.confluence.plugins.createcontent*;version="0.0.0",
+                            com.atlassian.confluence.plugins.featurediscovery.service;version="0.0.0",-->
+                            com.atlassian.core.filters*;resolution:=optional;version="0.0.0",
+                            com.atlassian.core.exception;resolution:=optional;version="0.0.0",
+                            com.atlassian.core.exception.*;resolution:=optional;version="0.0.0",
+                            com.atlassian.core.task;version="0.0.0",
+                            com.atlassian.core.task.*;version="0.0.0",
+                            com.atlassian.core.user.preferences;resolution:=optional;version="0.0.0",
+                            com.atlassian.core.user.preferences.*;resolution:=optional;version="0.0.0",
+                            com.atlassian.core.util;resolution:=optional;version="0.0.0",
+                            com.atlassian.core.util.*;resolution:=optional;version="0.0.0",
+                            com.atlassian.event.api;version="0.0.0",
+                            com.atlassian.extras.common.log;version="0.0.0",
+                            com.atlassian.hibernate;version="0.0.0",
+                            com.atlassian.plugin.module;version="0.0.0",
+                            com.atlassian.plugin.web;version="0.0.0",
+                            com.atlassian.plugin.web.*;version="0.0.0",
+                            com.atlassian.plugin.webresource;version="0.0.0",
+                            com.atlassian.plugin.descriptors;version="0.0.0",
+                            com.atlassian.plugin;version="0.0.0",
+                            com.atlassian.renderer;version="0.0.0",
+                            com.atlassian.scheduler;version="0.0.0",
+                            com.atlassian.scheduler.config;version="0.0.0",
+                            com.atlassian.scheduler.status;version="0.0.0",
+                            com.atlassian.sal.api.*;version="0.0.0",
+                            com.atlassian.upm.api.*;version="0.0.0",
+                            com.atlassian.user;version="0.0.0",
+                            com.atlassian.util.concurrent;resolution:=optional;version="0.0.0",
                             com.atlassian.xwork;version="0.0.0",
-                            org.springframework.beans.factory;version="0.0.0",
-                            org.apache.commons.lang3;version="0.0.0",
-                            org.apache.commons.lang3.mutable;version="0.0.0",
-                            net.java.ao.schema;version="0.0.0",
-                            net.java.ao;version="0.0.0",
-                            org.apache.log4j;version="0.0.0",
-                            org.slf4j*;version="0.0.0",
-                            org.xml.sax*;version="0.0.0",
-                            org.w3c.dom*;version="0.0.0",
-                            com.ctc.wstx*;version="0.0.0",
-                            javax.xml*;version="0.0.0",
+                            com.atlassian.annotations;version="0.0.0",
+                            com.atlassian.mail;version="0.0.0",
+                            com.atlassian.mail.queue;version="0.0.0",
+                            com.atlassian.beehive;version="0.0.0",
+                            com.atlassian.soy.renderer;version="0.0.0",
+                            com.atlassian.webresource.api.assembler;version="0.0.0",
+
+
+                            javax.annotation;version="0.0.0",
+                            javax.annotation.*;version="0.0.0",
+                            javax.imageio;version="0.0.0",
+                            javax.inject;resolution:=optional;version="0.0.0",
+                            javax.lang.model;version="0.0.0",
+                            javax.lang.model.*;version="0.0.0",
+                            javax.print.attribute;resolution:=optional;version="0.0.0",
+                            javax.print;resolution:=optional;version="0.0.0",
                             javax.servlet.http;version="0.0.0",
                             javax.servlet;version="0.0.0",
-                            javax.tools;version="0.0.0",
                             javax.ws.rs.core;version="0.0.0",
-                            javax.ws.rs;version="0.0.0"
+                            javax.ws.rs;version="0.0.0",
+                            javax.xml.bind.annotation;version="0.0.0",
+                            javax.xml.namespace;version="0.0.0",
+                            javax.xml.stream.events;version="0.0.0",
+                            javax.xml.stream;version="0.0.0",
+                            javax.xml.parsers;resolution:=optional;version="0.0.0",
+                            net.java.ao.schema;version="0.0.0",
+                            net.java.ao;version="0.0.0",
+                            com.fasterxml.jackson.annotation;version="0.0.0",
+                            org.joda.time*;resolution:=optional;version="0.0.0",
+                            org.slf4j*;resolution:=optional;version="0.0.0",
+
+
+                            <!--  For  atlassian-rest-v2-api-->
+                            com.atlassian.plugins.rest.api.security.annotation;resolution:=optional;version="0.0.0",
+                            com.atlassian.plugins.rest.api.security.exception;resolution:=optional;version="0.0.0",
+                            com.atlassian.plugins.rest.api.multipart;resolution:=optional;version="0.0.0",
+                            <!--  For the REST API v1 (before C8.9) -->
+                            com.atlassian.plugins.rest.common.multipart;resolution:=optional;version="0.0.0",
+                            <!-- End of REST APIs -->
+                            <!-- For the @Component annotation scanning -->
+                            org.springframework.stereotype;version="0.0.0",
+                            org.springframework.lang;version="0.0.0",
+                            org.springframework.beans;version="0.0.0",
+                            org.springframework.beans.factory;version="0.0.0",
+                            org.springframework.beans.factory.config;version="0.0.0",
+                            org.springframework.beans.factory.annotation;version="0.0.0",
+                            org.springframework.util;version="0.0.0",
+                            com.atlassian.spring.container;version="0.0.0",
+                            org.springframework.cglib.core,
+                            org.springframework.cglib.proxy,
+                            org.springframework.cglib.reflect
                         </Import-Package>
                     </instructions>
                     <banningExcludes>
-                        <!-- We can't import it because Apache POI uses 2.11, which has
-                             org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream,
-                             and Confluence's commons-io is 2.8.0 -->
+                        <!-- Atlassian said we MUST ship them in C8.7 if we want them -->
+                        <exclude>com.google.code.findbugs:jsr305</exclude>
+                        <exclude>com.google.guava:guava</exclude>
+                        <exclude>org.apache.commons:commons-lang3</exclude>
                         <exclude>commons-io:commons-io</exclude>
                     </banningExcludes>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.4.1</version>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.atlassian.plugin</groupId>
+                <!-- See https://bitbucket.org/atlassian/atlassian-spring-scanner -->
+                <artifactId>atlassian-spring-scanner-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>enforce-java</id>
+                        <id>attach-bundle-artifact</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>enforce</goal>
+                            <goal>attach-artifact</goal>
                         </goals>
                         <configuration>
-                            <rules>
-                                <requireMavenVersion>
-                                  <version>3.8.4</version>
-                                </requireMavenVersion>
-                                <requireJavaVersion>
-                                    <version>[11, 12)</version>
-                                </requireJavaVersion>
-                            </rules>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.build.directory}/${project.build.finalName}.jar</file>
+                                    <type>jar</type>
+                                </artifact>
+                            </artifacts>
                         </configuration>
                     </execution>
                 </executions>
@@ -356,203 +293,16 @@
                 </excludes>
             </resource>
         </resources>
-        <pluginManagement>
-            <!-- We set the plugin versions to get a deterministic build. To list versions to upgrade, see
-                 mvn versions:display-dependency-updates
-                 mvn versions:display-plugin-updates
-                 mvn versions:display-property-updates -->
-            <plugins>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.12.1</version>
-                    <configuration>
-                        <source>${java.version}</source>
-                        <target>${java.version}</target>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>3.1.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>3.1.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.3.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.3.2</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.6.3</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.16.2</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.owasp</groupId>
-                    <artifactId>dependency-check-maven</artifactId>
-                    <version>9.0.7</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <extensions>
-            <extension>
-                <!-- This is necessary for mvn deploy:deploy to work.
-                     If not, it doesn't use the user/pass from the settings.xml to upload
-                     in the Maven repository. Funny thing is, deploy:deploy-file always uses it.
-                     Thanks https://stackoverflow.com/questions/56201944/maven-deploydeploy-file-working-but-maven-deploy-not-working for this tip.
-                 -->
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-http</artifactId>
-                <version>2.10</version>
-            </extension>
-        </extensions>
     </build>
 
     <profiles>
         <profile>
-            <id>vulnerabilities</id>
-            <build>
-                <!-- We set the plugin versions to get a deterministic build. To list versions to upgrade, see
-                     mvn versions:display-dependency-updates
-                     mvn versions:display-plugin-updates
-                     mvn versions:display-property-updates -->
-                <plugins>
-                    <plugin>
-                        <!-- Suggest to upgrade our libraries, plugins and properties -->
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>versions-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>display-dependency-updates</goal>
-                                    <goal>display-plugin-updates</goal>
-                                    <goal>display-property-updates</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                      <groupId>org.owasp</groupId>
-                      <artifactId>dependency-check-maven</artifactId>
-                      <configuration>
-                          <failBuildOnCVSS>7</failBuildOnCVSS>
-                          <skipProvidedScope>true</skipProvidedScope>
-                          <skipRuntimeScope>true</skipRuntimeScope>
-                          <suppressionFile>src/main/other/owasp-vulnerability-suppression.xml</suppressionFile>
-                          <!-- Set up a proxy on Bamboo using the instructions at https://github.com/stevespringett/nist-data-mirror .
-                               Do NOT make it accessible from the outer world.
-                               docker build \-\-rm -t sspringett/nvdmirror
-                               docker run -dit \-\-name mirror -p 3221:3221 sspringett/nvdmirror
-                          <cveUrlBase>http://localhost:3221/nvdcve-1.1-%d.json.gz</cveUrlBase>
-                          <cveUrlModified>http://localhost:3221/nvdcve-1.1-modified.json.gz</cveUrlModified>
-                          -->
-                      </configuration>
-                      <executions>
-                          <execution>
-                              <phase>validate</phase>
-                              <goals>
-                                  <goal>check</goal>
-                              </goals>
-                          </execution>
-                      </executions>
-                    </plugin>
-                </plugins>
-            </build>
-            <reporting>
-                <plugins>
-                    <plugin>
-                      <groupId>org.codehaus.mojo</groupId>
-                      <artifactId>versions-maven-plugin</artifactId>
-                      <reportSets>
-                        <reportSet>
-                          <reports>
-                            <report>dependency-updates-report</report>
-                            <report>plugin-updates-report</report>
-                            <report>property-updates-report</report>
-                          </reports>
-                        </reportSet>
-                      </reportSets>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.owasp</groupId>
-                        <artifactId>dependency-check-maven</artifactId>
-                        <reportSets>
-                            <reportSet>
-                                <reports>
-                                    <report>aggregate</report>
-                                </reports>
-                            </reportSet>
-                        </reportSets>
-                    </plugin>
-                </plugins>
-            </reporting>
-        </profile>
-        <profile>
-            <!-- You can activate this profile manually using: mvn install -Prelease -->
             <id>release</id>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>license-maven-plugin</artifactId>
-                        <version>2.3.0</version>
-                        <configuration>
-                            <!--
-                                You don't need to run the license plugin manually, it is part of the build (see executions).
-                                It retrieves all licenses of all dependencies into src/licenses/THIRD-PARTY-included-modules.txt
-
-                                NB: How to retrieve licenses on a new project:
-                                mvn clean license:download-licenses
-                            -->
-                            <projectName>PSEA</projectName>
-                            <organizationName>Requirement Yogi S.A.S.U.</organizationName>
-                            <inceptionYear>2016</inceptionYear>
-
-                            <!-- This is an open-source project under APL v2 -->
-                            <licenseName>apache_v2</licenseName>
-                            <skipUpdateLicense>false</skipUpdateLicense>
-
-                            <!-- Forcefully updates the copyright in the headers of files -->
-                            <canUpdateCopyright>true</canUpdateCopyright>
-                            <!-- Skips the goal download-licenses -->
-                            <skipDownloadLicenses>false</skipDownloadLicenses>
-                            <!-- Skips the goal download-licenses -->
-                            <skipUpdateLicense>false</skipUpdateLicense>
-                            <!-- The license of each module -->
-                            <licenseFile>${basedir}/src/license/LICENSE.txt</licenseFile>
-                            <useMissingFile>true</useMissingFile>
-                            <sortArtifactByName>true</sortArtifactByName>
-                            <!-- The file with the list of licenses, for those which can't be found automatically -->
-                            <missingFile>src/license/THIRD-PARTY.properties</missingFile>
-                            <!-- Same as 'missingFile' but in XML, probably -->
-                            <licensesConfigFile>src/license/licenses-manual.xml</licensesConfigFile>
-                            <!-- All licenses which could automatically be fetched. About the current module only.-->
-                            <licensesOutputFile>src/license/licenses-generated.xml</licensesOutputFile>
-                            <!-- Dump the text of all licenses of third parties. About the current module only. -->
-                            <licensesOutputDirectory>src/license/text</licensesOutputDirectory>
-                            <!-- A list of dependencies for the subtree and their licenses -->
-                            <thirdPartyFilename>THIRD-PARTY-included-modules.txt</thirdPartyFilename>
-                            <!-- Where to put the THIRD-PARTY.txt file -->
-                            <outputDirectory>${project.basedir}/src/license</outputDirectory>
-                            <!-- In the binary distribution, we exclude libraries which are only compiled against, as long
-                                 as they're not GPL. Atlassian Confluence is considered with a developer license. -->
-                            <includedScopes>compile</includedScopes>
-
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>download-licenses2</id>
@@ -561,30 +311,43 @@
                                 <phase>generate-resources</phase>
                                 <goals>
                                     <goal>download-licenses</goal>
-                                    <goal>update-file-header</goal>
-                                    <goal>update-project-license</goal>
                                     <goal>add-third-party</goal>
                                 </goals>
                             </execution>
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
-                                <configuration>
-                                    <doclint>none</doclint>
-                                </configuration>
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
+                                <configuration>
+                                    <sourcepath>${basedir}/src/main/java:${basedir}/../libs/utils/src/main/java</sourcepath>
+                                    <!--<sourcepath>${basedir}/src/main/java</sourcepath>-->
+                                    <subpackages>com.playsql.requirementyogi.api,com.playsql.requirementyogi.ao,com.playsql.utils,com.playsql.utils.sharedbeans,com.playsql.utils.sharedbeans.v4,com.playsql.utils.sharedbeans.v9,com.playsql.utils.xml,com.playsql.utils.tc,com.playsql.utils.json,com.playsql.utils.applinks,com.playsql.utils.activeobjects,com.playsql.requirementyogi.rest.beans.input,com.playsql.requirementyogi.rest.beans.output,com.playsql.requirementyogi.reporting.api</subpackages>
+                                    <excludePackageNames>com.playsql.requirementyogi.ao.upgradetasks</excludePackageNames>
+                                    <doclint>none</doclint>
+                                    <show>private</show>
+                                    <!-- If I set source/release=8 and execute with JDK11, it throws an AssertionError -->
+                                    <!-- I wish I could have the javadoc style of Java 11 -->
+                                    <!--<javadocExecutable>/Library/Java/JavaVirtualMachines/adoptopenjdk-12.jdk/Contents/Home/bin/javadoc</javadocExecutable>-->
+                                    <!--<source>8</source>-->
+                                    <doctitle>${project.name} (Confluence) ${project.version} API</doctitle>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <skipTests>true</skipTests>
+            </properties>
         </profile>
     </profiles>
 
@@ -606,15 +369,7 @@
     </distributionManagement>
 
     <properties>
-        <java.version>1.8</java.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <allowGoogleTracking>false</allowGoogleTracking>
-        <confluence.version>7.13.0</confluence.version>
-        <confluence.data.version>7.13.0</confluence.data.version>
-        <plugin.testrunner.version>1.2.3</plugin.testrunner.version>
-        <junit.version>5.10.1</junit.version>
-        <skipTests>false</skipTests>
-        <ao.version>3.2.10</ao.version>
         <poi.version>5.2.5</poi.version>
     </properties>
 

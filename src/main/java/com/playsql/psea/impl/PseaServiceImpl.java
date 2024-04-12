@@ -25,6 +25,8 @@ import com.atlassian.confluence.api.model.accessmode.AccessMode;
 import com.atlassian.confluence.api.service.accessmode.AccessModeService;
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
 import com.atlassian.confluence.user.ConfluenceUser;
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import com.playsql.psea.api.ExcelImportConsumer;
@@ -38,6 +40,7 @@ import com.playsql.psea.dto.DTOPseaTask.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -48,6 +51,8 @@ import java.util.function.Consumer;
 
 import static com.playsql.psea.dto.DTOPseaTask.Status.*;
 
+@Component("provider") // Don't change this key - it's used by add-ons
+@ExportAsService(PseaService.class)
 public class PseaServiceImpl implements PseaService, DisposableBean {
 
     private final static Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
@@ -77,10 +82,10 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
      */
     private final ThreadLocal<Long> threadLocalTaskId = new ThreadLocal<>();
 
-    public PseaServiceImpl(PluginSettingsFactory pluginSettingsFactory,
-                           AccessModeService accessModeService,
+    public PseaServiceImpl(@ComponentImport PluginSettingsFactory pluginSettingsFactory,
+                           @ComponentImport AccessModeService accessModeService,
                            PseaTaskDAO dao,
-                           ActiveObjects ao
+                           @ComponentImport ActiveObjects ao
     ) {
         this.pluginSettingsFactory = pluginSettingsFactory;
         this.accessModeService = accessModeService;
