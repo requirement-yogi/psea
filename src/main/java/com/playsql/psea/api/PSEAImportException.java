@@ -20,8 +20,6 @@ package com.playsql.psea.api;
  * #L%
  */
 
-import com.playsql.psea.api.PseaService.PseaInput;
-
 /**
  * A checked exception, for all situations where an import fails (most often when Apache POI fails)
  */

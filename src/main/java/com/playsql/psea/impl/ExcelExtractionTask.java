@@ -22,10 +22,7 @@ package com.playsql.psea.impl;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.google.common.collect.Lists;
-import com.playsql.psea.api.ExcelImportConsumer;
-import com.playsql.psea.api.ImportableCell;
-import com.playsql.psea.api.PSEAImportException;
-import com.playsql.psea.api.PseaService;
+import com.playsql.psea.api.*;
 import com.playsql.psea.impl.beans.ImportableCellImpl;
 import com.playsql.psea.impl.beans.ImportableRowImpl;
 import com.playsql.psea.impl.beans.ImportableSheetImpl;
@@ -33,6 +30,8 @@ import com.playsql.psea.utils.Utils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.poi.hssf.usermodel.HSSFWorkbookFactory;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory;
 import org.slf4j.Logger;
@@ -62,7 +61,7 @@ public class ExcelExtractionTask extends ExtractionTask {
         super(ao, rowConsumer);
     }
 
-    private void initialize(PseaService.PseaInput workbookFile) throws OutOfMemoryError, PSEAImportException, IOException {
+    private void initialize(PseaInput workbookFile) throws OutOfMemoryError, PSEAImportException, IOException {
 
         clock = Utils.Clock.start("Reading Excel file " + workbookFile.getFileName() + " - ");
 
@@ -70,10 +69,10 @@ public class ExcelExtractionTask extends ExtractionTask {
         int foolProof = 2;
         do {
             try {
-                if (workbookFile instanceof PseaService.PseaFileInput) {
-                    workbook = WorkbookFactory.create(((PseaService.PseaFileInput) workbookFile).getFile(), null, true);
-                } else if (workbookFile instanceof PseaService.PseaInputStream) {
-                    workbook = WorkbookFactory.create(((PseaService.PseaInputStream) workbookFile).getInputStream());
+                if (workbookFile instanceof PseaFileInput) {
+                    workbook = WorkbookFactory.create(((PseaFileInput) workbookFile).getFile(), null, true);
+                } else if (workbookFile instanceof PseaInputStream) {
+                    workbook = WorkbookFactory.create(((PseaInputStream) workbookFile).getInputStream());
                 } else {
                     throw new RuntimeException("Unknown PseaInput class: " + workbookFile);
                 }
@@ -109,7 +108,7 @@ public class ExcelExtractionTask extends ExtractionTask {
     }
 
     @Override
-    public void extract(PseaService.PseaInput workbookFile) throws OutOfMemoryError, PSEAImportException {
+    public void extract(PseaInput workbookFile) throws OutOfMemoryError, PSEAImportException {
 
         try {
             initialize(workbookFile);

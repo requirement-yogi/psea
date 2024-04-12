@@ -29,14 +29,13 @@ import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-import com.playsql.psea.api.ExcelImportConsumer;
-import com.playsql.psea.api.PSEAImportException;
-import com.playsql.psea.api.PseaService;
-import com.playsql.psea.api.WorkbookAPI;
+import com.playsql.psea.api.*;
 import com.playsql.psea.api.exceptions.PseaCancellationException;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.db.entities.DBPseaTask;
 import com.playsql.psea.dto.DTOPseaTask.Status;
+import com.playsql.utils.PluginUtil;
+import com.playsql.utils.compat.InternalBeanFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -75,6 +74,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
     private final PseaTaskDAO dao;
     private final ExecutorService executorService;
     private final ActiveObjects ao;
+    private final String version;
 
     /**
      * The monitoring task. Removing items from the ThreadLocal is guaranteed by the fact that it's managed in a
@@ -85,13 +85,20 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
     public PseaServiceImpl(@ComponentImport PluginSettingsFactory pluginSettingsFactory,
                            @ComponentImport AccessModeService accessModeService,
                            PseaTaskDAO dao,
-                           @ComponentImport ActiveObjects ao
+                           @ComponentImport ActiveObjects ao,
+                           InternalBeanFactory internalBeanFactory
     ) {
         this.pluginSettingsFactory = pluginSettingsFactory;
         this.accessModeService = accessModeService;
         this.dao = dao;
         this.ao = ao;
+        this.version = internalBeanFactory.getPluginVersion(PluginUtil.PLUGIN_PSEA_KEY);
         this.executorService = Executors.newCachedThreadPool();
+    }
+
+    @Override
+    public String getVersion() {
+        return version;
     }
 
     /**
@@ -348,4 +355,5 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
     public void destroy() throws Exception {
         executorService.shutdownNow();
     }
+
 }

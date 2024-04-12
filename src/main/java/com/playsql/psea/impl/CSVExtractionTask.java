@@ -22,10 +22,7 @@ package com.playsql.psea.impl;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.google.common.collect.Lists;
-import com.playsql.psea.api.ExcelImportConsumer;
-import com.playsql.psea.api.ImportableCell;
-import com.playsql.psea.api.PSEAImportException;
-import com.playsql.psea.api.PseaService;
+import com.playsql.psea.api.*;
 import com.playsql.psea.impl.beans.ImportableCellImpl;
 import com.playsql.psea.impl.beans.ImportableRowImpl;
 import com.playsql.psea.impl.beans.ImportableSheetImpl;
@@ -33,8 +30,6 @@ import com.playsql.psea.utils.Utils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +39,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Extractor for CSV files, to make them look like XLS/XLSX files
@@ -61,7 +53,7 @@ public class CSVExtractionTask extends ExtractionTask {
     }
 
     @Override
-    public void extract(PseaService.PseaInput workbookFile) throws OutOfMemoryError, PSEAImportException {
+    public void extract(PseaInput workbookFile) throws OutOfMemoryError, PSEAImportException {
         clock = Utils.Clock.start("Reading CSV file " + workbookFile.getFileName() + " - ");
         int totalItems;
         try (Reader reader = getReader(workbookFile);
@@ -124,11 +116,11 @@ public class CSVExtractionTask extends ExtractionTask {
         }
     }
 
-    private Reader getReader(PseaService.PseaInput pseaInput) throws IOException {
-        if (pseaInput instanceof PseaService.PseaFileInput) {
-            return new FileReader(((PseaService.PseaFileInput) pseaInput).getFile());
-        } else if (pseaInput instanceof PseaService.PseaInputStream) {
-            return new InputStreamReader(((PseaService.PseaInputStream) pseaInput).getInputStream());
+    private Reader getReader(PseaInput pseaInput) throws IOException {
+        if (pseaInput instanceof PseaFileInput) {
+            return new FileReader(((PseaFileInput) pseaInput).getFile());
+        } else if (pseaInput instanceof PseaInputStream) {
+            return new InputStreamReader(((PseaInputStream) pseaInput).getInputStream());
         } else {
             throw new RuntimeException("Unknown PseaInput class: " + pseaInput);
         }

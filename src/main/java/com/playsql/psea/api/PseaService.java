@@ -23,7 +23,6 @@ package com.playsql.psea.api;
 import com.playsql.psea.api.exceptions.PseaCancellationException;
 
 import java.io.File;
-import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -84,56 +83,9 @@ public interface PseaService {
             boolean transactionHasAlreadyStarted
     ) throws PseaCancellationException;
 
+
     /**
-     * A file or an inputstream that is used as an input for the Excel import
-      */
-    interface PseaInput {
-        String getFileName();
-    }
-
-    class PseaFileInput implements PseaInput {
-        private final File file;
-
-        /**
-         * @deprecated since 1.9.2
-         */
-        public PseaFileInput(File file, String fileName) {
-            this.file = file;
-        }
-
-        /**
-         * @since PSEA 1.7
-         */
-        public PseaFileInput(File file) {
-            this.file = file;
-        }
-
-        public File getFile() {
-            return file;
-        }
-
-        @Override
-        public String getFileName() {
-            return file.getName();
-        }
-    }
-
-    class PseaInputStream implements PseaInput {
-        private final InputStream inputStream;
-        private final String fileName;
-
-        public PseaInputStream(InputStream inputStream, String fileName) {
-            this.inputStream = inputStream;
-            this.fileName = fileName;
-        }
-
-        public InputStream getInputStream() {
-            return inputStream;
-        }
-
-        @Override
-        public String getFileName() {
-            return fileName;
-        }
-    }
+     * Returns the version of PSEA
+     */
+    String getVersion();
 }

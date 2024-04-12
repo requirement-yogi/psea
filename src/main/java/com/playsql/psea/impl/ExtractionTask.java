@@ -23,10 +23,8 @@ package com.playsql.psea.impl;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.playsql.psea.api.ExcelImportConsumer;
 import com.playsql.psea.api.PSEAImportException;
-import com.playsql.psea.api.PseaService;
+import com.playsql.psea.api.PseaInput;
 import com.playsql.psea.utils.Utils;
-
-import java.util.function.Consumer;
 
 /**
  * Task that can extract a file and call a rowConsumer
@@ -54,6 +52,6 @@ public abstract class ExtractionTask {
         this.maxRecordsPerTransaction = rowConsumer.getMaxRecordsPerTransaction();
     }
 
-    public abstract void extract(PseaService.PseaInput workbookFile) throws OutOfMemoryError, PSEAImportException;
+    public abstract void extract(PseaInput workbookFile) throws OutOfMemoryError, PSEAImportException;
 
 }

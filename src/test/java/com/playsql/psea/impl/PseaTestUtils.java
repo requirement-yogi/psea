@@ -31,6 +31,7 @@ import com.atlassian.sal.api.transaction.TransactionCallback;
 import com.google.common.collect.Maps;
 import com.playsql.psea.db.dao.PseaTaskDAO;
 import com.playsql.psea.db.entities.DBPseaTask;
+import com.playsql.utils.compat.InternalBeanFactory;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mockito.Mockito;
 
@@ -106,6 +107,7 @@ public class PseaTestUtils {
     public final UserAccessor userAccessor = Mockito.mock(UserAccessor.class);
     public final PseaTaskDAO dao = new PseaTaskDAO(ao, userAccessor);
     public final DBPseaTask record = Mockito.mock(DBPseaTask.class);
+    public final InternalBeanFactory internalBeanFActory = Mockito.mock(InternalBeanFactory.class);
 
     {
         long recordId = 1L;
@@ -119,6 +121,6 @@ public class PseaTestUtils {
         when(ao.create(any())).thenAnswer(invocation -> record);
     }
 
-    public PseaServiceImpl psea = new PseaServiceImpl(pluginSettingsFactory, accessModeService, dao, ao);
+    public PseaServiceImpl psea = new PseaServiceImpl(pluginSettingsFactory, accessModeService, dao, ao, internalBeanFActory);
 
 }
