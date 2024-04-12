@@ -114,7 +114,7 @@
                         <Atlassian-Scan-Folders>META-INF/plugin-descriptors</Atlassian-Scan-Folders>
                         <Export-Package>
                             com.playsql.psea.api,
-                            com.playsql.psea.api.exceptions,
+                            com.playsql.psea.api.exceptions
                         </Export-Package>
                         <Import-Package>
                             <!-- According to https://confluence.atlassian.com/doc/struts-2-upgrade-1155473773.html -->
@@ -327,8 +327,7 @@
                                 <configuration>
                                     <sourcepath>${basedir}/src/main/java:${basedir}/../libs/utils/src/main/java</sourcepath>
                                     <!--<sourcepath>${basedir}/src/main/java</sourcepath>-->
-                                    <subpackages>com.playsql.requirementyogi.api,com.playsql.requirementyogi.ao,com.playsql.utils,com.playsql.utils.sharedbeans,com.playsql.utils.sharedbeans.v4,com.playsql.utils.sharedbeans.v9,com.playsql.utils.xml,com.playsql.utils.tc,com.playsql.utils.json,com.playsql.utils.applinks,com.playsql.utils.activeobjects,com.playsql.requirementyogi.rest.beans.input,com.playsql.requirementyogi.rest.beans.output,com.playsql.requirementyogi.reporting.api</subpackages>
-                                    <excludePackageNames>com.playsql.requirementyogi.ao.upgradetasks</excludePackageNames>
+                                    <subpackages>com.playsql.psea.api,com.playsql.psea.exceptions</subpackages>
                                     <doclint>none</doclint>
                                     <show>private</show>
                                     <!-- If I set source/release=8 and execute with JDK11, it throws an AssertionError -->
