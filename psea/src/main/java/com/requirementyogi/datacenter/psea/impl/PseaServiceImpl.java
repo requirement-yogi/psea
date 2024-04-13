@@ -9,8 +9,8 @@ import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-import com.playsql.utils.PluginUtil;
-import com.playsql.utils.compat.InternalBeanFactory;
+import com.requirementyogi.datacenter.utils.PluginUtil;
+import com.requirementyogi.datacenter.utils.compat.InternalBeanFactory;
 import com.requirementyogi.datacenter.psea.api.*;
 import com.requirementyogi.datacenter.psea.api.exceptions.PseaCancellationException;
 import com.requirementyogi.datacenter.psea.db.dao.PseaTaskDAO;
@@ -37,10 +37,11 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
     private final static Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
     static final String FILE_PREFIX = "excel-export-";
     static final String FILE_EXTENSION = ".xlsx";
-    private static final String SETTINGS_ROW_LIMIT = "com.requirementyogi.psea.row-limit";
-    private static final String SETTINGS_TIME_LIMIT = "com.requirementyogi.psea.time-limit";
-    private static final String SETTINGS_DATA_LIMIT = "com.requirementyogi.psea.data-limit";
-    private static final String SETTINGS_CONCURRENT_JOBS_LIMIT = "com.requirementyogi.psea.jobs-limit";
+    public static final String SETTINGS_ROOT = "com.requirementyogi.psea";
+    private static final String SETTINGS_ROW_LIMIT = SETTINGS_ROOT + ".row-limit";
+    private static final String SETTINGS_TIME_LIMIT = SETTINGS_ROOT + ".time-limit";
+    private static final String SETTINGS_DATA_LIMIT = SETTINGS_ROOT + ".data-limit";
+    private static final String SETTINGS_CONCURRENT_JOBS_LIMIT = SETTINGS_ROOT + ".jobs-limit";
     public static final long MAX_ROWS_DEFAULT = 1000000; // Straight out of Excel 2007's limits
     public static final long TIME_LIMIT_DEFAULT = TimeUnit.MINUTES.toMillis(2); // The default in RY
     public static final long TIME_LIMIT_MAX = TimeUnit.HOURS.toMillis(2); // 2 hours shall be enough...

@@ -1,22 +1,3 @@
-<!--
-  #%L
-  Play SQL Exports
-  %%
-  Copyright (C) 2016 - 2024 Requirement Yogi S.A.S.U.
-  %%
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  
-       http://www.apache.org/licenses/LICENSE-2.0
-  
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-  #L%
-  -->
 <atlassian-plugin key="${official.plugin.complete.key}" name="${official.plugin.name}" plugins-version="2">
     <plugin-info>
         <description>${project.description}</description>
@@ -37,7 +18,7 @@
         <param name="atlassian-data-center-status">compatible</param>
     </plugin-info>
 
-    <resource type="i18n" name="Internationalization" location="com/playsql/psea/i18n" />
+    <resource type="i18n" name="Internationalization" location="com/requirementyogi/datacenter/psea/i18n" />
 
     <web-resource name="JS / CSS for the administration" key="psea-admin-web">
         <transformation extension="js">
@@ -83,7 +64,7 @@
         <link linkId="psea-about-link">/plugins/psea/about.action</link>
     </web-item>
 
-    <ao key="ao-module">
+    <ao key="ao-module" namespace="${official.plugin.complete.key}">
         <description>The module configuring the Active Objects service used by this plugin</description>
         <entity>com.requirementyogi.datacenter.psea.db.entities.DBPseaTask</entity>
     </ao>

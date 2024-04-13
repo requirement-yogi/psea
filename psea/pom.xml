@@ -11,7 +11,7 @@
         2. We don't have to synchronize the version numbers for the moment,
         3. But it makes it much easier to manage the compatibility with Confluence 8.9 and 9.0.
         -->
-        <groupId>com.playsql</groupId>
+        <groupId>com.requirementyogi.datacenter</groupId>
         <artifactId>confluence-parent-pom</artifactId>
         <version>3.8-SNAPSHOT</version>
         <relativePath/><!-- This tells Maven to go look into the repositories -->
@@ -45,8 +45,8 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.playsql</groupId>
-            <artifactId>utils-confluence</artifactId>
+            <groupId>com.requirementyogi.datacenter</groupId>
+            <artifactId>confluence-utils</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>
@@ -75,6 +75,14 @@
                     <artifactId>xml-apis</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <!-- This dependency upgrades a vulnerable dep of Apache POI.
+                 Please remove it once POI is upgraded to the next version.
+            -->
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.26.1</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -366,6 +374,8 @@
 
     <properties>
         <allowGoogleTracking>false</allowGoogleTracking>
+        <!-- Next time you upgrade POI, please remove the dependency 'commons-compress'. POI had a vulnerable
+        version of it, but we shouldn't keep hard-coding that version. -->
         <poi.version>5.2.5</poi.version>
         <official.plugin.name>PSEA - Export Add-on</official.plugin.name>
         <official.plugin.key>play-sql-export-addon</official.plugin.key>

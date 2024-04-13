@@ -11,7 +11,7 @@ import com.atlassian.sal.api.transaction.TransactionCallback;
 import com.google.common.collect.Maps;
 import com.requirementyogi.datacenter.psea.db.dao.PseaTaskDAO;
 import com.requirementyogi.datacenter.psea.db.entities.DBPseaTask;
-import com.playsql.utils.compat.InternalBeanFactory;
+import com.requirementyogi.datacenter.utils.compat.InternalBeanFactory;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mockito.Mockito;
 

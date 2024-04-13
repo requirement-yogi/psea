@@ -8,7 +8,7 @@ import com.atlassian.xwork.XsrfTokenGenerator;
 import com.requirementyogi.datacenter.psea.db.dao.PseaTaskDAO;
 import com.requirementyogi.datacenter.psea.dto.DTOPseaTask;
 import com.requirementyogi.datacenter.psea.impl.PseaServiceImpl;
-import com.requirementyogi.server.utils.confluence.compat.CompatibilityLayer;
+import com.requirementyogi.datacenter.utils.confluence.compat.CompatibilityLayer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
