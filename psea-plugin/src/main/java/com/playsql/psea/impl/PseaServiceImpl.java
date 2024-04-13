@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 
 import static com.playsql.psea.dto.DTOPseaTask.Status.*;
 
-@Component("provider") // Don't change this key - it's used by add-ons
+@Component
 @ExportAsService(PseaService.class)
 public class PseaServiceImpl implements PseaService, DisposableBean {
 

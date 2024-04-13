@@ -161,15 +161,6 @@ public class PseaAdminAction extends ConfluenceActionSupport {
         this.pseaTaskDAO = pseaTaskDAO;
     }
 
-    @Inject
-    public void setPseaService(PseaServiceImpl pseaService) {
-        this.pseaService = pseaService;
-    }
-
-    public void setXsrfTokenGenerator(@ComponentImport XsrfTokenGenerator xsrfTokenGenerator) {
-        this.xsrfTokenGenerator = xsrfTokenGenerator;
-    }
-
     public String getRowLimitDefault() {
         return convertSizeToHuman(PseaServiceImpl.MAX_ROWS_DEFAULT);
     }
@@ -237,5 +228,13 @@ public class PseaAdminAction extends ConfluenceActionSupport {
     @Override
     public void setPermissionManager(@ComponentImport PermissionManager permissionManager) {
         this.permissionManager = permissionManager;
+    }
+
+    public void setPseaService(PseaServiceImpl pseaService) {
+        this.pseaService = pseaService;
+    }
+
+    public void setXsrfTokenGenerator(@ComponentImport XsrfTokenGenerator xsrfTokenGenerator) {
+        this.xsrfTokenGenerator = xsrfTokenGenerator;
     }
 }

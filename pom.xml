@@ -10,8 +10,10 @@
     <artifactId>psea-parent</artifactId>
     <version>2.0-SNAPSHOT</version>
 
-    <name>PSEA - Export Add-on</name>
-    <description>The add-on is a technical library that helps Requirement Yogi and Play SQL Spreadsheets export documents to Excel.</description>
+    <name>PSEA - Parent pom</name>
+    <description>The add-on is a technical library that helps Requirement Yogi and Play SQL Spreadsheets export
+        documents to Excel.
+    </description>
     <packaging>pom</packaging>
 
     <licenses>
@@ -26,6 +28,130 @@
         <module>psea-api</module>
         <module>psea-plugin</module>
     </modules>
+
+
+    <build>
+        <pluginManagement>
+            <!-- We set the plugin versions to get a deterministic build. To list versions to upgrade, see
+                 mvn versions:display-dependency-updates
+                 mvn versions:display-plugin-updates
+                 mvn versions:display-property-updates -->
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.12.1</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>3.1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>3.1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.3.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.3.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.6.3</version>
+                    <configuration>
+                        <doclint>none</doclint>
+                        <show>private</show>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>2.16.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>3.1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <version>${libs.dependency-check-maven.version}</version>
+                </plugin>
+                <plugin>
+                    <!-- This plugin, configured in <pluginManagement>, pre-configures the build.
+                         But you need to call it in the child's <build> section.
+                     -->
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>2.4.0</version>
+                    <configuration>
+                        <!--
+                            You don't need to run the license plugin manually, it is part of the build (see executions).
+                            It retrieves all licenses of all dependencies into src/licenses/THIRD-PARTY-included-modules.txt
+
+                            NB: How to retrieve licenses on a new project:
+                            mvn clean license:download-licenses
+                        -->
+                        <projectName>${project.name}</projectName>
+
+                        <organizationName>Requirement Yogi S.A.S.U.</organizationName>
+                        <inceptionYear>2014</inceptionYear>
+
+                        <!-- Skips the goal download-licenses -->
+                        <skipDownloadLicenses>false</skipDownloadLicenses>
+                        <!-- This is not an opensource project -->
+                        <skipUpdateLicense>true</skipUpdateLicense>
+                        <!-- The license of each module -->
+                        <licenseFile>${project.basedir}/src/license/LICENSE.txt</licenseFile>
+                        <useMissingFile>true</useMissingFile>
+                        <sortArtifactByName>true</sortArtifactByName>
+                        <!-- The file with the list of licenses, for those which can't be found automatically -->
+                        <missingFile>src/license/THIRD-PARTY.properties</missingFile>
+                        <!-- Same as 'missingFile' but in XML, probably -->
+                        <licensesConfigFile>src/license/licenses-manual.xml</licensesConfigFile>
+                        <!-- All licenses which could automatically be fetched. About the current module only.-->
+                        <licensesOutputFile>src/license/licenses-generated.xml</licensesOutputFile>
+                        <!-- Dump the text of all licenses of third parties. About the current module only. -->
+                        <licensesOutputDirectory>src/license/text</licensesOutputDirectory>
+                        <!-- A list of dependencies for the subtree and their licenses -->
+                        <thirdPartyFilename>THIRD-PARTY-included-modules.txt</thirdPartyFilename>
+                        <!-- Where to put the THIRD-PARTY.txt file -->
+                        <outputDirectory>${project.basedir}/src/license</outputDirectory>
+                        <!-- In the binary distribution, we exclude libraries which are only compiled against, as long
+                             as they're not GPL. Atlassian Confluence is considered with a developer license. -->
+                        <includedScopes>compile</includedScopes>
+                        <licenseMerges>
+                            <licenseMerge>Apache License 2.0|The Apache Software License, Version 2.0|Apache License,
+                                Version 2.0|Apache Public License 2.0|Apache 2
+                            </licenseMerge>
+                        </licenseMerges>
+                        <!-- We exclude artifacts which constantly cause the THIRD-PARTY.properties file to be
+                             modified and for which we know the license is from Atlassian -->
+                        <excludedArtifacts>xercesImpl</excludedArtifacts>
+
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <distributionManagement>
         <!-- To deploy, either run ./release.sh, or run: mvn clean deploy -Prelease
@@ -45,6 +171,11 @@
     </distributionManagement>
 
     <properties>
+        <java.version>8</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <allowGoogleTracking>false</allowGoogleTracking>
+        <downloadSources>true</downloadSources>
+        <downloadJavadocs>true</downloadJavadocs>
         <poi.version>5.2.5</poi.version>
     </properties>
 

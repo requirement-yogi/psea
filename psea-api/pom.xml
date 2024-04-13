@@ -6,21 +6,18 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <!-- Yes, this project depends on another project
-        1. It removes it from open-source, which doesn't matter since no-one is going to fork it,
-        2. We don't have to synchronize the version numbers for the moment,
-        3. But it makes it much easier to manage the compatibility with Confluence 8.9 and 9.0.
-        -->
-        <groupId>com.playsql</groupId>
-        <artifactId>confluence-parent-pom</artifactId>
-        <version>3.8-SNAPSHOT</version>
+        <groupId>com.requirementyogi.datacenter</groupId>
+        <artifactId>psea-parent</artifactId>
+        <version>2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>psea-api</artifactId>
-    <version>2.0-SNAPSHOT</version>
 
     <name>PSEA API</name>
-    <description>API for PSEA</description>
+    <description>
+        Simple no-dependency jar that exposes the API, because exposing the entire jar
+        makes Maven take a lot of time to compile the dependencies.
+    </description>
     <packaging>jar</packaging>
 
     <licenses>
@@ -30,5 +27,14 @@
             <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
         </license>
     </licenses>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
 </project>

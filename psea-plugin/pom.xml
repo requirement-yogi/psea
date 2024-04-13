@@ -14,6 +14,7 @@
         <groupId>com.playsql</groupId>
         <artifactId>confluence-parent-pom</artifactId>
         <version>3.8-SNAPSHOT</version>
+        <relativePath/><!-- This tells Maven to go look into the repositories -->
     </parent>
 
     <artifactId>psea-plugin</artifactId>
@@ -35,6 +36,12 @@
         <!-- ################################ -->
         <!-- ##     General libraries      ## -->
         <!-- ################################ -->
+        <dependency>
+            <groupId>com.requirementyogi.datacenter</groupId>
+            <artifactId>psea-api</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>com.playsql</groupId>
             <artifactId>utils-confluence</artifactId>
@@ -101,12 +108,6 @@
                 <version>${atlz.libs.amps.version}</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <pluginDependencies>
-                        <pluginDependency>
-                            <groupId>com.playsql</groupId>
-                            <artifactId>play-sql-export-addon</artifactId>
-                        </pluginDependency>
-                    </pluginDependencies>
                     <instructions>
                         <!-- Ensure the plugin is Spring-powered -->
                         <Spring-Context>*</Spring-Context>
@@ -116,6 +117,12 @@
                             com.playsql.psea.api,
                             com.playsql.psea.api.exceptions
                         </Export-Package>
+                        <scannedDependencies>
+                            <dependency>
+                                <groupId>com.requirementyogi.datacenter</groupId>
+                                <artifactId>psea-api</artifactId>
+                            </dependency>
+                        </scannedDependencies>
                         <Import-Package>
                             <!-- According to https://confluence.atlassian.com/doc/struts-2-upgrade-1155473773.html -->
                             com.opensymphony.xwork;resolution:=optional,
@@ -353,8 +360,9 @@
     <properties>
         <allowGoogleTracking>false</allowGoogleTracking>
         <poi.version>5.2.5</poi.version>
+        <official.plugin.name>PSEA - Export Add-on</official.plugin.name>
         <official.plugin.key>play-sql-export-addon</official.plugin.key>
-        <official.plugin.complete.key>com.playsql.${atlz.plugin.key}</official.plugin.complete.key>
+        <official.plugin.complete.key>com.playsql.${official.plugin.key}</official.plugin.complete.key>
     </properties>
 
 </project>
