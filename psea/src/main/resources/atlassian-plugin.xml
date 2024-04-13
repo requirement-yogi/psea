@@ -17,7 +17,7 @@
   limitations under the License.
   #L%
   -->
-<atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="2">
+<atlassian-plugin key="${official.plugin.complete.key}" name="${official.plugin.name}" plugins-version="2">
     <plugin-info>
         <description>${project.description}</description>
         <version>${project.version}</version>

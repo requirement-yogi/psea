@@ -17,7 +17,9 @@
         <relativePath/><!-- This tells Maven to go look into the repositories -->
     </parent>
 
-    <artifactId>psea-plugin</artifactId>
+    <!-- I didn't name it 'psea-plugin' because I want the final jar to be named `psea-x.y.z.jar` and not
+    fiddle with a ton of configuration just to get that final name -->
+    <artifactId>psea</artifactId>
     <version>2.0-SNAPSHOT</version>
 
     <name>PSEA - Export Add-on</name>
@@ -111,7 +113,7 @@
                     <instructions>
                         <!-- Ensure the plugin is Spring-powered -->
                         <Spring-Context>*</Spring-Context>
-                        <Atlassian-Plugin-Key>${project.groupId}.${project.artifactId}</Atlassian-Plugin-Key>
+                        <Atlassian-Plugin-Key>${official.plugin.complete.key}</Atlassian-Plugin-Key>
                         <Atlassian-Scan-Folders>META-INF/plugin-descriptors</Atlassian-Scan-Folders>
                         <Export-Package>
                             com.playsql.psea.api,
@@ -124,6 +126,10 @@
                             </dependency>
                         </scannedDependencies>
                         <Import-Package>
+                            <!-- Specific to Apache POI -->
+                            org.xml*,
+                            org.w3c.dom;version="0.0.0",
+
                             <!-- According to https://confluence.atlassian.com/doc/struts-2-upgrade-1155473773.html -->
                             com.opensymphony.xwork;resolution:=optional,
                             com.opensymphony.webwork;resolution:=optional,
@@ -210,6 +216,7 @@
                             javax.xml.stream.events;version="0.0.0",
                             javax.xml.stream;version="0.0.0",
                             javax.xml.parsers;resolution:=optional;version="0.0.0",
+                            javax.xml.transform*;resolution:=optional;version="0.0.0",
                             net.java.ao.schema;version="0.0.0",
                             net.java.ao;version="0.0.0",
                             com.fasterxml.jackson.annotation;version="0.0.0",

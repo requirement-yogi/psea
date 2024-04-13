@@ -7,7 +7,7 @@
 <body>
     <content tag="selectedWebItem">marketplace-psea-global-admin-item</content>
 
-    <p>PSEA is the module which allows Requirement Yogi and Play SQL Spreadsheets to read/write Excel files.</p>
+    <p>PSEA is the module which allows Requirement Yogi to read/write Excel files.</p>
     <p>This forms allows you to control the export limits, in case you are hitting memory / CPU issues.</p>
 
     #parse ( "/template/includes/actionerrors.vm" )
