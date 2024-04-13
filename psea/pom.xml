@@ -116,8 +116,8 @@
                         <Atlassian-Plugin-Key>${official.plugin.complete.key}</Atlassian-Plugin-Key>
                         <Atlassian-Scan-Folders>META-INF/plugin-descriptors</Atlassian-Scan-Folders>
                         <Export-Package>
-                            com.playsql.psea.api,
-                            com.playsql.psea.api.exceptions
+                            com.requirementyogi.datacenter.psea.api,
+                            com.requirementyogi.datacenter.psea.api.exceptions
                         </Export-Package>
                         <scannedDependencies>
                             <dependency>
@@ -341,7 +341,7 @@
                                 <configuration>
                                     <sourcepath>${basedir}/src/main/java:${basedir}/../libs/utils/src/main/java</sourcepath>
                                     <!--<sourcepath>${basedir}/src/main/java</sourcepath>-->
-                                    <subpackages>com.playsql.psea.api,com.playsql.psea.exceptions</subpackages>
+                                    <subpackages>com.requirementyogi.datacenter.psea.api,com.requirementyogi.datacenter.psea.exceptions</subpackages>
                                     <doclint>none</doclint>
                                     <show>private</show>
                                     <!-- If I set source/release=8 and execute with JDK11, it throws an AssertionError -->

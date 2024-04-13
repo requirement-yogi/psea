@@ -54,17 +54,17 @@
     <xwork name="MVC Actions" key="xwork">
         <description>MVC actions for all pages provided by the plugin</description>
         <package name="psea-general" extends="default" namespace="/plugins/psea">
-            <action name="about" class="com.playsql.psea.web.AboutAction" method="doDefault">
+            <action name="about" class="com.requirementyogi.datacenter.psea.web.AboutAction" method="doDefault">
                 <interceptor-ref name="defaultStack" />
                 <result name="input" type="velocity">/about.vm</result>
             </action>
         </package>
         <package name="psea-admin" extends="default" namespace="/admin/plugins/psea-admin">
-            <action name="admin" class="com.playsql.psea.web.PseaAdminAction" method="doAdmin">
+            <action name="admin" class="com.requirementyogi.datacenter.psea.web.PseaAdminAction" method="doAdmin">
                 <interceptor-ref name="defaultStack" />
                 <result name="input" type="velocity">/psea-admin.vm</result>
             </action>
-            <action name="save" class="com.playsql.psea.web.PseaAdminAction" method="doSave">
+            <action name="save" class="com.requirementyogi.datacenter.psea.web.PseaAdminAction" method="doSave">
                 <interceptor-ref name="validatingStack" />
                 <result name="input" type="velocity">/psea-admin.vm</result>
                 <result name="success" type="velocity">/psea-admin.vm</result>
@@ -79,18 +79,18 @@
     </web-item>
 
     <web-item key="about" name="About link in the Help menu" section="system.help/pages" weight="60">
-        <label key="com.playsql.psea.about-link" />
+        <label key="com.requirementyogi.datacenter.psea.about-link" />
         <link linkId="psea-about-link">/plugins/psea/about.action</link>
     </web-item>
 
     <ao key="ao-module">
         <description>The module configuring the Active Objects service used by this plugin</description>
-        <entity>com.playsql.psea.db.entities.DBPseaTask</entity>
+        <entity>com.requirementyogi.datacenter.psea.db.entities.DBPseaTask</entity>
     </ao>
 
     <rest key="rest" path="/psea" version="1" name="REST resources">
         <description>REST API for PSEA</description>
-        <package>com.playsql.psea.rest</package>
+        <package>com.requirementyogi.datacenter.psea.rest</package>
     </rest>
 
 </atlassian-plugin>
