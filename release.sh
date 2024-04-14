@@ -91,24 +91,19 @@ read
 echo "Just checking the vulnerabilities"
 mvn validate -Pvulnerabilities
 
-
-if [ -d target/confluence/home ] ; then
-    echo "Moving ./target to ../target-psea"
-    mv ./target ../target-psea
-fi
-
 echo
 echo
 echo "Changing version to $VER"
 echo
-mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$VER
+# The 3 stars ensure that the child module 'psea', whose parent is not-us, will be updated
+mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$VER -DoldVersion='*' -DgroupId='*' -DartifactId='*'
 mvn clean deploy -Prelease,vulnerabilities
 git commit -am "[auto] Set version to $VER"
 git tag -a psea-parent-$VER -m "Release $VER"
 
 # We don't move the other artifacts to ../releases, since the local maven repo is enough to publish them
-ls target/*.jar
-cp target/*.jar ../releases/
+ls psea/target/*.jar
+cp psea/target/*.jar ../releases/
 read
 
 echo
