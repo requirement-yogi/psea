@@ -122,13 +122,5 @@ git push --tags
 
 echo
 echo
-
-if [ -d ../target-psea ] ; then
-    echo "Restoring ../target-psea ./target"
-    rm -rf ./target
-    mv ../target-psea ./target
-    rm ./target/*.jar
-fi
-
 echo "Get cracking, now"
 echo
