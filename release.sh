@@ -110,7 +110,7 @@ echo
 echo
 echo "Changing version to $NEXT_VER"
 echo
-mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$NEXT_VER
+mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$NEXT_VER -DoldVersion='*' -DgroupId='*' -DartifactId='*'
 mvn clean install
 git commit -am "[auto] Set version to $NEXT_VER"
 
