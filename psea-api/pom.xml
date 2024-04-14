@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.requirementyogi.datacenter</groupId>
         <artifactId>psea-parent</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <version>2.0.0</version>
     </parent>
 
     <artifactId>psea-api</artifactId>
@@ -37,4 +37,36 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <sourcepath>${basedir}/src/main/java</sourcepath>
+                                    <!--<sourcepath>${basedir}/src/main/java</sourcepath>-->
+                                    <subpackages>com.requirementyogi.datacenter.psea.api,com.requirementyogi.datacenter.psea.api.exceptions</subpackages>
+                                    <doclint>none</doclint>
+                                    <show>private</show>
+                                    <!-- If I set source/release=8 and execute with JDK11, it throws an AssertionError -->
+                                    <!-- I wish I could have the javadoc style of Java 11 -->
+                                    <!--<javadocExecutable>/Library/Java/JavaVirtualMachines/adoptopenjdk-12.jdk/Contents/Home/bin/javadoc</javadocExecutable>-->
+                                    <!--<source>8</source>-->
+                                    <doctitle>${project.name} (Confluence) ${project.version} API</doctitle>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
