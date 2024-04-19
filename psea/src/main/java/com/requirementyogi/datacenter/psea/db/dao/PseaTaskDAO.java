@@ -5,6 +5,8 @@ import com.atlassian.confluence.user.ConfluenceUser;
 import com.atlassian.confluence.user.UserAccessor;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.google.common.collect.Lists;
+import java.util.LinkedList;
+import java.util.ArrayList;
 import com.requirementyogi.datacenter.psea.api.exceptions.PseaCancellationException;
 import com.requirementyogi.datacenter.psea.db.entities.DBPseaTask;
 import com.requirementyogi.datacenter.psea.dto.DTOPseaTask;
@@ -144,7 +146,7 @@ public class PseaTaskDAO {
      * Return the last 200 saves.
      */
     public List<DTOPseaTask> getList(int limit) {
-        List<DBPseaTask> list = Lists.newArrayList();
+        List<DBPseaTask> list = new ArrayList<>();
         fetchItems(list, Status.NOT_STARTED, limit);
         fetchItems(list, Status.PREPARING, limit);
         fetchItems(list, Status.CANCELLING, limit);

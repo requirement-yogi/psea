@@ -1,6 +1,8 @@
 package com.requirementyogi.datacenter.psea.impl;
 
 import com.google.common.collect.Lists;
+import java.util.LinkedList;
+import java.util.ArrayList;
 import com.requirementyogi.datacenter.psea.api.Row;
 import com.requirementyogi.datacenter.psea.api.Sheet;
 import com.requirementyogi.datacenter.psea.api.Value;
@@ -50,8 +52,8 @@ public class CreateExcelFileTest {
                     new Value(WorkbookAPI.Style.WORKBOOK_TITLE, "10. This is a big title (vertically centered, bold, font 16, height of row is 60px)")
             ));
             sheet.setHeightInPoints(4, 60);
-            sheet.addRow(Lists.newArrayList());
-            row = sheet.addRow(Lists.newArrayList());
+            sheet.addRow(new ArrayList<>());
+            row = sheet.addRow(new ArrayList<>());
             row.setCell(5, new Value("11. This is in the 6th column."));
             sheet.addRow(0, Lists.newArrayList(
                     new Value("12. Top-left cell"),

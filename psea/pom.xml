@@ -23,7 +23,7 @@
     <version>2.0-SNAPSHOT</version>
 
     <name>PSEA - Export Add-on</name>
-    <description>The add-on is a technical library that helps Requirement Yogi and Play SQL Spreadsheets export documents to Excel.</description>
+    <description>The add-on is a technical library that helps Requirement Yogi export documents to Excel.</description>
     <packaging>atlassian-plugin</packaging>
 
     <licenses>
@@ -227,10 +227,12 @@
                             javax.xml.transform*;resolution:=optional;version="0.0.0",
                             net.java.ao.schema;version="0.0.0",
                             net.java.ao;version="0.0.0",
-                            com.fasterxml.jackson.annotation;version="0.0.0",
                             org.joda.time*;resolution:=optional;version="0.0.0",
                             org.slf4j*;resolution:=optional;version="0.0.0",
 
+                            <!-- Yeah. This is for C7.19-C8.9, they don't support the same annotations -->
+                            com.fasterxml.jackson.annotation;resolution:=optional;version="0.0.0",
+                            org.codehaus.jackson.annotate;resolution:=optional;version="0.0.0",
 
                             <!--  For  atlassian-rest-v2-api-->
                             com.atlassian.plugins.rest.api.security.annotation;resolution:=optional;version="0.0.0",

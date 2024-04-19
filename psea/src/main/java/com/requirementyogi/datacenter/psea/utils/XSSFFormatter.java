@@ -1,6 +1,8 @@
 package com.requirementyogi.datacenter.psea.utils;
 
 import com.google.common.collect.Lists;
+import java.util.LinkedList;
+import java.util.ArrayList;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -47,7 +49,7 @@ public class XSSFFormatter {
          */
         final StringBuilder result = new StringBuilder();
         int start = 0;
-        List<FormattingElement> styles = Lists.newArrayList();
+        List<FormattingElement> styles = new ArrayList<>();
 
         public FormattingWriter(String initialString) {
             this.initialString = initialString;
@@ -58,7 +60,7 @@ public class XSSFFormatter {
             if (font.getItalic()) styles.add(new FormattingElement("i", false));
             if (font.getUnderline() > 0) styles.add(new FormattingElement("u", false));
             if (font.getStrikeout()) styles.add(new FormattingElement("s", false));
-            List<String> cssStyles = Lists.newArrayList();
+            List<String> cssStyles = new ArrayList<>();
             if (font.getXSSFColor() != null) {
                 XSSFColor color = font.getXSSFColor();
                 byte[] colors = color.getARGB();

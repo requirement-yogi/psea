@@ -2,6 +2,8 @@ package com.requirementyogi.datacenter.psea.impl;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.google.common.collect.Lists;
+import java.util.LinkedList;
+import java.util.ArrayList;
 import com.requirementyogi.datacenter.psea.api.*;
 import com.requirementyogi.datacenter.psea.impl.beans.ImportableCellImpl;
 import com.requirementyogi.datacenter.psea.impl.beans.ImportableRowImpl;
@@ -263,7 +265,7 @@ public class ExcelExtractionTask extends ExtractionTask {
 
     private static List<ImportableCell> readRow(Sheet sheet, Row row, short firstCellNum, short lastCellNum, FormulaEvaluator evaluator) {
         if (row != null) {
-            List<ImportableCell> values = Lists.newArrayList();
+            List<ImportableCell> values = new ArrayList<>();
             for (int i = firstCellNum ; i < lastCellNum ; i++) {
                 Cell cell = row.getCell(i);
                 Cell topLeftCell = resolveMergedRegion(sheet, cell);

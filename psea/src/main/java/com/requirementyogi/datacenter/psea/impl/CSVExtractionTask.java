@@ -2,6 +2,8 @@ package com.requirementyogi.datacenter.psea.impl;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.google.common.collect.Lists;
+import java.util.LinkedList;
+import java.util.ArrayList;
 import com.requirementyogi.datacenter.psea.api.*;
 import com.requirementyogi.datacenter.psea.impl.beans.ImportableCellImpl;
 import com.requirementyogi.datacenter.psea.impl.beans.ImportableRowImpl;
@@ -53,7 +55,7 @@ public class CSVExtractionTask extends ExtractionTask {
             if (rowConsumer.isSheetActive(SHEET_NAME)) {
 
                 List<String> headerNames = parser.getHeaderNames();
-                List<ImportableCell> headerCells = Lists.newArrayList();
+                List<ImportableCell> headerCells = new ArrayList<>();
                 for (int i = 0 ; i < headerNames.size() ; i++) {
                     headerCells.add(new ImportableCellImpl(i, false, headerNames.get(i), null));
                 }
@@ -73,7 +75,7 @@ public class CSVExtractionTask extends ExtractionTask {
                             if (focusedRow != null && record.getRecordNumber() < focusedRow - 2 && record.getRecordNumber() > focusedRow + 2) {
                                 continue;
                             }
-                            List<ImportableCell> cells = Lists.newArrayList();
+                            List<ImportableCell> cells = new ArrayList<>();
                             for (int i = 0; i < record.size(); i++) {
                                 cells.add(new ImportableCellImpl(i, false, record.get(i), null));
                             }
