@@ -13,7 +13,7 @@
         -->
         <groupId>com.requirementyogi.datacenter</groupId>
         <artifactId>confluence-parent-pom</artifactId>
-        <version>3.8-SNAPSHOT</version>
+        <version>3.9.6</version>
         <relativePath/><!-- This tells Maven to go look into the repositories -->
     </parent>
 
