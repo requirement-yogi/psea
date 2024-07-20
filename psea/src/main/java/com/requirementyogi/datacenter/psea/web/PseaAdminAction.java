@@ -10,6 +10,7 @@ import com.requirementyogi.datacenter.psea.dto.DTOPseaTask;
 import com.requirementyogi.datacenter.psea.impl.PseaServiceImpl;
 import com.requirementyogi.datacenter.utils.confluence.compat.CompatibilityLayer;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.struts2.interceptor.parameter.StrutsParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,6 +153,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
         }
     }
 
+    @StrutsParameter
     public List<DTOPseaTask> getLastExportList() {
         return pseaTaskDAO.getList(limit == null ? ITEMS_IN_UI : limit);
     }
@@ -160,62 +162,77 @@ public class PseaAdminAction extends ConfluenceActionSupport {
         this.pseaTaskDAO = pseaTaskDAO;
     }
 
+    @StrutsParameter
     public String getRowLimitDefault() {
         return convertSizeToHuman(PseaServiceImpl.MAX_ROWS_DEFAULT);
     }
 
+    @StrutsParameter
     public String getTimeLimitDefault() {
         return convertTimeToHuman(PseaServiceImpl.TIME_LIMIT_DEFAULT);
     }
 
+    @StrutsParameter
     public String getTimeLimitMax() {
         return convertTimeToHuman(PseaServiceImpl.TIME_LIMIT_MAX);
     }
 
+    @StrutsParameter
     public String getRowLimit() {
         return rowLimit;
     }
 
+    @StrutsParameter
     public String getTimeLimit() {
         return timeLimit;
     }
 
+    @StrutsParameter
     public String getDataLimit() {
         return dataLimit;
     }
 
+    @StrutsParameter
     public String getDataLimitDefault() {
         return convertSizeToHuman(PseaServiceImpl.DATA_LIMIT_DEFAULT);
     }
 
+    @StrutsParameter
     public Long getConcurrentJobs() {
         return concurrentJobs;
     }
 
+    @StrutsParameter
     public Long getConcurrentJobsDefault() {
         return PseaServiceImpl.CONCURRENT_JOBS_DEFAULT;
     }
 
+    @StrutsParameter
     public void setConcurrentJobs(Long concurrentJobs) {
         this.concurrentJobs = concurrentJobs;
     }
 
+    @StrutsParameter
     public void setTimeLimit(String timeLimit) {
         this.timeLimit = timeLimit;
     }
 
+    @StrutsParameter
     public void setDataLimit(String dataLimit) {
         this.dataLimit = dataLimit;
     }
 
+    @StrutsParameter
     public void setRowLimit(String rowLimit) {
         this.rowLimit = rowLimit;
     }
 
+    @StrutsParameter
     public Integer getLimit() {
         return limit;
     }
 
+    @StrutsParameter
     public void setLimit(Integer limit) {
         this.limit = limit;
     }
@@ -227,6 +244,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
     @Override
     public void setPermissionManager(@ComponentImport PermissionManager permissionManager) {
         this.permissionManager = permissionManager;
+        super.setPermissionManager(permissionManager);
     }
 
     public void setPseaService(PseaServiceImpl pseaService) {

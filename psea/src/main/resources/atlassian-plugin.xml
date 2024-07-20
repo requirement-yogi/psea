@@ -36,16 +36,19 @@
         <description>MVC actions for all pages provided by the plugin</description>
         <package name="psea-general" extends="default" namespace="/plugins/psea">
             <action name="about" class="com.requirementyogi.datacenter.psea.web.AboutAction" method="doDefault">
+                <param name="permittedMethods">GET</param>
                 <interceptor-ref name="defaultStack" />
                 <result name="input" type="velocity">/about.vm</result>
             </action>
         </package>
         <package name="psea-admin" extends="default" namespace="/admin/plugins/psea-admin">
             <action name="admin" class="com.requirementyogi.datacenter.psea.web.PseaAdminAction" method="doAdmin">
+                <param name="permittedMethods">GET</param>
                 <interceptor-ref name="defaultStack" />
                 <result name="input" type="velocity">/psea-admin.vm</result>
             </action>
             <action name="save" class="com.requirementyogi.datacenter.psea.web.PseaAdminAction" method="doSave">
+                <param name="permittedMethods">POST</param>
                 <interceptor-ref name="validatingStack" />
                 <result name="input" type="velocity">/psea-admin.vm</result>
                 <result name="success" type="velocity">/psea-admin.vm</result>
@@ -59,8 +62,8 @@
         <link linkId="global-admin-ry-item-link">/admin/plugins/psea-admin/admin.action</link>
     </web-item>
 
-    <web-item key="about" name="About link in the Help menu" section="system.help/pages" weight="60">
-        <label key="com.requirementyogi.datacenter.psea.about-link" />
+    <web-item key="about" name="About link in the Help menu" section="system.help/pages" weight="62">
+        <label key="PSEA ${project.version}" />
         <link linkId="psea-about-link">/plugins/psea/about.action</link>
     </web-item>
 

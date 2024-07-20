@@ -47,7 +47,7 @@
         <dependency>
             <groupId>com.requirementyogi.datacenter</groupId>
             <artifactId>confluence-utils</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${yogi.version}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -76,14 +76,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <!-- This dependency upgrades a vulnerable dep of Apache POI.
+        <!--<dependency>
+            &lt;!&ndash; This dependency upgrades a vulnerable dep of Apache POI.
                  Please remove it once POI is upgraded to the next version.
-            -->
+            &ndash;&gt;
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
             <version>1.26.1</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
@@ -92,7 +92,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
-            <version>1.10.0</version>
+            <version>1.11.0</version>
             <!-- compile -->
             <exclusions>
                 <exclusion>
@@ -136,7 +136,23 @@
                         <Import-Package>
                             <!-- Specific to Apache POI -->
                             org.xml*,
-                            org.w3c.dom;version="0.0.0",
+                            org.w3c.dom.*;resolution:=optional;version="0.0.0",
+                            !com.github.*,
+                            !de.rototor.*,
+                            !org.apache.*,
+                            !org.bouncycastle.*,
+                            !org.brotli.*,
+                            !org.openxmlformats.*,
+                            !org.tukaani.*,
+                            !com.microsoft.*,
+                            !com.sun.org.apache.*,
+                            !net.sf.saxon.*,
+                            !org.objectweb.asm.*,
+                            !org.ietf.jgss.*,
+
+                            <!-- To avoid double-importing the DynamicImport-Package -->
+                            !com.requirementyogi.datacenter.psea.api;resolution:=optional;version="0.0.0",
+                            !com.requirementyogi.datacenter.psea.api.exceptions;resolution:=optional;version="0.0.0",
 
                             <!-- According to https://confluence.atlassian.com/doc/struts-2-upgrade-1155473773.html -->
                             com.opensymphony.xwork;resolution:=optional,
@@ -146,6 +162,7 @@
                             org.apache.struts2.dispatcher;resolution:=optional,
                             org.apache.struts2.interceptor.parameter;resolution:=optional,
                             com.opensymphony.xwork2;resolution:=optional,
+
 
                             <!-- Shouldn't be necessary anymore. Also, not provided by Confluence. -->
                             org.apache.http*;version="0.0.0",
@@ -162,9 +179,13 @@
                             com.atlassian.config*;resolution:=optional;version="0.0.0",
 
                             <!-- We must put this instruction before confluence.*, otherwise it imports
-                                 the package as mandatory
+                                 the packages as mandatory
                                  -->
                             com.atlassian.confluence.search.v2.searchfilter;resolution:=optional;version="0.0.0",
+                            com.atlassian.confluence.plugin.descriptor;resolution:="optional",
+                            com.atlassian.confluence.plugin.descriptor.web;resolution:="optional",
+                            com.atlassian.confluence.plugin.descriptor.web.conditions;resolution:="optional",
+                            com.atlassian.confluence.plugin.descriptor.web.conditions.user;resolution:="optional",
 
                             <!-- The real problem here is that 2 subpackages (createcontent and featurediscovery) have
                                  versions 5.0.9 and 1.9 while the parent package com.atlassian.confluence requires 5.8.6 -->
@@ -187,7 +208,6 @@
                             com.atlassian.plugin.module;version="0.0.0",
                             com.atlassian.plugin.web;version="0.0.0",
                             com.atlassian.plugin.web.*;version="0.0.0",
-                            com.atlassian.plugin.webresource;version="0.0.0",
                             com.atlassian.plugin.descriptors;version="0.0.0",
                             com.atlassian.plugin;version="0.0.0",
                             com.atlassian.renderer;version="0.0.0",
@@ -223,8 +243,8 @@
                             javax.xml.namespace;version="0.0.0",
                             javax.xml.stream.events;version="0.0.0",
                             javax.xml.stream;version="0.0.0",
-                            javax.xml.parsers;resolution:=optional;version="0.0.0",
                             javax.xml.transform*;resolution:=optional;version="0.0.0",
+                            javax.xml.parsers;resolution:=optional;version="0.0.0",
                             net.java.ao.schema;version="0.0.0",
                             net.java.ao;version="0.0.0",
                             org.joda.time*;resolution:=optional;version="0.0.0",
@@ -238,7 +258,7 @@
                             com.atlassian.plugins.rest.api.security.annotation;resolution:=optional;version="0.0.0",
                             com.atlassian.plugins.rest.api.security.exception;resolution:=optional;version="0.0.0",
                             com.atlassian.plugins.rest.api.multipart;resolution:=optional;version="0.0.0",
-                            <!--  For the REST API v1 (before C8.9) -->
+                            <!--  For the REST API v1 (before C9.0) -->
                             com.atlassian.plugins.rest.common.multipart;resolution:=optional;version="0.0.0",
                             <!-- End of REST APIs -->
                             <!-- For the @Component annotation scanning -->
@@ -252,7 +272,21 @@
                             com.atlassian.spring.container;version="0.0.0",
                             org.springframework.cglib.core,
                             org.springframework.cglib.proxy,
-                            org.springframework.cglib.reflect
+                            org.springframework.cglib.reflect,
+                            org.springframework.osgi.*;resolution:="optional",
+                            org.eclipse.gemini.blueprint.*;resolution:="optional",
+                            <!-- For confluence 9.0 -->
+                            com.atlassian.plugins.rest.common.security;resolution:=optional;version="0.0.0",
+                            <!-- For @ModuleType -->
+                            com.atlassian.plugin.hostcontainer;resolution:=optional;version="0.0.0",
+                            <!--org.springframework.context;resolution:=optional;version="0.0.0",-->
+                            com.atlassian.plugin.osgi.external;resolution:=optional;version="0.0.0",
+                            com.atlassian.plugin.osgi.bridge.external;version="0.0.0",
+
+                            <!--For the ConfluenceAppSpringConfig with @Configuration to Work (including the *)-->
+                            org.jspecify.annotations;resolution:=optional;version="0.0.0",
+                            sun.misc;resolution:=optional;version="0.0.0",
+                            *
                         </Import-Package>
                     </instructions>
                     <banningExcludes>
@@ -353,12 +387,12 @@
 
     <properties>
         <allowGoogleTracking>false</allowGoogleTracking>
-        <!-- Next time you upgrade POI, please remove the dependency 'commons-compress'. POI had a vulnerable
-        version of it, but we shouldn't keep hard-coding that version. -->
-        <poi.version>5.2.5</poi.version>
         <official.plugin.name>PSEA - Export Add-on</official.plugin.name>
         <official.plugin.key>play-sql-export-addon</official.plugin.key>
         <official.plugin.complete.key>com.playsql.${official.plugin.key}</official.plugin.complete.key>
+        <poi.version>5.3.0</poi.version>
+        <!-- Since the parent is in RY -->
+        <yogi.version>${project.parent.version}</yogi.version>
     </properties>
 
 </project>
