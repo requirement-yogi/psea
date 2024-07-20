@@ -4,8 +4,8 @@ import com.requirementyogi.datacenter.psea.api.WorkbookAPI;
 import com.requirementyogi.datacenter.psea.api.exceptions.PseaCancellationException;
 import com.requirementyogi.datacenter.psea.db.dao.PseaTaskDAO;
 import com.requirementyogi.datacenter.psea.db.entities.DBPseaTask;
-import com.requirementyogi.datacenter.psea.dto.DTOPseaTask;
 import com.requirementyogi.datacenter.psea.dto.PseaLimitException;
+import com.requirementyogi.datacenter.psea.dto.PseaTaskStatus;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +15,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import static com.requirementyogi.datacenter.psea.dto.DTOPseaTask.Status.*;
-import static com.requirementyogi.datacenter.psea.dto.DTOPseaTask.Status.ERROR;
+import static com.requirementyogi.datacenter.psea.dto.PseaTaskStatus.*;
+import static com.requirementyogi.datacenter.psea.dto.PseaTaskStatus.ERROR;
 
 /**
  * Implementation of the export into an Excel file
@@ -37,7 +37,7 @@ public class ExcelExportTask {
     public File export(Consumer<WorkbookAPI> pluginCallback) throws PseaCancellationException {
         // We don't wait, in this step, because callers who want to wait should do it in the startMonitoredTask,
         // assuming they have the correct version of PSEA.
-        DBPseaTask record = pseaService.createTask(DTOPseaTask.Status.IN_PROGRESS, 0L, null);
+        DBPseaTask record = pseaService.createTask(PseaTaskStatus.IN_PROGRESS, 0L, null);
 
         long sizeLimit = pseaService.getDataLimit();
         Consumer<Long> saveSize = buildSaveSizeFunction(record, sizeLimit);
@@ -88,7 +88,7 @@ public class ExcelExportTask {
             throw re;
         } finally {
             if (record != null) {
-                DTOPseaTask.Status status = DTOPseaTask.Status.of(record);
+                PseaTaskStatus status = PseaTaskStatus.of(record);
                 if (status == null || !status.isFinalState()) {
                     dao.save(record, ERROR, "The status was " + record.getStatus() + " despite the export being finished.");
                 }

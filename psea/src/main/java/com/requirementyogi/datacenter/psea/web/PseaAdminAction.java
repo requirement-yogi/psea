@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -121,7 +122,7 @@ public class PseaAdminAction extends ConfluenceActionSupport {
         }
         String unit = matcher.group(2);
         if (unit != null) {
-            unit = unit.trim();
+            unit = unit.trim().toUpperCase(Locale.ROOT);
             switch (unit) {
                 case "K":
                 case "KB":

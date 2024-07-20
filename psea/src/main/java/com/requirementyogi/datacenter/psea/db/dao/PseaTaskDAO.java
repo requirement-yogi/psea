@@ -4,13 +4,12 @@ import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.confluence.user.ConfluenceUser;
 import com.atlassian.confluence.user.UserAccessor;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import com.google.common.collect.Lists;
-import java.util.LinkedList;
+
 import java.util.ArrayList;
 import com.requirementyogi.datacenter.psea.api.exceptions.PseaCancellationException;
 import com.requirementyogi.datacenter.psea.db.entities.DBPseaTask;
 import com.requirementyogi.datacenter.psea.dto.DTOPseaTask;
-import com.requirementyogi.datacenter.psea.dto.DTOPseaTask.Status;
+import com.requirementyogi.datacenter.psea.dto.PseaTaskStatus;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -35,7 +34,7 @@ public class PseaTaskDAO {
         this.userAccessor = userAccessor;
     }
     
-    public DBPseaTask create(@Nonnull Status status,
+    public DBPseaTask create(@Nonnull PseaTaskStatus status,
                              @Nullable ConfluenceUser confluenceUser,
                              @Nullable String details
     ) {
@@ -64,7 +63,7 @@ public class PseaTaskDAO {
      * - Appends the message instead of setting it,
      * - If the task is done, set the duration.
      */
-    public void save(DBPseaTask record, @Nonnull Status status, String message) {
+    public void save(DBPseaTask record, @Nonnull PseaTaskStatus status, String message) {
         if (record == null) return;
         ao.executeInTransaction(() -> {
             if (message != null) {
@@ -77,9 +76,9 @@ public class PseaTaskDAO {
             }
             // We only save the status if it isn't 'ERROR' yet (so no transition from ERROR -> DONE),
             // and we set the duration.
-            if (!Objects.equals(record.getStatus(), Status.ERROR.getDbValue()) && !Objects.equals(record.getStatus(), Status.CANCELLED.getDbValue())) {
+            if (!Objects.equals(record.getStatus(), PseaTaskStatus.ERROR.getDbValue()) && !Objects.equals(record.getStatus(), PseaTaskStatus.CANCELLED.getDbValue())) {
                 record.setStatus(status.getDbValue());
-                if (status == Status.DONE || status == Status.ERROR || status == Status.CANCELLED) {
+                if (status == PseaTaskStatus.DONE || status == PseaTaskStatus.ERROR || status == PseaTaskStatus.CANCELLED) {
                     Date startdate = record.getStartdate();
                     if (startdate == null) {
                         record.setDuration(0);
@@ -93,7 +92,7 @@ public class PseaTaskDAO {
         });
     }
 
-    public void save(long id, @Nonnull Status status, String message) {
+    public void save(long id, @Nonnull PseaTaskStatus status, String message) {
         ao.executeInTransaction(() -> {
             DBPseaTask task = ao.get(DBPseaTask.class, id);
             if (task != null) {
@@ -116,9 +115,9 @@ public class PseaTaskDAO {
             if (freshRecord == null) {
                 return true;
             }
-            Status status = Status.of(freshRecord);
-            if (status == Status.CANCELLING || status == Status.CANCELLED) {
-                record.setStatus(DTOPseaTask.Status.CANCELLED.getDbValue());
+            PseaTaskStatus status = PseaTaskStatus.of(freshRecord);
+            if (status == PseaTaskStatus.CANCELLING || status == PseaTaskStatus.CANCELLED) {
+                record.setStatus(PseaTaskStatus.CANCELLED.getDbValue());
                 record.save();
                 return true;
             }
@@ -147,21 +146,21 @@ public class PseaTaskDAO {
      */
     public List<DTOPseaTask> getList(int limit) {
         List<DBPseaTask> list = new ArrayList<>();
-        fetchItems(list, Status.NOT_STARTED, limit);
-        fetchItems(list, Status.PREPARING, limit);
-        fetchItems(list, Status.CANCELLING, limit);
-        fetchItems(list, Status.IN_PROGRESS, limit);
-        fetchItemsNotIn(list, limit, Status.NOT_STARTED, Status.PREPARING, Status.IN_PROGRESS, Status.CANCELLING);
+        fetchItems(list, PseaTaskStatus.NOT_STARTED, limit);
+        fetchItems(list, PseaTaskStatus.PREPARING, limit);
+        fetchItems(list, PseaTaskStatus.CANCELLING, limit);
+        fetchItems(list, PseaTaskStatus.IN_PROGRESS, limit);
+        fetchItemsNotIn(list, limit, PseaTaskStatus.NOT_STARTED, PseaTaskStatus.PREPARING, PseaTaskStatus.IN_PROGRESS, PseaTaskStatus.CANCELLING);
         return list.stream().map((DBPseaTask dbTask) -> DTOPseaTask.of(dbTask, userAccessor)).collect(Collectors.toList());
     }
 
-    private void fetchItems(List<DBPseaTask> list, Status status, int limit) {
+    private void fetchItems(List<DBPseaTask> list, PseaTaskStatus status, int limit) {
         if (limit < list.size()) return;
         DBPseaTask[] items = ao.find(DBPseaTask.class, Query.select().where("STATUS = ?", status.getDbValue()).order("STARTDATE DESC").limit(limit - list.size()));
         Collections.addAll(list, items);
     }
 
-    private void fetchItemsNotIn(List<DBPseaTask> list, int limit, Status... status) {
+    private void fetchItemsNotIn(List<DBPseaTask> list, int limit, PseaTaskStatus... status) {
         if (limit < list.size()) return;
         DBPseaTask[] items = ao.find(DBPseaTask.class, Query.select().where(
                 "STATUS NOT IN (" + StringUtils.repeat("?", ", ", status.length) + ")", (Object[]) status
@@ -169,13 +168,13 @@ public class PseaTaskDAO {
         Collections.addAll(list, items);
     }
 
-    /** Returns the number of jobs that have a status where {@link Status#isRunning()} is true */
+    /** Returns the number of jobs that have a status where {@link PseaTaskStatus#isRunning()} is true */
     public int countRunningJobs() {
         return ao.executeInTransaction(() -> {
-            List<Status> statuses = Status.listOfRunningStatuses();
+            List<PseaTaskStatus> statuses = PseaTaskStatus.listOfRunningStatuses();
             return ao.count(DBPseaTask.class,
                     "STATUS IN (" + StringUtils.repeat("?", ", ", statuses.size()) + ")",
-                    statuses.stream().map(Status::getDbValue).toArray());
+                    statuses.stream().map(PseaTaskStatus::getDbValue).toArray());
         });
     }
 

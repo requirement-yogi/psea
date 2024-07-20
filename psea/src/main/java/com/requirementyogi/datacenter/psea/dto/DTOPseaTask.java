@@ -8,82 +8,18 @@ import com.requirementyogi.datacenter.psea.impl.PseaServiceImpl;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class DTOPseaTask {
 
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT_HOUR_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    
-    public enum Status {
 
-        NOT_STARTED       (false, false, "NOT_STARTED"),
-        PREPARING       (true, false, "PREPARING"),
-        IN_PROGRESS     (true, false, "IN_PROGRESS"),
-        WRITING         (true, false, "WRITING"),
-
-        DONE            (false, true, "DONE"),
-        ERROR           (false, true, "ERROR"),
-
-        CANCELLING      (true, false, "CANCELLING"),
-        CANCELLED       (false, true, "CANCELLED");
-
-        /**
-         * True if a thread is currently running for this task,
-         * False if the process is not started, finished or almost finished.
-         */
-        private final boolean running;
-
-        /**
-         * True if a status is a final state, i.e. if the thread
-         * is finished or almost finished.
-         */
-        private final boolean finalState;
-
-        /** String for the value in the database */
-        private final String dbValue;
-
-        Status(boolean running, boolean finalState, String dbValue) {
-            this.running = running;
-            this.finalState = finalState;
-            this.dbValue = dbValue;
-        }
-
-        public static Status of(DBPseaTask dbTask) {
-            return of(dbTask.getStatus());
-        }
-
-        public static Status of(String status) {
-            return Arrays.stream(Status.values()).filter(value -> Objects.equals(value.getDbValue(), status)).findFirst().orElse(null);
-        }
-
-        /** Returns the list of 'running' statuses */
-        public static List<Status> listOfRunningStatuses() {
-            return Arrays.stream(values()).filter(Status::isRunning).collect(Collectors.toList());
-        }
-
-        public boolean isRunning() {
-            return running;
-        }
-
-        public boolean isFinalState() {
-            return finalState;
-        }
-
-        public String getDbValue() {
-            return dbValue;
-        }
-    };
-    
     private final Long id;
     private final String filename;
     private final Date startDate;
     private final Long duration;
-    private final Status status;
+    private final PseaTaskStatus status;
     private final String message;
     private final String userKey;
     private final String username;
@@ -93,7 +29,7 @@ public class DTOPseaTask {
                        String filename,
                        Date startDate,
                        Long duration,
-                       Status status,
+                       PseaTaskStatus status,
                        String message,
                        String userKey,
                        String username,
@@ -129,7 +65,7 @@ public class DTOPseaTask {
                 dbTask.getFilename(),
                 dbTask.getStartdate(),
                 dbTask.getDuration(),
-                Status.of(dbTask),
+                PseaTaskStatus.of(dbTask),
                 dbTask.getMessage(),
                 userKey,
                 username,
@@ -169,7 +105,7 @@ public class DTOPseaTask {
         return "(End date not recorded)";
     }
 
-    public Status getStatus() {
+    public PseaTaskStatus getStatus() {
         return status;
     }
 

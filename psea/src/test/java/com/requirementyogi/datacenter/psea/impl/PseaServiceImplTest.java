@@ -1,12 +1,10 @@
 package com.requirementyogi.datacenter.psea.impl;
 
 import com.google.common.collect.Lists;
-import java.util.LinkedList;
-import java.util.ArrayList;
 import com.requirementyogi.datacenter.psea.api.Sheet;
 import com.requirementyogi.datacenter.psea.api.Value;
-import com.requirementyogi.datacenter.psea.dto.DTOPseaTask;
 import com.requirementyogi.datacenter.psea.dto.PseaLimitException;
+import com.requirementyogi.datacenter.psea.dto.PseaTaskStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
@@ -37,6 +35,6 @@ public class PseaServiceImplTest {
             assertThat(e.getMessage(), CoreMatchers.containsString("The Excel export reached a hard limit for 'size'"));
         }
 
-        verify(utils.record, atLeastOnce()).setStatus(DTOPseaTask.Status.ERROR.getDbValue());
+        verify(utils.record, atLeastOnce()).setStatus(PseaTaskStatus.ERROR.getDbValue());
     }
 }

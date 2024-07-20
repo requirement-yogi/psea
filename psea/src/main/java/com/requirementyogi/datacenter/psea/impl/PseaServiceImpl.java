@@ -15,7 +15,7 @@ import com.requirementyogi.datacenter.psea.api.*;
 import com.requirementyogi.datacenter.psea.api.exceptions.PseaCancellationException;
 import com.requirementyogi.datacenter.psea.db.dao.PseaTaskDAO;
 import com.requirementyogi.datacenter.psea.db.entities.DBPseaTask;
-import com.requirementyogi.datacenter.psea.dto.DTOPseaTask.Status;
+import com.requirementyogi.datacenter.psea.dto.PseaTaskStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
-import static com.requirementyogi.datacenter.psea.dto.DTOPseaTask.Status.*;
+import static com.requirementyogi.datacenter.psea.dto.PseaTaskStatus.*;
 
 @Component
 @ExportAsService(PseaService.class)
@@ -107,7 +107,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
         try {
             return ensureTransactionIsClean(transactionHasAlreadyStarted, () -> {
                 try {
-                    DBPseaTask record = createTask(Status.PREPARING, waitingTimeMillis, taskDetails);
+                    DBPseaTask record = createTask(PseaTaskStatus.PREPARING, waitingTimeMillis, taskDetails);
                     if (record != null) {
                         threadLocalTaskId.set(record.getID());
                     }
@@ -118,10 +118,10 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
                     threadLocalTaskId.remove();
                     DBPseaTask task = dao.get(taskId);
                     if (task != null) {
-                        Status status = Status.of(task.getStatus());
+                        PseaTaskStatus status = PseaTaskStatus.of(task.getStatus());
                         if (status != null && status.isRunning()) {
-                            if (status == Status.CANCELLING) {
-                                dao.save(task, Status.CANCELLED, "Shut down by cancellation");
+                            if (status == PseaTaskStatus.CANCELLING) {
+                                dao.save(task, PseaTaskStatus.CANCELLED, "Shut down by cancellation");
                             } else {
                                 dao.save(task, ERROR, "Status is " + status + " at the end of the task");
                             }
@@ -180,7 +180,7 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
      *                          it will retry for maximum waitingTimeMillis before throwing a PseaCancellationException.
      *                          If 0L is passed, then it will either pass or reject straight away, but not wait.
      */
-    DBPseaTask createTask(Status status, long waitingTimeMillis, Map<String, Object> taskDetails) throws PseaCancellationException {
+    DBPseaTask createTask(PseaTaskStatus status, long waitingTimeMillis, Map<String, Object> taskDetails) throws PseaCancellationException {
         if (accessModeService.getAccessMode() != AccessMode.READ_WRITE) {
             return null;
         }

@@ -6,13 +6,13 @@ import com.atlassian.confluence.user.ConfluenceUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.requirementyogi.datacenter.psea.db.dao.PseaTaskDAO;
 import com.requirementyogi.datacenter.psea.db.entities.DBPseaTask;
-import com.requirementyogi.datacenter.psea.dto.DTOPseaTask;
+import com.requirementyogi.datacenter.psea.dto.PseaTaskStatus;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
-import static com.requirementyogi.datacenter.psea.dto.DTOPseaTask.Status.*;
+import static com.requirementyogi.datacenter.psea.dto.PseaTaskStatus.*;
 import static javax.ws.rs.core.Response.*;
 
 @Path("/")
@@ -39,7 +39,7 @@ public class PseaJobsResource {
         if (job == null) {
             return Response.status(Status.NOT_FOUND).entity("No job with ID " + id).build();
         }
-        DTOPseaTask.Status status = of(job.getStatus());
+        PseaTaskStatus status = of(job.getStatus());
         if (status != CANCELLING && status.isRunning()) {
             dao.save(job, CANCELLING, "Cancellation requested by " + user.getFullName());
             return ok("Cancellation requested").build();

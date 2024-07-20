@@ -56,6 +56,24 @@
         </package>
     </xwork>
 
+    <velocity-allowlist key="psea-velocity-whilelist">
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getFilename()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getStartDate()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getStartDateHuman()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getDuration()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getDurationHuman()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getStatus()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getMessage()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getId()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getUserKey()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getUsername()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getUserFullName()</method>
+
+        <method>com.requirementyogi.datacenter.psea.dto.PseaTaskStatus#isRunning()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.PseaTaskStatus#isFinalState()</method>
+        <method>com.requirementyogi.datacenter.psea.dto.PseaTaskStatus#getDbValue()</method>
+    </velocity-allowlist>
+
     <web-item key="marketplace-psea-global-admin-item" name="Menu - Global admin" section="system.admin/marketplace_confluence" weight="145">
         <description>Entry in the Global Admin left-hand menu.</description>
         <label key="global.admin.psea.item" />
