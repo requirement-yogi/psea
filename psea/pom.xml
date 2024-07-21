@@ -378,6 +378,7 @@
     </profiles>
 
     <properties>
+        <java.version>8</java.version>
         <allowGoogleTracking>false</allowGoogleTracking>
         <official.plugin.name>PSEA - Export Add-on</official.plugin.name>
         <official.plugin.key>play-sql-export-addon</official.plugin.key>

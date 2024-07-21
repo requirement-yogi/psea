@@ -56,7 +56,7 @@
         </package>
     </xwork>
 
-    <velocity-allowlist key="psea-velocity-whilelist">
+    <velocity-allowlist key="psea-velocity-whitelist">
         <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getFilename()</method>
         <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getStartDate()</method>
         <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getStartDateHuman()</method>
