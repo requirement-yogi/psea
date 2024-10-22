@@ -4,6 +4,7 @@ import com.requirementyogi.datacenter.psea.api.Row;
 import com.requirementyogi.datacenter.psea.api.Sheet;
 import com.requirementyogi.datacenter.psea.api.Value;
 import com.requirementyogi.datacenter.psea.dto.PseaLimitException;
+import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.SheetUtil;
 import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
@@ -148,5 +149,10 @@ public class SheetImpl implements Sheet {
 
     XSSFCreationHelper getHelper() {
         return helper;
+    }
+
+    @Override
+    public String getName() {
+        return sheet.getSheetName();
     }
 }

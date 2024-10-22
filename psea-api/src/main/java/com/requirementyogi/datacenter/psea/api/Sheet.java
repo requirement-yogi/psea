@@ -8,7 +8,8 @@ public interface Sheet {
     Row addRow(int position, List<? extends Value> values);
 
     /** Shift all existing rows, from the top
-     * @return the number of rows shifted */
+     * @return the number of rows shifted
+     * */
     int shiftRows(int count);
 
     void autoSizeHeaders();
@@ -36,4 +37,10 @@ public interface Sheet {
 
     int getRowNum();
     void setRowNum(int rowNum);
+
+    /**
+     * @return the name of this sheet
+     * @since 2.0.2
+     */
+    String getName();
 }

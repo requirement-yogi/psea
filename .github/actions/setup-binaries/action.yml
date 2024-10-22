@@ -52,7 +52,7 @@ runs:
         echo "random_number=$(date "+%Y%m%d-%H%M%S")" >> "$GITHUB_OUTPUT"
 
     - name: "Maven cache (${{ steps.get-random-number.outputs.random_number }})" # https://github.com/actions/cache/blob/master/examples.md#java---maven
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       id: maven-cache
       with:
         path: /home/runner/.m2/repository
@@ -68,7 +68,7 @@ runs:
         echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
 
     - name: "NPM Cache: Configure npm with ${{ steps.npm-cache-dir.outputs.dir }}"
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
       with:
         path: ${{ steps.npm-cache-dir.outputs.dir }}

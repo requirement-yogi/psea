@@ -6,11 +6,14 @@ import com.requirementyogi.datacenter.psea.api.WorkbookAPI;
 import com.requirementyogi.datacenter.psea.dto.PseaLimitException;
 import com.requirementyogi.datacenter.psea.utils.Utils;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -46,6 +49,8 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
 
     private final Utils.Clock timer;
     private final Map<Style, CellStyle> styles = Maps.newHashMap();
+    private List<String> errors = new ArrayList<>();
+    private List<String> warnings = new ArrayList<>();
 
     public WorkbookAPIImpl(XSSFWorkbook workbook,
                            long rowLimit,
@@ -62,6 +67,7 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
         IndexedColorMap colorMap = new DefaultIndexedColorMap();
         XSSFColor RED = new XSSFColor(new java.awt.Color(255, 0, 0), colorMap);
         XSSFColor RED_CELL_COLOR = new XSSFColor(new java.awt.Color(172, 80, 80), colorMap);
+        XSSFColor ORANGE = new XSSFColor(new java.awt.Color(239, 161, 0), colorMap);
 
         // The fonts
         Font BOLD_FONT = workbook.createFont();
@@ -70,6 +76,10 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
         Font BOLD_RED_FONT = workbook.createFont();
         BOLD_RED_FONT.setBold(true);
         BOLD_RED_FONT.setColor(RED.getIndex());
+
+        Font BOLD_ORANGE_FONT = workbook.createFont();
+        BOLD_ORANGE_FONT.setBold(true);
+        BOLD_ORANGE_FONT.setColor(ORANGE.getIndex());
 
         Font BOLD_WHITE_FONT = workbook.createFont();
         BOLD_WHITE_FONT.setBold(true);
@@ -104,6 +114,10 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
         XSSFCellStyle STYLE_ERROR_CELL = workbook.createCellStyle();
         STYLE_ERROR_CELL.setFont(BOLD_RED_FONT);
         styles.put(Style.ERROR_CELL, STYLE_ERROR_CELL);
+
+        XSSFCellStyle STYLE_WARNING_CELL = workbook.createCellStyle();
+        STYLE_WARNING_CELL.setFont(BOLD_ORANGE_FONT);
+        styles.put(Style.WARNING_CELL, STYLE_WARNING_CELL);
     }
 
     @Override
@@ -158,5 +172,29 @@ public final class WorkbookAPIImpl implements WorkbookAPI {
         XSSFCell cell = xlRow.createCell(0);
         cell.setCellValue("ERROR, the export was interrupted and aborted: " + message);
         cell.setCellStyle(styles.get(Style.ERROR_CELL));
+    }
+
+    @Override
+    public List<String> getErrors() {
+        return errors;
+    }
+
+    @Override
+    public List<String> getWarnings() {
+        return warnings;
+    }
+
+    /**
+     * Saves an error message, which can be retrieved through the client API
+     * @param error
+     */
+    public void addError(String error) {
+        errors.add(error);
+    }
+
+    @Override
+    public String getCellReference(int row, int column) {
+        CellAddress ca = new CellAddress(row, column);
+        return ca.formatAsString();
     }
 }
