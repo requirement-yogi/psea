@@ -28,7 +28,7 @@ Lists of 33 third-party dependencies.
      (Commercial) Polyfills (Confluence 8.5.0) (com.requirementyogi.datacenter:confluence-polyfills-850:3.11.1 - no url defined)
      (Commercial) Polyfills (Confluence 8.9.0) (com.requirementyogi.datacenter:confluence-polyfills-890:3.11.1 - no url defined)
      (Commercial) Polyfills (Confluence 9.0.0) (com.requirementyogi.datacenter:confluence-polyfills-900:3.11.1 - no url defined)
-     (Commercial) PSEA API (com.requirementyogi.datacenter:psea-api:2.0.3 - no url defined)
+     (Commercial) PSEA API (com.requirementyogi.datacenter:psea-api:2.0.4 - no url defined)
      (Apache License 2.0) SparseBitSet (com.zaxxer:SparseBitSet:1.3 - https://github.com/brettwooldridge/SparseBitSet)
      (Apache License 2.0) swagger-annotations (io.swagger:swagger-annotations:1.5.0 - https://github.com/swagger-api/swagger-core/modules/swagger-annotations)
      (Commercial) Utils library (com.requirementyogi.datacenter:utils:3.11.1 - no url defined)
