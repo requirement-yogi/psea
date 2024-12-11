@@ -8,7 +8,7 @@
 
         <param name="plugin-icon">img/psea-ry-16px.png</param>
         <param name="plugin-logo">img/psea-ry-72px.png</param>
-        <param name="plugin-type">both</param>
+        <param name="plugin-type">data-center</param>
 
         <!--<param name="plugin-banner">img/Banner.png</param>-->
         <param name="vendor-icon">img/ry-v3-16px-simple.png</param>
