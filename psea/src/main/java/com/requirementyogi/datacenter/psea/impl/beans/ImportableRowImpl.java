@@ -26,7 +26,7 @@ public class ImportableRowImpl implements ImportableRow {
 
     @Override
     public boolean isFocused() {
-        return false;
+        return isFocused;
     }
 
     @Override
