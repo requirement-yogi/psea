@@ -4,7 +4,7 @@ import com.atlassian.confluence.core.ConfluenceActionSupport;
 import com.atlassian.confluence.security.PermissionManager;
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import com.atlassian.xwork.XsrfTokenGenerator;
+import com.atlassian.struts.xsrf.XsrfTokenGenerator;
 import com.requirementyogi.datacenter.psea.db.dao.PseaTaskDAO;
 import com.requirementyogi.datacenter.psea.dto.DTOPseaTask;
 import com.requirementyogi.datacenter.psea.impl.PseaServiceImpl;
@@ -14,7 +14,7 @@ import org.apache.struts2.interceptor.parameter.StrutsParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
