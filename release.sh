@@ -34,7 +34,7 @@ LAST_COMMIT=$(git log -1 --pretty=oneline)
 HAS_MVN=$(echo $LAST_COMMIT | grep "[auto] Set version to" || true)
 HAS_NO_RELEASE=$(grep "NO_RELEASE" -l -RI * | grep -v "/target/" | wc -l)
 
-export JAVA_HOME="$(/usr/libexec/java_home -v 11)"
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
 echo $JAVA_HOME
 
 if [ -d ../target-psea ] ; then

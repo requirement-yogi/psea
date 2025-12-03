@@ -38,7 +38,7 @@ git checkout -b "$NEW_BRANCH" || suggestToRecover
 # Apply the "RY-1704 Compatibility with Confluence 10 and Jira 11" commit
 git cherry-pick 260f07e0250 || suggestToRecover
 ./src/update-to-confluence-10.sh || suggestToRecover
-./src/release.sh "$VER" "$NEXT_VER" || suggestToRecover
+./release.sh "$VER" "$NEXT_VER" || suggestToRecover
 
 echo
 echo "$GREEN_CHECKMARK Success"
