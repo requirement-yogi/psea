@@ -8,12 +8,12 @@ import com.requirementyogi.datacenter.psea.db.dao.PseaTaskDAO;
 import com.requirementyogi.datacenter.psea.db.entities.DBPseaTask;
 import com.requirementyogi.datacenter.psea.dto.PseaTaskStatus;
 
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Response;
 
 import static com.requirementyogi.datacenter.psea.dto.PseaTaskStatus.*;
-import static javax.ws.rs.core.Response.*;
+import static jakarta.ws.rs.core.Response.*;
 
 @Path("/")
 public class PseaJobsResource {
