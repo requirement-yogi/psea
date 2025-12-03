@@ -214,7 +214,7 @@
                             com.atlassian.upm.api.*;version="0.0.0",
                             com.atlassian.user;version="0.0.0",
                             com.atlassian.util.concurrent;resolution:=optional;version="0.0.0",
-                            com.atlassian.xwork;resolution:=optional;version="0.0.0",
+                            com.atlassian.struts.xsrf;resolution:=optional;version="0.0.0",
                             com.atlassian.annotations;version="0.0.0",
                             com.atlassian.mail;version="0.0.0",
                             com.atlassian.mail.queue;version="0.0.0",
@@ -226,16 +226,16 @@
                             javax.annotation;resolution:=optional;version="0.0.0",
                             javax.annotation.*;version="0.0.0",
                             javax.imageio;version="0.0.0",
-                            javax.inject;resolution:=optional;version="0.0.0",
+                            jakarta.inject;resolution:=optional;version="0.0.0",
                             javax.lang.model;version="0.0.0",
                             javax.lang.model.*;version="0.0.0",
                             javax.print.attribute;resolution:=optional;version="0.0.0",
                             javax.print;resolution:=optional;version="0.0.0",
-                            javax.servlet.http;version="0.0.0",
-                            javax.servlet;version="0.0.0",
-                            javax.ws.rs.core;version="0.0.0",
-                            javax.ws.rs;version="0.0.0",
-                            javax.xml.bind.annotation;version="0.0.0",
+                            jakarta.servlet.http;version="0.0.0",
+                            jakarta.servlet;version="0.0.0",
+                            jakarta.ws.rs.core;version="0.0.0",
+                            jakarta.ws.rs;version="0.0.0",
+                            jakarta.xml.bind.annotation;version="0.0.0",
                             javax.xml.namespace;version="0.0.0",
                             javax.xml.stream.events;version="0.0.0",
                             javax.xml.stream;version="0.0.0",
@@ -248,7 +248,7 @@
 
                             <!-- Yeah. This is for C7.19-C8.9, they don't support the same annotations -->
                             com.fasterxml.jackson.annotation;resolution:=optional;version="0.0.0",
-                            org.codehaus.jackson.annotate;resolution:=optional;version="0.0.0",
+                            
 
                             <!--  For  atlassian-rest-v2-api-->
                             com.atlassian.plugins.rest.api.security.annotation;resolution:=optional;version="0.0.0",
