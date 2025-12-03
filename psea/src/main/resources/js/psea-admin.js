@@ -17,7 +17,7 @@ AJS.$(function($) {
                 },
                 error: function (jqXHR) {
                     $tr.find(".actions").text("Error while deleting the job: " +
-                        (RY.extractMessageFromXHR && RY.extractMessageFromXHR(jqXHR, 300) || "")
+                        (extractMessageFromXHR && extractMessageFromXHR(jqXHR, 300) || "")
                     );
                 }
             });

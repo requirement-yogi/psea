@@ -13,7 +13,7 @@
         -->
         <groupId>com.requirementyogi.datacenter</groupId>
         <artifactId>confluence-parent-pom</artifactId>
-        <version>4.0.14</version>
+        <version>4.4.4</version>
         <relativePath/><!-- This tells Maven to go look into the repositories -->
     </parent>
 
@@ -150,10 +150,6 @@
                             !org.objectweb.asm.*,
                             !org.ietf.jgss.*,
 
-                            <!-- To avoid double-importing the DynamicImport-Package -->
-                            !com.requirementyogi.datacenter.psea.api;resolution:=optional;version="0.0.0",
-                            !com.requirementyogi.datacenter.psea.api.exceptions;resolution:=optional;version="0.0.0",
-
                             <!-- According to https://confluence.atlassian.com/doc/struts-2-upgrade-1155473773.html -->
                             com.opensymphony.xwork;resolution:=optional,
                             com.opensymphony.webwork;resolution:=optional,
@@ -218,7 +214,7 @@
                             com.atlassian.upm.api.*;version="0.0.0",
                             com.atlassian.user;version="0.0.0",
                             com.atlassian.util.concurrent;resolution:=optional;version="0.0.0",
-                            com.atlassian.xwork;version="0.0.0",
+                            com.atlassian.xwork;resolution:=optional;version="0.0.0",
                             com.atlassian.annotations;version="0.0.0",
                             com.atlassian.mail;version="0.0.0",
                             com.atlassian.mail.queue;version="0.0.0",
@@ -227,7 +223,7 @@
                             com.atlassian.webresource.api.assembler;version="0.0.0",
 
 
-                            javax.annotation;version="0.0.0",
+                            javax.annotation;resolution:=optional;version="0.0.0",
                             javax.annotation.*;version="0.0.0",
                             javax.imageio;version="0.0.0",
                             javax.inject;resolution:=optional;version="0.0.0",

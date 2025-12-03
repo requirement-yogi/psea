@@ -174,10 +174,8 @@
                             <version>3.8.4</version>
                         </requireMavenVersion>
                         <requireJavaVersion>
-                            <!-- We compile the polyfill for Confluence 9.0 in Java 17.
-                                 All other .class will be in Java 8 (class version 52) because of Jira <9.10 and <C8.0.
-                            -->
-                            <version>[11, 18)</version>
+                            <!-- C10 requires Java 21 -->
+                            <version>[21,)</version>
                         </requireJavaVersion>
                     </rules>
                 </configuration>

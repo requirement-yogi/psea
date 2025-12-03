@@ -32,7 +32,7 @@
         <resource type="download" name="psea-admin.js" location="js/psea-admin.js" />
     </web-resource>
 
-    <xwork name="MVC Actions" key="xwork">
+    <struts name="MVC Actions" key="xwork">
         <description>MVC actions for all pages provided by the plugin</description>
         <package name="psea-general" extends="default" namespace="/plugins/psea">
             <action name="about" class="com.requirementyogi.datacenter.psea.web.AboutAction" method="doDefault">
@@ -54,7 +54,7 @@
                 <result name="success" type="velocity">/psea-admin.vm</result>
             </action>
         </package>
-    </xwork>
+    </struts>
 
     <velocity-allowlist key="psea-velocity-whitelist">
         <method>com.requirementyogi.datacenter.psea.dto.DTOPseaTask#getFilename()</method>
