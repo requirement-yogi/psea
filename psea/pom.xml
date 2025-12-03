@@ -87,12 +87,12 @@
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.16.1</version>
+            <version>1.20.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
-            <version>1.11.0</version>
+            <version>1.14.1</version>
             <!-- compile -->
             <exclusions>
                 <exclusion>
@@ -379,7 +379,7 @@
         <official.plugin.name>PSEA - Export Add-on</official.plugin.name>
         <official.plugin.key>play-sql-export-addon</official.plugin.key>
         <official.plugin.complete.key>com.playsql.${official.plugin.key}</official.plugin.complete.key>
-        <poi.version>5.3.0</poi.version>
+        <poi.version>5.5.1</poi.version>
         <!-- Since the parent is in RY -->
         <yogi.version>${project.parent.version}</yogi.version>
     </properties>
