@@ -291,6 +291,10 @@
                         <exclude>com.google.guava:guava</exclude>
                         <exclude>org.apache.commons:commons-lang3</exclude>
                         <exclude>commons-io:commons-io</exclude>
+                        <!-- We can't use Confluence's dependencies for reliability reasons -->
+                        <exclude>org.jsoup:jsoup</exclude>
+                        <exclude>com.google.code.gson:gson</exclude>
+                        <exclude>org.apache.commons:commons-text</exclude>
                     </banningExcludes>
                 </configuration>
             </plugin>

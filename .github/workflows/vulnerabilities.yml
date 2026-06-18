@@ -1,13 +1,13 @@
 name: Vulnerabilities
 
 on:
-  workflow_run:
-    workflows: [ "Initial compilation" ]
-    types: [ "completed" ]
-    branches: [ "master" ]
-  schedule:
-    - cron:  '47 2 * * *'
-  workflow_dispatch:
+  # workflow_run:
+  #   workflows: [ "Initial compilation" ]
+  #   types: [ "completed" ]
+  #   branches: [ "master" ]
+  # schedule:
+  #   - cron:  '47 2 * * *'
+  # workflow_dispatch:
 
 jobs:
   build:
