@@ -13,8 +13,9 @@
         -->
         <groupId>com.requirementyogi.datacenter</groupId>
         <artifactId>confluence-parent-pom</artifactId>
-        <version>4.4.4-c10j11</version>
-        <relativePath/><!-- This tells Maven to go look into the repositories -->
+        <version>4.6-SNAPSHOT</version>
+        <relativePath>../../ry-dc/libs/confluence-parent-pom</relativePath>
+<!--        <relativePath/>&lt;!&ndash; This tells Maven to go look into the repositories &ndash;&gt;-->
     </parent>
 
     <!-- I didn't name it 'psea-plugin' because I want the final jar to be named `psea-x.y.z.jar` and not
@@ -28,11 +29,24 @@
 
     <licenses>
         <license>
-            <name>Commercial</name>
-            <url>https://docs.requirementyogi.com/legal/eula</url>
+            <name>Requirement Yogi EULA</name>
+            <url>https://docs.requirementyogi.com/legal/eula.md</url>
             <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
         </license>
     </licenses>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <!-- Forcefully upgrade Apache POI's dependency to log4j-api to 2.26.1.
+                Remove this when Apache POI doesn't depend on 2.24.x, and doesn't trigger the vulnerability build.
+                -->
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>2.26.1</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- ################################ -->
@@ -105,7 +119,7 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.18.0</version>
+            <version>2.26.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -149,6 +163,7 @@
                             !net.sf.saxon.*,
                             !org.objectweb.asm.*,
                             !org.ietf.jgss.*,
+                            !com.google.re2j.*,
 
                             <!-- According to https://confluence.atlassian.com/doc/struts-2-upgrade-1155473773.html -->
                             com.opensymphony.xwork;resolution:=optional,

@@ -18,8 +18,8 @@
 
     <licenses>
         <license>
-            <name>Commercial</name>
-            <url>https://docs.requirementyogi.com/legal/eula</url>
+            <name>Requirement Yogi EULA</name>
+            <url>https://docs.requirementyogi.com/legal/eula.md</url>
             <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
         </license>
     </licenses>
@@ -266,7 +266,7 @@
         <downloadJavadocs>true</downloadJavadocs>
         <failBuildOnCVSS>7</failBuildOnCVSS>
 
-        <libs.dependency-check-maven.version>12.1.9</libs.dependency-check-maven.version>
+        <libs.dependency-check-maven.version>13.0.0</libs.dependency-check-maven.version>
     </properties>
 
 </project>
