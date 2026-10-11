@@ -19,6 +19,7 @@ import com.requirementyogi.datacenter.psea.dto.PseaTaskStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -32,7 +33,7 @@ import static com.requirementyogi.datacenter.psea.dto.PseaTaskStatus.*;
 
 @Component
 @ExportAsService(PseaService.class)
-public class PseaServiceImpl implements PseaService, DisposableBean {
+public class PseaServiceImpl implements PseaService, InitializingBean, DisposableBean {
 
     private final static Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
     static final String FILE_PREFIX = "excel-export-";
@@ -53,9 +54,9 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
     private final PluginSettingsFactory pluginSettingsFactory;
     private final AccessModeService accessModeService;
     private final PseaTaskDAO dao;
-    private final ExecutorService executorService;
     private final ActiveObjects ao;
     private final String version;
+    private ExecutorService executorService; // Will be assigned after the constructor
 
     /**
      * The monitoring task. Removing items from the ThreadLocal is guaranteed by the fact that it's managed in a
@@ -74,6 +75,10 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
         this.dao = dao;
         this.ao = ao;
         this.version = internalBeanFactory.getPluginVersion(PluginUtil.PLUGIN_PSEA_KEY);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
         this.executorService = Executors.newCachedThreadPool();
     }
 
@@ -334,7 +339,9 @@ public class PseaServiceImpl implements PseaService, DisposableBean {
 
     @Override
     public void destroy() throws Exception {
-        executorService.shutdownNow();
+        if (executorService != null) {
+            executorService.shutdownNow();
+        }
     }
 
 }
