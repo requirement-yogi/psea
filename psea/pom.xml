@@ -163,6 +163,12 @@
                             !net.sf.saxon.*,
                             !org.objectweb.asm.*,
                             !org.ietf.jgss.*,
+
+                            !android.os,
+                            !com.google.appengine.*,
+                            !com.google.apphosting.*,
+                            !org.antlr.v4.gui.*,
+                            !sun.nio.ch.*,
                             !com.google.re2j.*,
 
                             <!-- According to https://confluence.atlassian.com/doc/struts-2-upgrade-1155473773.html -->
