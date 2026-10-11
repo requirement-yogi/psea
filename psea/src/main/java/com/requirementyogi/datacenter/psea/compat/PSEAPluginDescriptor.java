@@ -7,6 +7,7 @@ import com.atlassian.confluence.user.UserAccessor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.requirementyogi.datacenter.utils.PluginUtil;
+import com.requirementyogi.datacenter.utils.compat.GeneralPerm;
 import com.requirementyogi.datacenter.utils.compat.PluginDescriptor;
 import com.requirementyogi.datacenter.utils.confluence.compat.AbstractConfluencePluginDescriptor;
 import com.requirementyogi.datacenter.utils.confluence.compat.CompatibilityLayer;
@@ -51,7 +52,7 @@ public class PSEAPluginDescriptor extends AbstractConfluencePluginDescriptor {
     }
 
     @Override
-    public boolean isAdmin() {
+    public boolean isAdmin(GeneralPerm perm) {
         ConfluenceUser user = AuthenticatedUserThreadLocal.get();
         return permissionManager.isConfluenceAdministrator(user);
     }
