@@ -242,19 +242,19 @@
     </profiles>
 
     <distributionManagement>
-        <!-- To deploy, either run ./release.sh, or run: mvn clean deploy -Prelease
+        <!-- To deploy, run ./release.sh
         
             If you have a 401:Unauthorized error when doing 'mvn deploy', check that:
              - You have set your user/password in the <servers> section of ~/.m2/settings.xml
              - You have a section <extensions> with wagon-http 2.10, to fix a bug of maven-deploy-plugin.
          -->
         <repository>
-            <id>yogi.public.releases</id>
-            <url>https://maven.dev.requirementyogi.com/repository/public-release</url>
+            <id>yogi.nexus.yogi-releases</id>
+            <url>https://nexus.dev.requirementyogi.com/repository/yogi-releases/</url>
         </repository>
         <snapshotRepository>
-            <id>yogi.public.snapshots</id>
-            <url>https://maven.dev.requirementyogi.com/repository/public-snapshots</url>
+            <id>yogi.nexus.yogi-snapshots</id>
+            <url>https://nexus.dev.requirementyogi.com/repository/yogi-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
