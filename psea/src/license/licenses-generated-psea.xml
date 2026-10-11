@@ -105,12 +105,38 @@
     </dependency>
     <dependency>
       <groupId>com.requirementyogi.datacenter</groupId>
-      <artifactId>confluence-polyfills-1000</artifactId>
-      <version>4.4.4-c10j11</version>
+      <artifactId>confluence-polyfills-850</artifactId>
+      <version>4.6-SNAPSHOT</version>
       <licenses>
         <license>
-          <name>Requirement Yogi EULA</name>
-          <url>https://docs.requirementyogi.com/legal/eula.md</url>
+          <name>Commercial</name>
+          <url>https://docs.requirementyogi.com/legal/eula</url>
+          <file>commercial - eula.html</file>
+          <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
+        </license>
+      </licenses>
+    </dependency>
+    <dependency>
+      <groupId>com.requirementyogi.datacenter</groupId>
+      <artifactId>confluence-polyfills-890</artifactId>
+      <version>4.6-SNAPSHOT</version>
+      <licenses>
+        <license>
+          <name>Commercial</name>
+          <url>https://docs.requirementyogi.com/legal/eula</url>
+          <file>commercial - eula.html</file>
+          <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
+        </license>
+      </licenses>
+    </dependency>
+    <dependency>
+      <groupId>com.requirementyogi.datacenter</groupId>
+      <artifactId>confluence-polyfills-900</artifactId>
+      <version>4.6-SNAPSHOT</version>
+      <licenses>
+        <license>
+          <name>Commercial</name>
+          <url>https://docs.requirementyogi.com/legal/eula</url>
           <file>commercial - eula.html</file>
           <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
         </license>
@@ -119,11 +145,11 @@
     <dependency>
       <groupId>com.requirementyogi.datacenter</groupId>
       <artifactId>confluence-polyfills-base</artifactId>
-      <version>4.4.4-c10j11</version>
+      <version>4.6-SNAPSHOT</version>
       <licenses>
         <license>
-          <name>Requirement Yogi EULA</name>
-          <url>https://docs.requirementyogi.com/legal/eula.md</url>
+          <name>Commercial</name>
+          <url>https://docs.requirementyogi.com/legal/eula</url>
           <file>commercial - eula.html</file>
           <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
         </license>
@@ -132,11 +158,11 @@
     <dependency>
       <groupId>com.requirementyogi.datacenter</groupId>
       <artifactId>confluence-utils</artifactId>
-      <version>4.4.4-c10j11</version>
+      <version>4.6-SNAPSHOT</version>
       <licenses>
         <license>
-          <name>Requirement Yogi EULA</name>
-          <url>https://docs.requirementyogi.com/legal/eula.md</url>
+          <name>Commercial</name>
+          <url>https://docs.requirementyogi.com/legal/eula</url>
           <file>commercial - eula.html</file>
           <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
         </license>
@@ -145,7 +171,7 @@
     <dependency>
       <groupId>com.requirementyogi.datacenter</groupId>
       <artifactId>psea-api</artifactId>
-      <version>2.1.1-c10</version>
+      <version>2.1.2</version>
       <licenses>
         <license>
           <name>Requirement Yogi EULA</name>
@@ -158,11 +184,11 @@
     <dependency>
       <groupId>com.requirementyogi.datacenter</groupId>
       <artifactId>utils</artifactId>
-      <version>4.4.4-c10j11</version>
+      <version>4.6-SNAPSHOT</version>
       <licenses>
         <license>
-          <name>Requirement Yogi EULA</name>
-          <url>https://docs.requirementyogi.com/legal/eula.md</url>
+          <name>Commercial</name>
+          <url>https://docs.requirementyogi.com/legal/eula</url>
           <file>commercial - eula.html</file>
           <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
         </license>
@@ -314,7 +340,7 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
-      <version>2.24.3</version>
+      <version>2.26.1</version>
       <licenses>
         <license>
           <name>Apache-2.0</name>
@@ -379,25 +405,13 @@
     <dependency>
       <groupId>org.jsoup</groupId>
       <artifactId>jsoup</artifactId>
-      <version>1.18.3</version>
+      <version>1.23.2</version>
       <licenses>
         <license>
           <name>The MIT License</name>
           <url>https://jsoup.org/license</url>
           <distribution>repo</distribution>
           <file>the mit license - license.html</file>
-        </license>
-      </licenses>
-    </dependency>
-    <dependency>
-      <groupId>org.jspecify</groupId>
-      <artifactId>jspecify</artifactId>
-      <version>1.0.0</version>
-      <licenses>
-        <license>
-          <name>The Apache License, Version 2.0</name>
-          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-          <file>apache 2.0 - license-2.0.txt</file>
         </license>
       </licenses>
     </dependency>
