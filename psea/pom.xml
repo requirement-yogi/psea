@@ -203,6 +203,7 @@
                             com.atlassian.confluence.plugin.descriptor.web;resolution:="optional",
                             com.atlassian.confluence.plugin.descriptor.web.conditions;resolution:="optional",
                             com.atlassian.confluence.plugin.descriptor.web.conditions.user;resolution:="optional",
+                            com.atlassian.ratelimiting.annotation;resolution:="optional",
 
                             <!-- The real problem here is that 2 subpackages (createcontent and featurediscovery) have
                                  versions 5.0.9 and 1.9 while the parent package com.atlassian.confluence requires 5.8.6 -->
@@ -221,7 +222,7 @@
                             com.atlassian.core.util.*;resolution:=optional;version="0.0.0",
                             com.atlassian.event.api;version="0.0.0",
                             com.atlassian.extras.common.log;version="0.0.0",
-                            com.atlassian.hibernate;version="0.0.0",
+                            com.atlassian.hibernate;resolution:=optional;version="0.0.0",
                             com.atlassian.plugin.module;version="0.0.0",
                             com.atlassian.plugin.web;version="0.0.0",
                             com.atlassian.plugin.web.*;version="0.0.0",

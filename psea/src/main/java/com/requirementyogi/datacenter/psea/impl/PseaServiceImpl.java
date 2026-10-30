@@ -9,6 +9,7 @@ import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import com.requirementyogi.datacenter.utils.BaseUtils;
 import com.requirementyogi.datacenter.utils.PluginUtil;
 import com.requirementyogi.datacenter.utils.compat.InternalBeanFactory;
 import com.requirementyogi.datacenter.psea.api.*;
@@ -152,18 +153,25 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
         // But we still have to carry the current user to that thread.
         if (transactionHasAlreadyStarted) {
             ConfluenceUser user = AuthenticatedUserThreadLocal.get();
+            Callable<T> task = () -> {
+                try {
+                    AuthenticatedUserThreadLocal.set(user);
+                    return callable.call();
+                } finally {
+                    AuthenticatedUserThreadLocal.reset();
+                }
+            };
+            Future<T> future = executorService.submit(task);
+            long timeoutMillis = getTimeLimit() + TimeUnit.SECONDS.toMillis(60);
             try {
-                return executorService.submit(() -> {
-                    try {
-                        AuthenticatedUserThreadLocal.set(user);
-                        return callable.call();
-                    } finally {
-                        AuthenticatedUserThreadLocal.reset();
-                    }
-                }).get();
+                return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
+                future.cancel(true);
                 Thread.currentThread().interrupt();
                 throw new RuntimeException("Interruption while executing a PSEA task", e);
+            } catch (TimeoutException e) {
+                future.cancel(true);
+                throw new RuntimeException("PSEA task exceeded the time limit of " + timeoutMillis + "ms", e);
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof RuntimeException) {
                     throw (RuntimeException) e.getCause();
@@ -204,6 +212,14 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
             waitUntilASlotIsAvailable(waitingTimeMillis, record);
 
             dao.save(record, status, null);
+        } else {
+            // The record already exists (nested createTask call from export()): transition its status
+            // if we are moving to a different running state, so the UI reflects actual progress
+            // (otherwise the task appears stuck in PREPARING for the entire callback).
+            PseaTaskStatus current = PseaTaskStatus.of(record);
+            if (current != null && current.isRunning() && current != CANCELLING && current != status) {
+                dao.save(record, status, null);
+            }
         }
         return record;
     }
@@ -214,8 +230,8 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
         long timeout = System.currentTimeMillis() + waitingTimeMillis;
         int runningJobs;
         // Retry 10 times during the duration, but at least every 3s and at most every 10s.
-        long sleepTime = Math.max(3000L, Math.min(timeout - System.currentTimeMillis() / 10L, 10000L));
-        while ((runningJobs = dao.countRunningJobs()) > maxConcurrentJobs) {
+        long sleepTime = Math.max(3000L, Math.min((timeout - System.currentTimeMillis()) / 10L, 10000L));
+        while ((runningJobs = dao.countRunningJobs()) >= maxConcurrentJobs) {
             if (System.currentTimeMillis() > timeout) {
                 String message = "Cancelled because too many concurrent jobs are running (" + runningJobs + "/" + maxConcurrentJobs + ")";
                 dao.save(record, CANCELLED, message);
