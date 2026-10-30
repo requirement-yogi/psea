@@ -98,6 +98,14 @@
                         <nvdValidForHours>24</nvdValidForHours>
                         <nvdApiDelay>6000</nvdApiDelay> <!-- Wait 6 seconds between each request -->
                         <suppressionFile>src/owasp-vulnerability-suppression.xml</suppressionFile>
+
+                        <!-- Sonatype Guide, to download enriched NVD records -->
+                        <!-- https://guide.sonatype.com/settings/usage -->
+                        <ossIndexAnalyzerEnabled>true</ossIndexAnalyzerEnabled>
+                        <ossIndexAnalyzerUseCache>true</ossIndexAnalyzerUseCache>
+                        <ossIndexServerId>ossindex</ossIndexServerId>
+                        <ossIndexWarnOnlyOnRemoteErrors>false</ossIndexWarnOnlyOnRemoteErrors>
+
                         <!-- Set up a proxy on Bamboo using the instructions at https://github.com/stevespringett/nist-data-mirror .
                              Do NOT make it accessible from the outer world.
                              docker build \-\-rm -t sspringett/nvdmirror
