@@ -1,6 +1,7 @@
 package com.requirementyogi.datacenter.psea.impl;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
+import net.java.ao.Query;
 import com.atlassian.confluence.api.model.accessmode.AccessMode;
 import com.atlassian.confluence.api.service.accessmode.AccessModeService;
 import com.atlassian.confluence.api.service.exceptions.ServiceException;
@@ -99,6 +100,8 @@ public class PseaTestUtils {
         });
         when(ao.get(eq(DBPseaTask.class), eq(recordId))).thenReturn(record);
         when(ao.create(any())).thenAnswer(invocation -> record);
+        // Like ActiveObjects, which returns an empty array (not null) when nothing matches, e.g. no stale task
+        when(ao.find(eq(DBPseaTask.class), any(Query.class))).thenReturn(new DBPseaTask[0]);
     }
 
     public PseaServiceImpl psea = new PseaServiceImpl(pluginSettingsFactory, accessModeService, dao, ao, internalBeanFActory);

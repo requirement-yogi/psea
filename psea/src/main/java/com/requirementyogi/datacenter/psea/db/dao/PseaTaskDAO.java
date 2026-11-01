@@ -168,6 +168,32 @@ public class PseaTaskDAO {
         Collections.addAll(list, items);
     }
 
+    /**
+     * Marks the tasks which have been running for longer than maximumDurationMillis as ERROR. They were probably
+     * abandoned (e.g. Confluence or the app was restarted during the export), and otherwise they would take a slot
+     * of {@link #countRunningJobs()} forever.
+     *
+     * If such a task is actually still running, it isn't interrupted, and it will set its final status itself.
+     *
+     * @return the number of tasks which were marked as ERROR
+     */
+    public int markStaleTasksAsFailed(long maximumDurationMillis) {
+        return ao.executeInTransaction(() -> {
+            List<PseaTaskStatus> statuses = PseaTaskStatus.listOfRunningStatuses();
+            List<Object> parameters = new ArrayList<>();
+            statuses.forEach(status -> parameters.add(status.getDbValue()));
+            parameters.add(new Date(System.currentTimeMillis() - maximumDurationMillis));
+            DBPseaTask[] staleTasks = ao.find(DBPseaTask.class, Query.select().where(
+                    "STATUS IN (" + StringUtils.repeat("?", ", ", statuses.size()) + ") AND STARTDATE < ?",
+                    parameters.toArray()));
+            for (DBPseaTask staleTask : staleTasks) {
+                save(staleTask, PseaTaskStatus.ERROR,
+                     "Marked as failed, because it was still running after " + (maximumDurationMillis / 1000) + "s");
+            }
+            return staleTasks.length;
+        });
+    }
+
     /** Returns the number of jobs that have a status where {@link PseaTaskStatus#isRunning()} is true */
     public int countRunningJobs() {
         return ao.executeInTransaction(() -> {

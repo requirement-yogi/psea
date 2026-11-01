@@ -13,7 +13,7 @@
         -->
         <groupId>com.requirementyogi.datacenter</groupId>
         <artifactId>confluence-parent-pom</artifactId>
-        <version>4.6-SNAPSHOT</version>
+        <version>4.7-SNAPSHOT</version>
         <relativePath>../../ry-dc/libs/confluence-parent-pom</relativePath>
 <!--        <relativePath/>&lt;!&ndash; This tells Maven to go look into the repositories &ndash;&gt;-->
     </parent>
@@ -34,19 +34,6 @@
             <comments>The Requirement Yogi EULA applies to this software - See https://docs.requirementyogi.com/legal/eula</comments>
         </license>
     </licenses>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <!-- Forcefully upgrade Apache POI's dependency to log4j-api to 2.26.1.
-                Remove this when Apache POI doesn't depend on 2.24.x, and doesn't trigger the vulnerability build.
-                -->
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-api</artifactId>
-                <version>2.26.1</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <!-- ################################ -->
@@ -89,6 +76,13 @@
                     <artifactId>xml-apis</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <!-- Apache POI needs it -->
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.26.1</version>
+            <scope>provided</scope>
         </dependency>
         <!--<dependency>
             &lt;!&ndash; This dependency upgrades a vulnerable dep of Apache POI.
@@ -148,6 +142,11 @@
                             </dependency>
                         </scannedDependencies>
                         <Import-Package>
+                            <!-- Apache POI needs it, and before !org.apache.* -->
+                            org.apache.logging.log4j;version="0.0.0",
+                            org.apache.logging.log4j.message;version="0.0.0",
+                            org.apache.logging.log4j.util;version="0.0.0",
+
                             <!-- Specific to Apache POI -->
                             org.xml*,
                             org.w3c.dom.*;resolution:=optional;version="0.0.0",
