@@ -4,6 +4,8 @@ import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.confluence.api.model.accessmode.AccessMode;
 import com.atlassian.confluence.api.service.accessmode.AccessModeService;
 import com.atlassian.confluence.api.service.exceptions.ServiceException;
+import com.atlassian.confluence.setup.BootstrapManager;
+import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import com.atlassian.sal.api.transaction.TransactionCallback;
@@ -14,8 +16,12 @@ import com.requirementyogi.datacenter.utils.compat.InternalBeanFactory;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mockito.Mockito;
 
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -23,6 +29,16 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class PseaTestUtils {
+
+    /** With the milliseconds, so that two tests don't use the same file */
+    private static final DateTimeFormatter FILE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss-SSS");
+
+    /**
+     * "ry-[date]-[description].xlsx", like the files of Requirement Yogi, so that its purge deletes them.
+     */
+    public static String buildFileName(String description) {
+        return "ry-" + LocalDateTime.now().format(FILE_DATE_FORMAT) + "-" + description + ".xlsx";
+    }
 
     public AccessModeService accessModeService = new AccessModeService() {
         @Override
@@ -99,6 +115,24 @@ public class PseaTestUtils {
         when(ao.create(any())).thenAnswer(invocation -> record);
     }
 
-    public PseaServiceImpl psea = new PseaServiceImpl(pluginSettingsFactory, accessModeService, dao, ao, internalBeanFActory);
+    /** The local home: The files are created in "target/psea-test-home/temp/yogi" */
+    public final ApplicationProperties applicationProperties = Mockito.mock(ApplicationProperties.class);
+    /** No temporary directory is configured in confluence.cfg.xml (getFilePathProperty() returns null) */
+    public final BootstrapManager bootstrapManager = Mockito.mock(BootstrapManager.class);
+
+    {
+        when(applicationProperties.getLocalHomeDirectory())
+                .thenReturn(Optional.of(Paths.get("target", "psea-test-home").toAbsolutePath()));
+    }
+
+    public PseaServiceImpl psea = new PseaServiceImpl(
+            pluginSettingsFactory,
+            applicationProperties,
+            bootstrapManager,
+            accessModeService,
+            dao,
+            ao,
+            internalBeanFActory
+    );
 
 }

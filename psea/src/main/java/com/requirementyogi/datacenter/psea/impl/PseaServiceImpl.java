@@ -3,13 +3,15 @@ package com.requirementyogi.datacenter.psea.impl;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.confluence.api.model.accessmode.AccessMode;
 import com.atlassian.confluence.api.service.accessmode.AccessModeService;
+import com.atlassian.confluence.setup.BootstrapManager;
+import com.atlassian.confluence.setup.ConfluenceBootstrapConstants;
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
 import com.atlassian.confluence.user.ConfluenceUser;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-import com.requirementyogi.datacenter.utils.BaseUtils;
 import com.requirementyogi.datacenter.utils.PluginUtil;
 import com.requirementyogi.datacenter.utils.compat.InternalBeanFactory;
 import com.requirementyogi.datacenter.psea.api.*;
@@ -17,18 +19,23 @@ import com.requirementyogi.datacenter.psea.api.exceptions.PseaCancellationExcept
 import com.requirementyogi.datacenter.psea.db.dao.PseaTaskDAO;
 import com.requirementyogi.datacenter.psea.db.entities.DBPseaTask;
 import com.requirementyogi.datacenter.psea.dto.PseaTaskStatus;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nonnull;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 import static com.requirementyogi.datacenter.psea.dto.PseaTaskStatus.*;
 
@@ -37,8 +44,13 @@ import static com.requirementyogi.datacenter.psea.dto.PseaTaskStatus.*;
 public class PseaServiceImpl implements PseaService, InitializingBean, DisposableBean {
 
     private final static Logger LOG = LoggerFactory.getLogger(PseaServiceImpl.class);
-    static final String FILE_PREFIX = "excel-export-";
-    static final String FILE_EXTENSION = ".xlsx";
+    /** In the local home. Atlassian recommends it for exports, imports, etc. */
+    private static final String TEMPORARY_DIRECTORY = "temp";
+    /** In Confluence's temporary directory, so that our files are easy to spot. See {@link #getTemporaryDirectory()} */
+    private static final String YOGI_TEMP_DIR = "yogi";
+    /** No directory separator, and not "." or ".." */
+    private static final Pattern VALID_FILE_NAME = Pattern.compile("^(?!\\.{1,2}$)[0-9A-Za-z._-]+$");
+    private static final int MAX_FILE_NAME_LENGTH = 255;
     public static final String SETTINGS_ROOT = "com.requirementyogi.psea";
     private static final String SETTINGS_ROW_LIMIT = SETTINGS_ROOT + ".row-limit";
     private static final String SETTINGS_TIME_LIMIT = SETTINGS_ROOT + ".time-limit";
@@ -53,6 +65,8 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
     public static final long CONCURRENT_JOBS_MAX = 10000 * CONCURRENT_JOBS_DEFAULT; // Doesn't really matter, they can be small
 
     private final PluginSettingsFactory pluginSettingsFactory;
+    private final ApplicationProperties applicationProperties;
+    private final BootstrapManager bootstrapManager;
     private final AccessModeService accessModeService;
     private final PseaTaskDAO dao;
     private final ActiveObjects ao;
@@ -66,12 +80,16 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
     private final ThreadLocal<Long> threadLocalTaskId = new ThreadLocal<>();
 
     public PseaServiceImpl(@ComponentImport PluginSettingsFactory pluginSettingsFactory,
+                           @ComponentImport ApplicationProperties applicationProperties,
+                           @ComponentImport BootstrapManager bootstrapManager,
                            @ComponentImport AccessModeService accessModeService,
                            PseaTaskDAO dao,
                            @ComponentImport ActiveObjects ao,
                            InternalBeanFactory internalBeanFactory
     ) {
         this.pluginSettingsFactory = pluginSettingsFactory;
+        this.applicationProperties = applicationProperties;
+        this.bootstrapManager = bootstrapManager;
         this.accessModeService = accessModeService;
         this.dao = dao;
         this.ao = ao;
@@ -119,7 +137,6 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
                     }
                     return callable.call();
                 } finally {
-                    AuthenticatedUserThreadLocal.reset();
                     Long taskId = threadLocalTaskId.get();
                     threadLocalTaskId.remove();
                     DBPseaTask task = dao.get(taskId);
@@ -246,9 +263,45 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
         }
     }
 
-    public File export(Consumer<WorkbookAPI> pluginCallback) throws PseaCancellationException {
+    @Override
+    public File export(String fileName, Consumer<WorkbookAPI> pluginCallback) throws PseaCancellationException {
+        // The length first, so that the regular expression only runs on short inputs
+        if (fileName == null || fileName.length() > MAX_FILE_NAME_LENGTH || !VALID_FILE_NAME.matcher(fileName).matches()) {
+            throw new IllegalArgumentException("Invalid file name for an export: " + fileName);
+        }
+        File directory = getTemporaryDirectory();
+        try {
+            // Unlike mkdirs(), it doesn't fail if another export creates the directory at the same time
+            Files.createDirectories(directory.toPath());
+        } catch (IOException exception) {
+            throw new RuntimeException("Can't create the directory " + directory, exception);
+        }
         ExcelExportTask task = new ExcelExportTask(this, dao);
-        return task.export(pluginCallback);
+        return task.export(new File(directory, fileName), pluginCallback);
+    }
+
+    /**
+     * "yogi" in Confluence's temporary directory:
+     * - The directory configured in confluence.cfg.xml ("struts.multipart.saveDir", formerly
+     *   "webwork.multipart.saveDir"), if any,
+     * - Otherwise "temp" in the local home, i.e. {@code <confluence-home>/temp/yogi},
+     * - Otherwise java.io.tmpdir, if the local home is unknown.
+     */
+    @Override
+    @Nonnull
+    public File getTemporaryDirectory() {
+        String configuredDirectory = StringUtils.trimToNull(bootstrapManager.getFilePathProperty(ConfluenceBootstrapConstants.TEMP_DIR_PROP));
+        if (configuredDirectory != null) {
+            if (new File(configuredDirectory).isAbsolute()) {
+                return new File(configuredDirectory, YOGI_TEMP_DIR);
+            }
+            // It would be resolved against the working directory of the JVM, usually in the installation directory
+            LOG.warn("PSEA: The temporary directory of confluence.cfg.xml isn't absolute, so it is ignored: " + configuredDirectory);
+        }
+        File temporaryDirectory = applicationProperties.getLocalHomeDirectory()
+                                                       .map(localHome -> localHome.resolve(TEMPORARY_DIRECTORY).toFile())
+                                                       .orElseGet(() -> new File(System.getProperty("java.io.tmpdir")));
+        return new File(temporaryDirectory, YOGI_TEMP_DIR);
     }
 
     public void extract(PseaInput workbookFile, ExcelImportConsumer consumer) throws OutOfMemoryError, PSEAImportException {
@@ -277,9 +330,17 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
         }
     }
 
+    /**
+     * Reads a setting in a transaction. In Confluence, plugin settings are stored by Bandana, which requires a
+     * Hibernate session when the value isn't in the cache. Background threads (e.g. Requirement Yogi's queue)
+     * don't have one, so it would fail with "Failed to find org.hibernate.Session from the current thread".
+     */
+    private Object readSetting(String key) {
+        return ao.executeInTransaction(() -> pluginSettingsFactory.createGlobalSettings().get(key));
+    }
+
     public Long getRowLimit() {
-        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
-        Object value = settings.get(SETTINGS_ROW_LIMIT);
+        Object value = readSetting(SETTINGS_ROW_LIMIT);
         return readLong(value, 1, MAX_ROWS_DEFAULT, MAX_ROWS_DEFAULT);
     }
 
@@ -297,8 +358,7 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
     }
 
     public Long getTimeLimit() {
-        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
-        Object value = settings.get(SETTINGS_TIME_LIMIT);
+        Object value = readSetting(SETTINGS_TIME_LIMIT);
         return readLong(value, 1, TIME_LIMIT_MAX, TIME_LIMIT_DEFAULT);
     }
 
@@ -316,8 +376,7 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
     }
 
     public long getDataLimit() {
-        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
-        Object value = settings.get(SETTINGS_DATA_LIMIT);
+        Object value = readSetting(SETTINGS_DATA_LIMIT);
         return readLong(value, 1, DATA_LIMIT_MAX, DATA_LIMIT_DEFAULT);
     }
 
@@ -335,8 +394,7 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
     }
 
     public long getConcurrentJobsLimit() {
-        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
-        Object value = settings.get(SETTINGS_CONCURRENT_JOBS_LIMIT);
+        Object value = readSetting(SETTINGS_CONCURRENT_JOBS_LIMIT);
         return readLong(value, -1, CONCURRENT_JOBS_MAX, CONCURRENT_JOBS_DEFAULT);
     }
 

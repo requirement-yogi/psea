@@ -2,6 +2,7 @@ package com.requirementyogi.datacenter.psea.api;
 
 import com.requirementyogi.datacenter.psea.api.exceptions.PseaCancellationException;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -11,18 +12,33 @@ import java.util.function.Consumer;
 public interface PseaService {
 
     /**
-     * Export excel file with default constraints
+     * Export excel file with default constraints. The file is created in {@link #getTemporaryDirectory()}, with
+     * the given name, so that the caller can find it again (e.g. to clean it up).
      *
-     * The caller is responsible for deleting the file afterwards.
-     * If not, it will only be deleted when the JVM is deleted.
+     * The caller is responsible for moving or deleting the file afterwards. If it fails, the file is deleted.
      *
      * IMPORTANT: If you want the exception to be saved, no transaction should be started before
      * this export, AND any exception should be caught and returned to the UI as a simple error.
      *
+     * @param fileName the name of the file, without directory. Only the characters [0-9A-Za-z._-] are accepted.
      * @param f the consumer
      * @return File where the file is stored
+     * @throws IllegalArgumentException if the file name is invalid
+     * @since PSEA 2.2.0, which replaced export(Consumer) on purpose
      */
-    File export(Consumer<WorkbookAPI> f) throws CancellationException;
+    File export(String fileName, Consumer<WorkbookAPI> f) throws CancellationException;
+
+    /**
+     * The directory where {@link #export(String, Consumer)} creates the files:
+     * {@code "<confluence-home>/temp/yogi"}, as recommended by Atlassian for exports, unless the temporary
+     * directory is overridden in confluence.cfg.xml. Falls back to "yogi" in java.io.tmpdir if the local home is
+     * unknown. It may not exist yet.
+     *
+     * @return never null
+     * @since PSEA 2.2.0
+     */
+    @Nonnull
+    File getTemporaryDirectory();
 
     /**
      * Read an Excel file, and feed it to the consumer.

@@ -22,7 +22,7 @@ public class PseaServiceImplTest {
     public void testSizeLimit() {
         utils.psea.setDataLimit(300L);
         try {
-            utils.psea.export(workbook -> {
+            utils.psea.export(PseaTestUtils.buildFileName("size-limit-test"), workbook -> {
                 Sheet sheet = workbook.newSheet("foo");
                 sheet.addRow(Lists.newArrayList(new Value("v1"))); // Takes 10 for the row, 10 for the cell, 2 for the contents
                 sheet.addRow(Lists.newArrayList(new Value(StringUtils.repeat("a", 250)))); // Still under 300

@@ -34,7 +34,10 @@ public class ExcelExportTask {
         this.dao = dao;
     }
 
-    public File export(Consumer<WorkbookAPI> pluginCallback) throws PseaCancellationException {
+    /**
+     * @param file the file to write. The caller is in charge of moving or deleting it.
+     */
+    public File export(File file, Consumer<WorkbookAPI> pluginCallback) throws PseaCancellationException {
         // We don't wait, in this step, because callers who want to wait should do it in the startMonitoredTask,
         // assuming they have the correct version of PSEA.
         DBPseaTask record = pseaService.createTask(PseaTaskStatus.IN_PROGRESS, 0L, null);
@@ -42,12 +45,9 @@ public class ExcelExportTask {
         long sizeLimit = pseaService.getDataLimit();
         Consumer<Long> saveSize = buildSaveSizeFunction(record, sizeLimit);
 
-        XSSFWorkbook xlWorkbook = null;
         long rowLimit = pseaService.getRowLimit();
         long timeLimit = pseaService.getTimeLimit();
-        File file = null;
-        try {
-            xlWorkbook = new XSSFWorkbook();
+        try (XSSFWorkbook xlWorkbook = new XSSFWorkbook()) {
             WorkbookAPIImpl workbook = new WorkbookAPIImpl(xlWorkbook, rowLimit, timeLimit, saveSize);
             try {
                 pluginCallback.accept(workbook);
@@ -59,8 +59,6 @@ public class ExcelExportTask {
                 // with the error inside.
             }
 
-            file = File.createTempFile(pseaService.FILE_PREFIX, pseaService.FILE_EXTENSION);
-            file.deleteOnExit();
             if (record != null) {
                 record.setFilename(file.getName());
                 dao.saveAndCheckCancellation(record);
@@ -75,29 +73,22 @@ public class ExcelExportTask {
 
         } catch (IOException e) {
             dao.save(record, ERROR, "IO Exception: " + e.getMessage());
-            if (file != null) {
-                file.delete(); // Doesn't throw an exception, just returns false if error
-            }
+            file.delete(); // Doesn't throw an exception, just returns false if error
             throw new RuntimeException("Error while writing an Excel file to disk", e);
 
         } catch (RuntimeException re) {
             dao.save(record, ERROR, re.getMessage());
-            if (file != null) {
-                file.delete(); // Doesn't throw an exception, just returns false if error
-            }
+            file.delete(); // Doesn't throw an exception, just returns false if error
             throw re;
         } finally {
             if (record != null) {
                 PseaTaskStatus status = PseaTaskStatus.of(record);
                 if (status == null || !status.isFinalState()) {
-                    dao.save(record, ERROR, "The status was " + record.getStatus() + " despite the export being finished.");
-                }
-            }
-            if (xlWorkbook != null) {
-                try {
-                    xlWorkbook.close();
-                } catch (IOException e) {
-                    LOG.error("Error while closing an Excel file that we were creating", e);
+                    dao.save(
+                            record,
+                            ERROR,
+                            "The status was " + record.getStatus() + " despite the export being finished."
+                    );
                 }
             }
         }

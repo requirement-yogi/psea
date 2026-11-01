@@ -28,7 +28,7 @@ public class CreateExcelFileTest {
     @Test
     public void test() throws IOException {
         PseaServiceImpl psea = utils.psea;
-        File file = psea.export(workbookAPI -> {
+        File file = psea.export(PseaTestUtils.buildFileName("create-excel-file-test"), workbookAPI -> {
             Row row;
             Sheet sheet = workbookAPI.newSheet("ABC");
             sheet.addRow(Lists.newArrayList(
