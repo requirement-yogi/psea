@@ -62,6 +62,8 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
     public static final long DATA_LIMIT_DEFAULT = 100000000; // 100 MB of data ?
     public static final long DATA_LIMIT_MAX = 100 * DATA_LIMIT_DEFAULT; // 10GB of data...
     public static final long CONCURRENT_JOBS_DEFAULT = 10;
+    /** Tasks running for longer than this factor x the time limit are considered abandoned, and marked as failed */
+    private static final long STALE_TASK_FACTOR = 2;
     public static final long CONCURRENT_JOBS_MAX = 10000 * CONCURRENT_JOBS_DEFAULT; // Doesn't really matter, they can be small
 
     private final PluginSettingsFactory pluginSettingsFactory;
@@ -243,6 +245,13 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
 
     private void waitUntilASlotIsAvailable(long waitingTimeMillis, DBPseaTask record) throws PseaCancellationException {
         long maxConcurrentJobs = getConcurrentJobsLimit();
+
+        // Abandoned tasks (e.g. after a restart during an export) would otherwise take the slots forever
+        int staleTasks = dao.markStaleTasksAsFailed(STALE_TASK_FACTOR * getTimeLimit());
+        if (staleTasks > 0) {
+            LOG.warn("PSEA: " + staleTasks + " task(s) were still running after " + STALE_TASK_FACTOR
+                     + " times the time limit, they were marked as failed.");
+        }
 
         long timeout = System.currentTimeMillis() + waitingTimeMillis;
         int runningJobs;

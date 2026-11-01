@@ -6,6 +6,7 @@ import com.atlassian.confluence.user.ConfluenceUser;
 import com.atlassian.confluence.user.UserAccessor;
 import com.atlassian.plugin.PluginAccessor;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
+import com.atlassian.sal.api.ApplicationProperties;
 import com.requirementyogi.datacenter.utils.PluginUtil;
 import com.requirementyogi.datacenter.utils.compat.GeneralPerm;
 import com.requirementyogi.datacenter.utils.compat.PluginDescriptor;
@@ -23,11 +24,12 @@ public class PSEAPluginDescriptor extends AbstractConfluencePluginDescriptor {
     @Autowired
     public PSEAPluginDescriptor(
             PluginAccessor pluginAccessor,
+            ApplicationProperties applicationProperties,
             UserAccessor userAccessor,
             CompatibilityLayer compatibilityLayer,
             PermissionManager permissionManager
     ) {
-        super(pluginAccessor, userAccessor, compatibilityLayer);
+        super(pluginAccessor, applicationProperties, userAccessor, compatibilityLayer);
         this.permissionManager = permissionManager;
     }
 
