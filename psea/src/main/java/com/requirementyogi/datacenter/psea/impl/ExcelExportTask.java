@@ -42,12 +42,10 @@ public class ExcelExportTask {
         long sizeLimit = pseaService.getDataLimit();
         Consumer<Long> saveSize = buildSaveSizeFunction(record, sizeLimit);
 
-        XSSFWorkbook xlWorkbook = null;
         long rowLimit = pseaService.getRowLimit();
         long timeLimit = pseaService.getTimeLimit();
         File file = null;
-        try {
-            xlWorkbook = new XSSFWorkbook();
+        try (XSSFWorkbook xlWorkbook = new XSSFWorkbook()) {
             WorkbookAPIImpl workbook = new WorkbookAPIImpl(xlWorkbook, rowLimit, timeLimit, saveSize);
             try {
                 pluginCallback.accept(workbook);
@@ -91,13 +89,6 @@ public class ExcelExportTask {
                 PseaTaskStatus status = PseaTaskStatus.of(record);
                 if (status == null || !status.isFinalState()) {
                     dao.save(record, ERROR, "The status was " + record.getStatus() + " despite the export being finished.");
-                }
-            }
-            if (xlWorkbook != null) {
-                try {
-                    xlWorkbook.close();
-                } catch (IOException e) {
-                    LOG.error("Error while closing an Excel file that we were creating", e);
                 }
             }
         }

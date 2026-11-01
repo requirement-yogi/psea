@@ -121,7 +121,6 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
                     }
                     return callable.call();
                 } finally {
-                    AuthenticatedUserThreadLocal.reset();
                     Long taskId = threadLocalTaskId.get();
                     threadLocalTaskId.remove();
                     DBPseaTask task = dao.get(taskId);
@@ -286,9 +285,18 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
         }
     }
 
+    /**
+     * Reads a setting in a transaction. In Confluence, plugin settings are stored by Bandana, which requires a
+     * Hibernate session when the value isn't in the cache. Background threads (e.g. PSEA's executor, see
+     * ensureTransactionIsClean()) don't have one, so it would fail with "Failed to find org.hibernate.Session from
+     * the current thread".
+     */
+    private Object readSetting(String key) {
+        return ao.executeInTransaction(() -> pluginSettingsFactory.createGlobalSettings().get(key));
+    }
+
     public Long getRowLimit() {
-        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
-        Object value = settings.get(SETTINGS_ROW_LIMIT);
+        Object value = readSetting(SETTINGS_ROW_LIMIT);
         return readLong(value, 1, MAX_ROWS_DEFAULT, MAX_ROWS_DEFAULT);
     }
 
@@ -306,8 +314,7 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
     }
 
     public Long getTimeLimit() {
-        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
-        Object value = settings.get(SETTINGS_TIME_LIMIT);
+        Object value = readSetting(SETTINGS_TIME_LIMIT);
         return readLong(value, 1, TIME_LIMIT_MAX, TIME_LIMIT_DEFAULT);
     }
 
@@ -325,8 +332,7 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
     }
 
     public long getDataLimit() {
-        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
-        Object value = settings.get(SETTINGS_DATA_LIMIT);
+        Object value = readSetting(SETTINGS_DATA_LIMIT);
         return readLong(value, 1, DATA_LIMIT_MAX, DATA_LIMIT_DEFAULT);
     }
 
@@ -344,8 +350,7 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
     }
 
     public long getConcurrentJobsLimit() {
-        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
-        Object value = settings.get(SETTINGS_CONCURRENT_JOBS_LIMIT);
+        Object value = readSetting(SETTINGS_CONCURRENT_JOBS_LIMIT);
         return readLong(value, -1, CONCURRENT_JOBS_MAX, CONCURRENT_JOBS_DEFAULT);
     }
 
