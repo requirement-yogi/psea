@@ -249,8 +249,8 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
         // Abandoned tasks (e.g. after a restart during an export) would otherwise take the slots forever
         int staleTasks = dao.markStaleTasksAsFailed(STALE_TASK_FACTOR * getTimeLimit());
         if (staleTasks > 0) {
-            LOG.warn("PSEA: " + staleTasks + " task(s) were still running after " + STALE_TASK_FACTOR
-                     + " times the time limit, they were marked as failed.");
+            LOG.warn("PSEA: {} task(s) were still running after {} times the time limit, they were marked as failed.",
+                     staleTasks, STALE_TASK_FACTOR);
         }
 
         long timeout = System.currentTimeMillis() + waitingTimeMillis;
@@ -305,7 +305,7 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
                 return new File(configuredDirectory, YOGI_TEMP_DIR);
             }
             // It would be resolved against the working directory of the JVM, usually in the installation directory
-            LOG.warn("PSEA: The temporary directory of confluence.cfg.xml isn't absolute, so it is ignored: " + configuredDirectory);
+            LOG.warn("PSEA: The temporary directory of confluence.cfg.xml isn't absolute, so it is ignored: {}", configuredDirectory);
         }
         File temporaryDirectory = applicationProperties.getLocalHomeDirectory()
                                                        .map(localHome -> localHome.resolve(TEMPORARY_DIRECTORY).toFile())

@@ -116,7 +116,7 @@ public class CreateExcelFileTest {
             targetFile = new File("target", "file-" + ++fileNumber + ".xlsx");
         } while (targetFile.exists());
         FileUtils.copyFile(file, targetFile);
-        LOGGER.info("Excel file is in " + targetFile.getAbsolutePath() + ", please check its contents.");
+        LOGGER.info("Excel file is in {}, please check its contents.", targetFile.getAbsolutePath());
         return targetFile;
     }
 }
