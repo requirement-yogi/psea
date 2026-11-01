@@ -19,9 +19,12 @@ import org.mockito.Mockito;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 public class PseaTestUtils {
@@ -89,10 +92,17 @@ public class PseaTestUtils {
     public final PseaTaskDAO dao = new PseaTaskDAO(ao, userAccessor);
     public final DBPseaTask record = Mockito.mock(DBPseaTask.class);
     public final InternalBeanFactory internalBeanFActory = Mockito.mock(InternalBeanFactory.class);
+    /** The status of the record, which PseaServiceImpl reads again after setting it */
+    private final AtomicReference<String> recordStatus = new AtomicReference<>();
 
     {
         long recordId = 1L;
         when(record.getID()).thenReturn(recordId);
+        doAnswer(invocation -> {
+            recordStatus.set(invocation.getArgument(0));
+            return null;
+        }).when(record).setStatus(anyString());
+        when(record.getStatus()).thenAnswer(invocation -> recordStatus.get());
         when(ao.executeInTransaction(any())).thenAnswer(invocation -> {
             TransactionCallback callback = invocation.getArgument(0);
             Object result = callback.doInTransaction();

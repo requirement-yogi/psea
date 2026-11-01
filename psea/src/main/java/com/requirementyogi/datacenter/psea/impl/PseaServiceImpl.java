@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -53,6 +54,8 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
     /** Tasks running for longer than this factor x the time limit are considered abandoned, and marked as failed */
     private static final long STALE_TASK_FACTOR = 2;
     public static final long CONCURRENT_JOBS_MAX = 10000 * CONCURRENT_JOBS_DEFAULT; // Doesn't really matter, they can be small
+    /** Waiting tasks refresh their start date at least every 10s, so a task which didn't for that long has stopped waiting */
+    private static final long ABANDONED_WAITING_TASK_MILLIS = TimeUnit.SECONDS.toMillis(60);
 
     private final PluginSettingsFactory pluginSettingsFactory;
     private final AccessModeService accessModeService;
@@ -210,9 +213,7 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
                     taskDetails != null ? (String) taskDetails.get("details") : null
             );
 
-            waitUntilASlotIsAvailable(waitingTimeMillis, record);
-
-            dao.save(record, status, null);
+            startWhenASlotIsAvailable(waitingTimeMillis, record, status);
         } else {
             // The record already exists (nested createTask call from export()): transition its status
             // if we are moving to a different running state, so the UI reflects actual progress
@@ -225,7 +226,18 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
         return record;
     }
 
-    private void waitUntilASlotIsAvailable(long waitingTimeMillis, DBPseaTask record) throws PseaCancellationException {
+    /**
+     * Waits until a slot is available, then starts the task, i.e. sets the status, which makes it count as running.
+     *
+     * - The slots are given in order of arrival: A task only starts if the running tasks and the tasks waiting for
+     *   longer than itself leave a slot. Otherwise, the newest tasks would take the slots, and the oldest ones would
+     *   reach their timeout first,
+     * - It also prevents concurrent tasks from taking the same free slot, without a lock: A newer task always counts
+     *   an older one, either as waiting or as running, and an older task counts a newer one once it runs,
+     * - Waiting tasks refresh their start date at each attempt, so that the tasks abandoned while waiting (e.g. after
+     *   a restart) are cancelled after {@link #ABANDONED_WAITING_TASK_MILLIS}, rather than being ahead forever.
+     */
+    private void startWhenASlotIsAvailable(long waitingTimeMillis, DBPseaTask record, PseaTaskStatus status) throws PseaCancellationException {
         long maxConcurrentJobs = getConcurrentJobsLimit();
 
         // Abandoned tasks (e.g. after a restart during an export) would otherwise take the slots forever
@@ -236,12 +248,15 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
         }
 
         long timeout = System.currentTimeMillis() + waitingTimeMillis;
-        int runningJobs;
         // Retry 10 times during the duration, but at least every 3s and at most every 10s.
-        long sleepTime = Math.max(3000L, Math.min((timeout - System.currentTimeMillis()) / 10L, 10000L));
-        while ((runningJobs = dao.countRunningJobs()) >= maxConcurrentJobs) {
-            if (System.currentTimeMillis() > timeout) {
-                String message = "Cancelled because too many concurrent jobs are running (" + runningJobs + "/" + maxConcurrentJobs + ")";
+        long sleepTime = Math.max(3000L, Math.min(waitingTimeMillis / 10L, 10000L));
+        while (true) {
+            String reasonToWait = tryToStart(record, status, maxConcurrentJobs);
+            if (reasonToWait == null) {
+                return;
+            }
+            if (System.currentTimeMillis() >= timeout) {
+                String message = "Cancelled because " + reasonToWait;
                 dao.save(record, CANCELLED, message);
                 throw new PseaCancellationException(message);
             }
@@ -249,9 +264,36 @@ public class PseaServiceImpl implements PseaService, InitializingBean, Disposabl
                 Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore the interruption bit
+                dao.save(record, CANCELLED, "Interrupted while waiting to start");
                 throw new PseaCancellationException("Interrupted while waiting to start");
             }
         }
+    }
+
+    /**
+     * Starts the task if a slot is available for it, see {@link #startWhenASlotIsAvailable}.
+     *
+     * @return null if the task was started, otherwise the reason why it must wait
+     * @throws PseaCancellationException if the task was cancelled or deleted while waiting
+     */
+    private String tryToStart(DBPseaTask record, PseaTaskStatus status, long maxConcurrentJobs) throws PseaCancellationException {
+        int abandonedTasks = dao.cancelAbandonedWaitingTasks(ABANDONED_WAITING_TASK_MILLIS);
+        if (abandonedTasks > 0) {
+            LOG.warn("PSEA: {} task(s) stopped waiting for a slot, they were cancelled.", abandonedTasks);
+        }
+        if (!dao.refreshWaitingTask(record.getID())) {
+            throw new PseaCancellationException("The task was cancelled while waiting to start");
+        }
+        int runningJobs = dao.countRunningJobs();
+        int olderWaitingJobs = dao.countOlderWaitingTasks(record.getID());
+        if (runningJobs + olderWaitingJobs >= maxConcurrentJobs) {
+            return "too many concurrent jobs are running (" + runningJobs + "/" + maxConcurrentJobs
+                   + ", and " + olderWaitingJobs + " waiting before this one)";
+        }
+        // The duration starts now, rather than when the task started to wait
+        record.setStartdate(new Date());
+        dao.save(record, status, null);
+        return null;
     }
 
     public File export(Consumer<WorkbookAPI> pluginCallback) throws PseaCancellationException {

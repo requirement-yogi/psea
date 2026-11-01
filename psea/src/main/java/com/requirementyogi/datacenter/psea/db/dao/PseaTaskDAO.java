@@ -204,6 +204,61 @@ public class PseaTaskDAO {
         });
     }
 
+    /**
+     * Cancels the tasks which are waiting for a slot, but whose start date wasn't refreshed for longer than
+     * maximumSilenceMillis (see {@link #refreshWaitingTask}). They were probably abandoned (e.g. Confluence was
+     * restarted while they were waiting), and otherwise they would be ahead of all the next tasks forever.
+     *
+     * @return the number of cancelled tasks
+     */
+    public int cancelAbandonedWaitingTasks(long maximumSilenceMillis) {
+        return ao.executeInTransaction(() -> {
+            DBPseaTask[] abandonedTasks = ao.find(DBPseaTask.class, Query.select().where(
+                    "STATUS = ? AND STARTDATE < ?",
+                    PseaTaskStatus.NOT_STARTED.getDbValue(),
+                    new Date(System.currentTimeMillis() - maximumSilenceMillis)));
+            for (DBPseaTask abandonedTask : abandonedTasks) {
+                save(abandonedTask, PseaTaskStatus.CANCELLED,
+                     "Cancelled, because it stopped waiting for a slot " + (maximumSilenceMillis / 1000) + "s ago");
+            }
+            return abandonedTasks.length;
+        });
+    }
+
+    /**
+     * Sets the start date of a waiting task to now, to show that it is still waiting.
+     *
+     * @return false if the task isn't waiting anymore, i.e. it was deleted or cancelled in the meantime. A task
+     *         which was CANCELLING is set to CANCELLED, since it never started.
+     */
+    public boolean refreshWaitingTask(long id) {
+        return ao.executeInTransaction(() -> {
+            DBPseaTask task = ao.get(DBPseaTask.class, id);
+            if (task == null) {
+                return false;
+            }
+            PseaTaskStatus status = PseaTaskStatus.of(task);
+            if (status == PseaTaskStatus.CANCELLING) {
+                save(task, PseaTaskStatus.CANCELLED, "Cancelled while waiting for a slot");
+                return false;
+            }
+            if (status != PseaTaskStatus.NOT_STARTED) {
+                return false;
+            }
+            task.setStartdate(new Date());
+            task.save();
+            return true;
+        });
+    }
+
+    /** The number of tasks which are waiting for a slot, and which arrived before the given one */
+    public int countOlderWaitingTasks(long id) {
+        return ao.executeInTransaction(() -> ao.count(DBPseaTask.class,
+                "STATUS = ? AND ID < ?",
+                PseaTaskStatus.NOT_STARTED.getDbValue(),
+                id));
+    }
+
     public void delete(DBPseaTask job) {
         ao.executeInTransaction(() -> {
             ao.delete(job);
